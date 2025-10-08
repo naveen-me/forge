@@ -1,0 +1,162 @@
+# Matrix Project & Matrix Reloaded: Architecture Overview
+
+## Original Matrix Project (Root Directory)
+
+The original Matrix project is an Electron-based playout system that integrates OBS Studio in headless mode. Key components:
+
+### Architecture:
+- **Frontend**: Vue.js with Electron as the desktop wrapper
+- **Backend**: Node.js-based services running within Electron
+- **OBS Integration**: Manages a headless OBS instance using obs-websocket-js
+- **Database**: SQLite with Sequelize ORM
+- **Workers**: Multi-threaded worker system for handling OBS operations
+
+### Key Features:
+- Launches a private OBS instance in portable mode
+- Worker-based management with main + backup workers for reliability
+- Live preview functionality showing OBS output
+- Media playout controls
+- Virtual camera support
+- Industrial-grade reliability with automatic failover
+
+### Technical Stack:
+- Electron (desktop wrapper)
+- Vue.js 3 (frontend)
+- Node.js (backend services)
+- OBS Studio (video playout engine)
+- obs-websocket-js (OBS control)
+- SQLite (database)
+- Webpack/Vite (build tools)
+
+## Matrix Reloaded Approach
+
+Matrix Reloaded represents a complete architectural refactoring to address the monolithic nature of the original project.
+
+### Goals:
+- **Separation of Concerns**: Decouple OBS management from application logic
+- **Scalability**: Allow independent scaling of different system components  
+- **Stability**: Isolate failures between components
+- **Maintainability**: Clear boundaries between system components
+
+### New Architecture:
+
+#### 1. matrix-engine (Dockerized OBS Service)
+- **Technology**: Docker container with Ubuntu base image
+- **Components**: 
+  - OBS Studio installation
+  - obs-websocket plugin
+  - Headless operation capabilities
+- **Purpose**: Dedicated OBS process management
+- **Benefits**: 
+  - Isolated from main application
+  - Can be scaled independently
+  - Containerized for consistent deployments
+
+#### 2. node-m (Core Application)
+- **node-m/backend**: Node.js + Express API server
+  - Handles business logic and database operations
+  - API endpoints for media, schedules, overlays, ads
+  - User authentication and management
+  - Database connectivity (Sequelize/SQLite)
+
+- **node-m/frontend**: Vue.js 3 + Vite frontend
+  - Modern UI built with Vue 3 composition API
+  - Communicates with both backend services
+  - Handles both PHP authentication and Node.js services
+
+### Hybrid Backend Approach:
+
+#### Authentication (PHP Backend - matrixapi.io):
+- **Purpose**: User authentication and PIN management
+- **API Endpoint**: https://matrixapi.io/api/v1/action
+- **Features**: 
+  - User registration/login
+  - Password reset with OTP
+  - PIN-based authentication
+  - Token validation
+- **Data Storage**: MySQL database via Medoo
+
+#### Core Services (Node.js Backend):  
+- **Purpose**: All non-authentication features
+- **API Endpoint**: http://localhost:3001/api
+- **Features**:
+  - Media library management
+  - Schedule creation and management
+  - Overlay configuration
+  - Ad management
+  - System defaults
+
+### Key Technical Changes in Matrix Reloaded:
+
+#### 1. Dual Backend Architecture:
+- Authentication flows to PHP backend (matrixapi.io)
+- All other services use Node.js backend
+- API client intelligently routes requests to appropriate backend
+
+#### 2. Improved Worker Management:
+- Enhanced worker architecture with better error handling
+- Automatic failover between main and backup workers
+- Health monitoring and auto-restart capabilities
+
+#### 3. Enhanced Security:
+- PIN-based authentication stored locally
+- JWT-like token management
+- Proper session handling
+
+#### 4. Better Separation of Concerns:
+- OBS operations isolated in dedicated Docker service
+- Application logic in Node.js backend
+- Authentication in PHP backend
+- UI in Vue.js frontend
+
+### Data Flow:
+
+#### Authentication Flow:
+1. User enters credentials in Vue frontend
+2. Request sent to PHP backend via https://matrixapi.io/api/v1/action
+3. PHP backend validates credentials and returns token
+4. Token stored in localStorage
+5. Subsequent authenticated requests include token
+
+#### Core Service Flow:
+1. User performs non-auth operations in Vue frontend
+2. Requests sent to Node.js backend at http://localhost:3001/api
+3. Node.js backend processes requests and updates database
+4. Responses returned to frontend
+
+#### OBS Integration Flow:
+1. Node.js backend communicates with Dockerized OBS service
+2. OBS operations executed in isolated container
+3. Results reported back to application
+
+### Benefits of Matrix Reloaded:
+
+1. **Reduced Complexity**: Each component has a single responsibility
+2. **Improved Reliability**: Isolated failures don't cascade across system
+3. **Better Performance**: Components can be optimized independently
+4. **Easier Maintenance**: Clear code boundaries and documentation
+5. **Scalability**: Components can be scaled based on demand
+6. **Technology Flexibility**: Different components can use different tech stacks
+7. **Containerization**: OBS operations in Docker for consistency
+
+### Current Implementation Status:
+
+#### Completed Changes:
+- API client updated to support dual backend architecture
+- Authentication services redirected to PHP backend
+- PIN storage implemented in localStorage
+- Proper payload structure for PHP API calls
+- Worker management systems updated for new architecture
+
+#### Key Files Modified:
+- `apiClient.js`: Handles routing to appropriate backend
+- `authService.js`: Manages authentication with PHP backend
+- Worker management files updated for new architecture
+
+### Migration Path:
+- Original project continues to function independently
+- New features and improvements focused on Matrix Reloaded
+- Gradual migration of functionality from monolithic to microservices approach
+- Backward compatibility maintained during transition
+
+This approach represents a significant architectural improvement, moving from a monolithic Electron application to a more maintainable and scalable microservices architecture with clear separation of concerns.
