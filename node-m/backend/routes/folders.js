@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const router = express.Router();
 const db = require('../db');
+const { robustQuery } = require('../db-helper');
 
 // Middleware for error handling
 const asyncHandler = fn => (req, res, next) => {
@@ -92,7 +93,7 @@ router.post('/', [
             pId = null;
         }
         
-        const folder = await db.Folder.create({
+        const folder = await robustQuery(db.Folder.create.bind(db.Folder), {
             name,
             parentId: pId
         });

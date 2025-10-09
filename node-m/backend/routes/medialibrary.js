@@ -4,6 +4,7 @@ const router = express.Router();
 const db = require('../db');
 const fs = require('fs');
 const { Op } = require('sequelize');
+const { robustQuery } = require('../db-helper');
 
 // Middleware for error handling
 const asyncHandler = fn => (req, res, next) => {
@@ -166,7 +167,7 @@ router.post('/add-files', [
 
         const filename = filePath.split(/[\\\\/]/).pop();
 
-        const mediaItem = await db.MediaLibrary.create({
+        const mediaItem = await robustQuery(db.MediaLibrary.create.bind(db.MediaLibrary), {
             filename: filename,
             displayName: filename,
             filepath: filePath,
