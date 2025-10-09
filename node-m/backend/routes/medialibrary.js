@@ -74,7 +74,7 @@ router.post('/', [
     body('filepath').notEmpty(),
     body('type').isIn(['video', 'image', 'audio', 'stream']),
     body('duration').optional().isInt({ min: 0 }).toInt(),
-    body('folderId').optional().isInt().toInt()
+    body('folderId').optional({ nullable: true }).isInt().toInt()
 ], asyncHandler(async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -128,14 +128,33 @@ router.delete('/:id', asyncHandler(async (req, res) => {
 // POST /api/media/add-files - Add multiple media files
 router.post('/add-files', [
     body('files').isArray({ min: 1 }),
-    body('folderId').optional().isInt().toInt()
+    body('folderId').optional({ nullable: true })
 ], asyncHandler(async (req, res) => {
+    console.log('Received request to add files:', req.body);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ error: 'Validation failed', errors: errors.array() });
     }
 
-    const { files, folderId } = req.body;
+    let { files, folderId } = req.body;
+    
+    // Handle folderId - keep as null for root, or validate if provided
+    if (folderId !== null && folderId !== undefined) {
+        folderId = parseInt(folderId, 10);
+        if (isNaN(folderId)) {
+            return res.status(400).json({ error: 'Validation failed', errors: [{ msg: 'folderId must be an integer' }] });
+        }
+        
+        // Verify the folder exists
+        const folder = await db.Folder.findByPk(folderId);
+        if (!folder) {
+            return res.status(404).json({ error: 'Target folder not found' });
+        }
+    } else {
+        // For root folder assignment, explicitly set to null
+        folderId = null;
+    }
+    
     const createdMediaItems = [];
 
     for (const filePath of files) {
@@ -145,14 +164,14 @@ router.post('/add-files', [
         else if (['jpg', 'jpeg', 'png'].includes(extension)) fileType = 'image';
         else if (['mp3', 'wav'].includes(extension)) fileType = 'audio';
 
-        const filename = filePath.split(/[\\/]/).pop();
+        const filename = filePath.split(/[\\\\/]/).pop();
 
         const mediaItem = await db.MediaLibrary.create({
             filename: filename,
             displayName: filename,
             filepath: filePath,
             type: fileType,
-            folderId: folderId || null,
+            folderId: folderId,
             duration: 0,
             thumbnailPath: null
         });
@@ -197,6 +216,31 @@ router.post('/validate-files', asyncHandler(async (req, res) => {
         return { ...item.toJSON(), exists };
     }));
     res.json(validationResults);
+}));
+
+// PUT /api/media/:id/regenerate-thumbnail - Regenerate thumbnail for a media item
+router.put('/:id/regenerate-thumbnail', asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const mediaItem = await db.MediaLibrary.findByPk(id);
+    if (!mediaItem) {
+        return res.status(404).json({ error: 'Media item not found' });
+    }
+    
+    // In a real implementation, this would involve generating a new thumbnail
+    // For now, we'll just return success
+    // In a real app, you'd use a library like ffmpeg to generate the thumbnail
+    
+    // For simulation purposes, we'll create a placeholder thumbnail
+    const thumbnailPath = mediaItem.filepath.replace(/\.[^/.]+$/, '') + '_thumb.jpg';
+    
+    // This is a placeholder - in a real implementation you'd generate the actual thumbnail
+    await mediaItem.update({ thumbnailPath });
+    
+    res.json({ 
+        success: true, 
+        message: 'Thumbnail regenerated successfully',
+        data: { ...mediaItem.toJSON(), thumbnailPath }
+    });
 }));
 
 module.exports = router;

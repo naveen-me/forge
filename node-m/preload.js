@@ -51,7 +51,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
    * This is more secure than exposing ipcRenderer directly.
    */
   receive: (channel, func) => {
-    const validChannels = ['ad-item-updated', 'check-pin-required']; // Whitelist of valid channels
+    const validChannels = ['ad-item-updated', 'check-pin-required', 'tarva-engine-preview']; // Whitelist of valid channels
     if (validChannels.includes(channel)) {
       // Deliberately strip event as it includes `sender`
       ipcRenderer.on(channel, (event, ...args) => func(...args));
@@ -82,5 +82,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
    */
   removeAllListeners: (channel) => {
     ipcRenderer.removeAllListeners(channel);
-  }
+  },
+
+  /**
+   * Direct API methods for frequently used endpoints
+   */
+  getAllOverlays: () => ipcRenderer.invoke('get-all-overlays'),
+  getAllAds: () => ipcRenderer.invoke('get-all-ads'),
+  getMediaLibrary: () => ipcRenderer.invoke('get-media-library'),
+  addVideoFile: () => ipcRenderer.invoke('add-video-file'),
+  showOpenDialog: (options) => ipcRenderer.invoke('show-open-dialog', options),
 });

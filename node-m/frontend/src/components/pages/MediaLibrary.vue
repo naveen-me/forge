@@ -186,8 +186,13 @@ const loadMedia = async () => {
       folderId: currentFolderId.value || ''
     };
     const data = await mediaLibraryService.getMedia(params);
-    media.value = data.media;
-    totalPages.value = data.totalPages;
+    if (data && data.media) {
+      media.value = data.media;
+      totalPages.value = data.totalPages || 1;
+    } else {
+      media.value = [];
+      totalPages.value = 1;
+    }
   } catch (err) {
     error.value = 'Failed to load media. Please ensure the backend is running and accessible.';
     console.error(err);
@@ -198,9 +203,12 @@ const loadMedia = async () => {
 
 const loadFolders = async () => {
   try {
-    const params = { parentId: currentFolderId.value || '' };
     const allFolders = await mediaLibraryService.getFolders();
-    folders.value = allFolders.filter(f => f.parentId === currentFolderId.value);
+    if (allFolders && Array.isArray(allFolders)) {
+      folders.value = allFolders.filter(f => f.parentId === currentFolderId.value);
+    } else {
+      folders.value = [];
+    }
   } catch (err) {
     error.value = 'Failed to load folders.';
     console.error(err);
@@ -247,8 +255,12 @@ const handleSelectFiles = async () => {
   try {
     const filePaths = await mediaLibraryService.selectFiles();
     if (filePaths && filePaths.length > 0) {
-      await mediaLibraryService.addMediaFiles(filePaths, currentFolderId.value);
-      refresh();
+      const result = await mediaLibraryService.addMediaFiles(filePaths, currentFolderId.value);
+      if (result) {
+        refresh();
+      } else {
+        error.value = 'Failed to add files.';
+      }
     }
   } catch (err) {
     error.value = 'Failed to add files.';
@@ -257,15 +269,20 @@ const handleSelectFiles = async () => {
 };
 
 const handleCreateFolder = async () => {
+  console.log('newFolderName', newFolderName.value);
   if (!newFolderName.value.trim()) return;
   try {
-    await mediaLibraryService.createFolder({
+    const result = await mediaLibraryService.createFolder({
       name: newFolderName.value,
       parentId: currentFolderId.value,
     });
-    showCreateFolderModal.value = false;
-    newFolderName.value = '';
-    loadFolders();
+    if (result) {
+      showCreateFolderModal.value = false;
+      newFolderName.value = '';
+      loadFolders();
+    } else {
+      error.value = 'Failed to create folder.';
+    }
   } catch (err) {
     error.value = 'Failed to create folder.';
     console.error(err);
@@ -275,8 +292,12 @@ const handleCreateFolder = async () => {
 const handleDeleteFolder = async (folderId) => {
   if (!confirm('Are you sure you want to delete this folder? Its contents will be moved to the parent folder.')) return;
   try {
-    await mediaLibraryService.deleteFolder(folderId);
-    refresh();
+    const result = await mediaLibraryService.deleteFolder(folderId);
+    if (result) {
+      refresh();
+    } else {
+      error.value = 'Failed to delete folder.';
+    }
   } catch (err) {
     error.value = 'Failed to delete folder.';
     console.error(err);
@@ -287,8 +308,12 @@ const handleRenameFolder = async (folder) => {
   const newName = prompt('Enter new folder name:', folder.name);
   if (newName && newName.trim() && newName.trim() !== folder.name) {
     try {
-      await mediaLibraryService.updateFolder(folder.id, { name: newName.trim() });
-      loadFolders();
+      const result = await mediaLibraryService.updateFolder(folder.id, { name: newName.trim() });
+      if (result) {
+        loadFolders();
+      } else {
+        error.value = 'Failed to rename folder.';
+      }
     } catch (err) {
       error.value = 'Failed to rename folder.';
       console.error(err);
@@ -300,8 +325,12 @@ const handleRenameMedia = async (item) => {
   const newName = prompt('Enter new display name:', item.displayName);
   if (newName && newName.trim() && newName.trim() !== item.displayName) {
     try {
-      await mediaLibraryService.updateMedia(item.id, { displayName: newName.trim() });
-      loadMedia();
+      const result = await mediaLibraryService.updateMedia(item.id, { displayName: newName.trim() });
+      if (result) {
+        loadMedia();
+      } else {
+        error.value = 'Failed to rename media item.';
+      }
     } catch (err) {
       error.value = 'Failed to rename media item.';
       console.error(err);
@@ -313,8 +342,12 @@ const handleRenameMedia = async (item) => {
 const handleDeleteMedia = async (mediaId) => {
   if (!confirm('Are you sure you want to delete this media?')) return;
   try {
-    await mediaLibraryService.deleteMedia(mediaId);
-    loadMedia();
+    const result = await mediaLibraryService.deleteMedia(mediaId);
+    if (result) {
+      loadMedia();
+    } else {
+      error.value = 'Failed to delete media.';
+    }
   } catch (err) {
     error.value = 'Failed to delete media.';
     console.error(err);

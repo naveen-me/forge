@@ -23,7 +23,7 @@
 <script>
 import { ref, onMounted, computed } from 'vue';
 import draggable from 'vuedraggable';
-import apiClient from '../../api.js';
+import adService from '../../services/adService';
 
 export default {
   name: 'AdsTab',
@@ -38,11 +38,11 @@ export default {
 
     const fetchAds = async () => {
       try {
-        const result = await apiClient.getAllAds();
-        if (result.success) {
-          ads.value = result.data;
+        const result = await adService.getAds();
+        if (result) {
+          ads.value = result;
         } else {
-          throw new Error(result);
+          throw new Error('Failed to load ads');
         }
       } catch (err) {
         error.value = `Failed to load ads: ${err.message}`;
@@ -59,6 +59,7 @@ export default {
         return ads.value;
       }
       return ads.value.filter(ad =>
+        ad.displayName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
         ad.filename.toLowerCase().includes(searchQuery.value.toLowerCase())
       );
     });

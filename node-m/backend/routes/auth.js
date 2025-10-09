@@ -350,4 +350,67 @@ router.post('/validate-token', async (req, res) => {
     }
 });
 
+// GET /api/auth - Get current auth information
+router.get('/', async (req, res) => {
+    try {
+        // Return a placeholder since we don't have local auth storage for this
+        const token = req.headers.authorization?.split(' ')[1];
+        if (!token) {
+            return res.status(401).json({ success: false, message: 'No token provided' });
+        }
+        
+        const decoded = jwt.verify(token, JWT_SECRET);
+        res.json({ success: true, data: { user: decoded } });
+    } catch (error) {
+        console.error('Get auth failed:', error.message);
+        res.status(500).json({ 
+            success: false, 
+            message: error.message || 'Failed to get auth information' 
+        });
+    }
+});
+
+// DELETE /api/auth - Clear auth information (logout)
+router.delete('/', async (req, res) => {
+    try {
+        // In this implementation, we don't have server-stored sessions to clear
+        // The client should handle token removal
+        res.json({ success: true, message: 'Logged out successfully' });
+    } catch (error) {
+        console.error('Logout failed:', error.message);
+        res.status(500).json({ 
+            success: false, 
+            message: error.message || 'Logout failed' 
+        });
+    }
+});
+
+// POST /api/auth/save - Save auth information
+router.post('/save', async (req, res) => {
+    try {
+        const { token, pin } = req.body;
+        
+        // Store the token and pin in the local auth table
+        // First check if an auth record already exists
+        let authRecord = await db.Auth.findOne();
+        if (authRecord) {
+            // Update existing record
+            await authRecord.update({ token, pin });
+        } else {
+            // Create new record
+            authRecord = await db.Auth.create({ token, pin });
+        }
+        
+        res.json({ success: true, data: authRecord });
+    } catch (error) {
+        console.error('Save auth failed:', error.message);
+        res.status(500).json({ 
+            success: false, 
+            message: error.message || 'Save auth failed' 
+        });
+    }
+});
+
+module.exports = router;
+
 module.exports = router;

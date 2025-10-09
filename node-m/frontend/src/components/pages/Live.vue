@@ -85,7 +85,7 @@ export default {
     onMounted(() => {
       console.log('Live component mounted, setting up preview listener');
       if (window.electronAPI) {
-        window.electronAPI.onTarvaEnginePreview(handleTarvaEnginePreview);
+        window.electronAPI.receive('tarva-engine-preview', handleTarvaEnginePreview);
       } else {
         console.log('electronAPI not available');
       }

@@ -16,6 +16,11 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'parentId'
       });
       
+      Folder.hasMany(models.Folder, {
+        as: 'children',
+        foreignKey: 'parentId'
+      });
+
       // Define association with MediaLibrary items
       Folder.hasMany(models.MediaLibrary, {
         foreignKey: 'folderId',

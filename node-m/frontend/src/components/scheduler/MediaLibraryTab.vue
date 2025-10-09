@@ -38,11 +38,11 @@ export default {
 
     const fetchMedia = async () => {
       try {
-        const result = await mediaLibraryService.getMediaLibrary();
-        if (result.success) {
-          media.value = result.data;
+        const result = await mediaLibraryService.getMedia({});
+        if (result) {
+          media.value = result.media || result; // Handle both response formats
         } else {
-          throw new Error(result.error);
+          throw new Error('Failed to load media library');
         }
       } catch (err) {
         error.value = `Failed to load media library: ${err.message}`;

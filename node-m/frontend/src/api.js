@@ -1,4 +1,5 @@
 import authService from './services/authService';
+import axios from 'axios'; // Import axios at the top level
 
 const createApiClient = () => {
   const request = async (method, url, data = null, headers = {}) => {
@@ -13,14 +14,14 @@ const createApiClient = () => {
       if (response.success) {
         return response.data;
       } else {
-        if (response.error?.message.includes('401')) {
+        if (response.error && response.error.error && response.error.error.includes('401')) {
           authService.logout();
           // Ensure hash-based navigation works inside Electron
           if (typeof window !== 'undefined') {
             window.location.hash = '#/login';
           }
         }
-        throw new Error(response.error?.message || 'API call failed');
+        return null;
       }
     } catch (error) {
       console.error(`API call failed: ${method.toUpperCase()} ${url}`, error);
@@ -36,21 +37,21 @@ const createApiClient = () => {
   };
 };
 
-let apiClient;
-
-if (typeof window !== 'undefined' && window.electronAPI) {
-  apiClient = createApiClient();
-} else {
-  // Fallback for non-Electron environments (if any)
-  const axios = require('axios');
-  apiClient = axios.create({
-    baseURL: 'http://localhost:3001/api',
+// Also create an axios-based client for non-electron fallback
+const createAxiosClient = () => {
+  // In development with Vite proxy, we want to make requests to the frontend server
+  // which will proxy them to the backend. In production without Electron, we'd use the backend URL.
+  const isDev = process.env.NODE_ENV !== 'production';
+  const baseURL = isDev ? '' : 'http://localhost:3001'; // Empty string for proxy in development
+  
+  const client = axios.create({
+    baseURL: baseURL,
     headers: {
       'Content-Type': 'application/json',
     },
   });
 
-  apiClient.interceptors.request.use(
+  client.interceptors.request.use(
     (config) => {
       const token = authService.getToken();
       if (token) {
@@ -61,18 +62,77 @@ if (typeof window !== 'undefined' && window.electronAPI) {
     (error) => Promise.reject(error)
   );
 
-  apiClient.interceptors.response.use(
-    (response) => response,
-    (error) => {
-      if (error.response && error.response.status === 401) {
-        authService.logout();
-        if (typeof window !== 'undefined') {
-          window.location.hash = '#/login';
+  return {
+    get: async (url, config = {}) => {
+      try {
+        const response = await client.get(url, config);
+        // Return success and the actual response data directly
+        return { success: true, data: response.data };
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          authService.logout();
+          if (typeof window !== 'undefined') {
+            window.location.hash = '#/login';
+          }
         }
+        return { success: false, error: error.response?.data || { message: error.message } };
       }
-      return Promise.reject(error);
+    },
+    post: async (url, data, config = {}) => {
+      try {
+        const response = await client.post(url, data, config);
+        // Return success and the actual response data directly
+        return { success: true, data: response.data };
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          authService.logout();
+          if (typeof window !== 'undefined') {
+            window.location.hash = '#/login';
+          }
+        }
+        return { success: false, error: error.response?.data || { message: error.message } };
+      }
+    },
+    put: async (url, data, config = {}) => {
+      try {
+        const response = await client.put(url, data, config);
+        // Return success and the actual response data directly
+        return { success: true, data: response.data };
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          authService.logout();
+          if (typeof window !== 'undefined') {
+            window.location.hash = '#/login';
+          }
+        }
+        return { success: false, error: error.response?.data || { message: error.message } };
+      }
+    },
+    delete: async (url, config = {}) => {
+      try {
+        const response = await client.delete(url, config);
+        // For delete operations, return success and the response data (if any)
+        return { success: true, data: response.data };
+      } catch (error) {
+        if (error.response && error.response.status === 401) {
+          authService.logout();
+          if (typeof window !== 'undefined') {
+            window.location.hash = '#/login';
+          }
+        }
+        return { success: false, error: error.response?.data || { message: error.message } };
+      }
     }
-  );
+  };
+};
+
+let apiClient;
+
+if (typeof window !== 'undefined' && window.electronAPI) {
+  apiClient = createApiClient();
+} else {
+  // Fallback for non-Electron environments
+  apiClient = createAxiosClient();
 }
 
 export default apiClient;

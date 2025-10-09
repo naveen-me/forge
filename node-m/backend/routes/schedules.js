@@ -321,5 +321,136 @@ router.delete('/:scheduleId/items/:itemId/adplacements/:adPlacementId', asyncHan
     res.status(204).send();
 }));
 
+// POST /api/schedules/:scheduleId/export - Export schedule
+router.post('/:scheduleId/export', asyncHandler(async (req, res) => {
+    const { scheduleId } = req.params;
+    const { format = 'json' } = req.body;
+
+    try {
+        const schedule = await db.Schedule.findByPk(scheduleId, {
+            include: [
+                {
+                    model: db.ScheduleItem,
+                    as: 'items',
+                    include: [
+                        { model: db.ScheduleItemOverlay, as: 'overlays', include: [{ model: db.Overlay, as: 'overlay' }] },
+                        { model: db.ScheduleItemCuePoint, as: 'cuePoints', include: [{ model: db.Ad, as: 'ad' }] },
+                        { model: db.ScheduleItemAdPlacement, as: 'adPlacements', include: [{ model: db.Ad, as: 'ad' }] }
+                    ]
+                }
+            ],
+            order: [[{ model: db.ScheduleItem, as: 'items' }, 'sortOrder', 'ASC']]
+        });
+
+        if (!schedule) {
+            return res.status(404).json({ error: 'Schedule not found' });
+        }
+
+        // Prepare data for export based on requested format
+        if (format === 'json') {
+            res.json({
+                success: true,
+                data: schedule.toJSON()
+            });
+        } else {
+            // For other formats, we can add additional logic
+            res.json({
+                success: true,
+                data: schedule.toJSON()
+            });
+        }
+    } catch (error) {
+        console.error('Error exporting schedule:', error);
+        res.status(500).json({ error: error.message });
+    }
+}));
+
+// POST /api/schedules/import - Import schedule
+router.post('/import', asyncHandler(async (req, res) => {
+    const { scheduleData, date } = req.body;
+
+    if (!scheduleData || !date) {
+        return res.status(400).json({ error: 'Schedule data and target date are required for import' });
+    }
+
+    try {
+        const transaction = await db.sequelize.transaction();
+        
+        // Check if a schedule already exists for the target date
+        const existingSchedule = await db.Schedule.findOne({ where: { date } });
+        if (existingSchedule) {
+            throw new Error(`A schedule for date ${date} already exists.`);
+        }
+
+        // Create new schedule with imported data
+        const importedSchedule = await db.Schedule.create({
+            name: scheduleData.name || `Imported Schedule ${new Date().toISOString().split('T')[0]}`,
+            date: date,
+            status: scheduleData.status || 'draft',
+            repeat: scheduleData.repeat || null
+        }, { transaction });
+
+        // Import schedule items if they exist
+        if (scheduleData.items && Array.isArray(scheduleData.items)) {
+            for (const item of scheduleData.items) {
+                const importedItem = await db.ScheduleItem.create({
+                    ...item,
+                    scheduleId: importedSchedule.id
+                }, { transaction });
+
+                // Import nested associations if they exist
+                if (item.overlays && Array.isArray(item.overlays)) {
+                    for (const overlay of item.overlays) {
+                        await db.ScheduleItemOverlay.create({
+                            ...overlay,
+                            scheduleItemId: importedItem.id
+                        }, { transaction });
+                    }
+                }
+
+                if (item.cuePoints && Array.isArray(item.cuePoints)) {
+                    for (const cuePoint of item.cuePoints) {
+                        await db.ScheduleItemCuePoint.create({
+                            ...cuePoint,
+                            scheduleItemId: importedItem.id
+                        }, { transaction });
+                    }
+                }
+
+                if (item.adPlacements && Array.isArray(item.adPlacements)) {
+                    for (const adPlacement of item.adPlacements) {
+                        await db.ScheduleItemAdPlacement.create({
+                            ...adPlacement,
+                            scheduleItemId: importedItem.id
+                        }, { transaction });
+                    }
+                }
+            }
+        }
+
+        await transaction.commit();
+
+        // Return the imported schedule
+        const result = await db.Schedule.findByPk(importedSchedule.id, {
+            include: [
+                {
+                    model: db.ScheduleItem,
+                    as: 'items',
+                    include: [
+                        { model: db.ScheduleItemOverlay, as: 'overlays', include: [{ model: db.Overlay, as: 'overlay' }] },
+                        { model: db.ScheduleItemCuePoint, as: 'cuePoints', include: [{ model: db.Ad, as: 'ad' }] },
+                        { model: db.ScheduleItemAdPlacement, as: 'adPlacements', include: [{ model: db.Ad, as: 'ad' }] }
+                    ]
+                }
+            ],
+            order: [[{ model: db.ScheduleItem, as: 'items' }, 'sortOrder', 'ASC']]
+        });
+
+        res.status(201).json(result);
+    } catch (error) {
+        console.error('Error importing schedule:', error);
+        res.status(500).json({ error: error.message });
+    }
+}));
 
 module.exports = router;

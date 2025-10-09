@@ -16,7 +16,7 @@
                   <label for="email" class="form-label fw-semibold">Email Address</label>
                   <div class="input-group">
                     <span class="input-group-text bg-light border-end-0">
-                      <i class="bi bi-envelope"></i>
+                      <i class="bx bx-envelope"></i>
                     </span>
                     <input
                       id="email"
@@ -33,7 +33,7 @@
                   <label for="password" class="form-label fw-semibold">Password</label>
                   <div class="input-group">
                     <span class="input-group-text bg-light border-end-0">
-                      <i class="bi bi-lock"></i>
+                      <i class="bx bx-lock"></i>
                     </span>
                     <input
                       id="password"

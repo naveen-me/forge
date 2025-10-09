@@ -61,7 +61,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
 // POST /api/folders - Create a new folder
 router.post('/', [
     body('name').notEmpty().withMessage('Folder name is required'),
-    body('parentId').optional().isInt().toInt()
+    body('parentId').optional({ nullable: true })
 ], asyncHandler(async (req, res) => {
     try {
         const errors = validationResult(req);
@@ -74,17 +74,27 @@ router.post('/', [
         
         const { name, parentId } = req.body;
         
-        // Check if parent folder exists (if parentId is provided)
-        if (parentId) {
-            const parentFolder = await db.Folder.findByPk(parentId);
+        // Handle parentId - keep as null for root folders, or validate if provided
+        let pId = parentId;
+        if (parentId !== null && parentId !== undefined) {
+            pId = parseInt(parentId, 10);
+            if (isNaN(pId)) {
+                return res.status(400).json({ error: 'Validation failed', errors: [{ msg: 'parentId must be an integer' }] });
+            }
+            
+            // Check if parent folder exists
+            const parentFolder = await db.Folder.findByPk(pId);
             if (!parentFolder) {
                 return res.status(404).json({ error: 'Parent folder not found' });
             }
+        } else {
+            // For root folders, parentId should remain null
+            pId = null;
         }
         
         const folder = await db.Folder.create({
             name,
-            parentId: parentId || null
+            parentId: pId
         });
         
         res.status(201).json(folder);
@@ -113,9 +123,9 @@ router.put('/:id', [
             return res.status(404).json({ error: 'Folder not found' });
         }
         
-        // Check if new parent exists (if parentId is provided)
-        if (req.body.parentId !== undefined && req.body.parentId !== null) {
-            if (req.body.parentId !== folder.parentId) {
+        // Check if new parent exists (if parentId is provided and different from current)
+        if (req.body.parentId !== undefined && req.body.parentId !== folder.parentId) {
+            if (req.body.parentId !== null) {
                 // Prevent circular reference
                 if (req.body.parentId === folder.id) {
                     return res.status(400).json({ error: 'Cannot set folder as its own parent' });
