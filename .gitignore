@@ -1,0 +1,17 @@
+# Ignore Node.js modules and logs
+node_modules/
+npm-debug.log
+
+# Ignore build output
+/build/output/
+playout.exe
+
+# Ignore environment files
+.env
+
+# Ignore database files
+*.db
+*.db-journal
+
+# Ignore Vue build output
+/webapp/dist/
