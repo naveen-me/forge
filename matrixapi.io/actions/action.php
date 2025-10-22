@@ -16,10 +16,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Check for token unless it's a public task
         if ($action === 'auth' && !in_array($task, $publicTasks)) {
             $token = isset($data['token']) ? $data['token'] : '';
-            $isUser = $db->has("users", ["authToken" => $token]);
-            if (!$isUser) {
+            if (empty($token)) {
                 http_response_code(401);
-                echo json_encode(['success' => false, 'message' => 'Unauthorized']);
+                echo json_encode(['success' => false, 'message' => 'Unauthorized - No token provided']);
+                exit();
+            }
+            
+            // Validate JWT token
+            try {
+                require_once __DIR__ . '/../vendor/autoload.php';
+                
+                $jwt_secret = $_ENV['JWT_SECRET'];
+                $decoded = \Firebase\JWT\JWT::decode($token, new \Firebase\JWT\Key($jwt_secret, 'HS256'));
+                
+                // Optional: Verify the user still exists in DB
+                $userId = $decoded->data->id;
+                $isUser = $db->has("users", ["id" => $userId]);
+                
+                if (!$isUser) {
+                    http_response_code(401);
+                    echo json_encode(['success' => false, 'message' => 'Unauthorized - User not found']);
+                    exit();
+                }
+            } catch (Exception $e) {
+                http_response_code(401);
+                echo json_encode(['success' => false, 'message' => 'Unauthorized - Invalid token']);
                 exit();
             }
         }
@@ -27,6 +48,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Include the appropriate action file
         if ($action === 'auth') {
             include __DIR__ . '/auth.php';
+        } else if ($action === 'upi') {
+            include __DIR__ . '/upi.php';
+        } else if ($action === 'payment') {
+            include __DIR__ . '/payment.php';
         } else {
             $target_file = str_replace('action-', '', $action) . '.php';
             $file_path = __DIR__ . '/' . $target_file;

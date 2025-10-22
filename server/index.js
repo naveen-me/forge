@@ -5,14 +5,23 @@ import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import { WebSocketServer } from 'ws';
+
+// Import routes
 import apiRoutes from './src/routes/api.js';
+import authRoutes from './src/routes/auth.js';
+import subscriptionRoutes from './src/routes/subscription.js';
+import paymentRoutes from './src/routes/payment.js';
+import upiManagementRoutes from './src/routes/upiManagement.js';
+
+// Import database initializer
 import { initDb } from './src/db/database.js';
 
+// Basic setup
 dotenv.config();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// App and server initialization
 const app = express();
 const server = http.createServer(app);
 const port = process.env.PORT || 4000;
@@ -30,6 +39,10 @@ app.use((req, res, next) => {
 
 // API Routes
 app.use('/api', apiRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/subscription', subscriptionRoutes);
+app.use('/api/payment', paymentRoutes);
+app.use('/api/upi', upiManagementRoutes);
 
 // Serve static files from Vue app
 const webappPath = path.join(__dirname, '..', 'webapp', 'dist');
@@ -37,22 +50,26 @@ app.use(express.static(webappPath));
 
 // Handle all other routes by serving the Vue app
 app.get('*', (req, res) => {
-    res.sendFile(path.join(webappPath, 'index.html'));
+    res.sendFile(path.join(webappPath, 'index.html'), (err) => {
+        if (err) {
+            res.status(500).send(err);
+        }
+    });
 });
 
 // Initialize Database
 initDb().then(() => {
     console.log('Database initialized.');
+}).catch(err => {
+    console.error('Database initialization failed:', err);
 });
 
 // WebSocket Server
 const wss = new WebSocketServer({ server });
-
 wss.on('connection', (ws) => {
     console.log('Client connected to WebSocket');
     ws.on('message', (message) => {
         console.log(`Received message: ${message}`);
-        // Broadcast to all clients
         wss.clients.forEach(client => {
             if (client.readyState === ws.OPEN) {
                 client.send(`Echo: ${message}`);
@@ -76,6 +93,7 @@ const shutdown = () => {
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
 
+// Start the server
 server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}`);
 });

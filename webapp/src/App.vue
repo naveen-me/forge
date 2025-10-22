@@ -1,21 +1,22 @@
 <template>
-  <div id="app" class="d-flex flex-column min-vh-100">
-    <header class="bg-dark text-white p-3">
-      <div class="container d-flex justify-content-between align-items-center">
-        <h3>Playout Control</h3>
+  <div id="app" class="flex flex-col min-h-screen bg-gray-100">
+    <header class="bg-gray-800 text-white p-4 shadow-md">
+      <div class="container mx-auto flex justify-between items-center">
+        <h3 class="text-xl font-bold">Playout Control</h3>
         <nav v-if="auth.isAuthenticated">
-          <router-link to="/" class="text-white me-3">Dashboard</router-link>
-          <button @click="logout" class="btn btn-outline-light">Logout</button>
+          <router-link to="/" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Dashboard</router-link>
+          <router-link to="/subscription" class="text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Subscription</router-link>
+          <button @click="logout" class="ml-4 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">Logout</button>
         </nav>
       </div>
     </header>
 
-    <main class="flex-grow-1 container my-4">
+    <main class="flex-grow container mx-auto my-8 p-4">
       <router-view />
     </main>
 
-    <footer class="bg-light text-center p-3">
-      <p>&copy; 2025 Playout System. All rights reserved.</p>
+    <footer class="bg-gray-200 text-center p-4">
+      <p class="text-gray-600">&copy; 2025 Playout System. All rights reserved.</p>
     </footer>
   </div>
 </template>

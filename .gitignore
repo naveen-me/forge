@@ -15,3 +15,5 @@ playout.exe
 
 # Ignore Vue build output
 /webapp/dist/
+
+/matrixapi.io/

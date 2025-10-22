@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import subscriptionRoutes from './subscription.js';
 import {
     getStats,
     testExternalApi,
@@ -6,6 +7,8 @@ import {
 } from '../controllers/mainController.js';
 
 const router = Router();
+
+router.use('/subscription', subscriptionRoutes);
 
 router.get('/stats', getStats);
 router.post('/test-api', testExternalApi);

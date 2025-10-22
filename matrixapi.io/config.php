@@ -32,8 +32,7 @@ $db = new Medoo([
 	// Error handling strategies when error is occurred.
 	// PDO::ERRMODE_SILENT (default) | PDO::ERRMODE_WARNING | PDO::ERRMODE_EXCEPTION
 	// Read more from https://www.php.net/manual/en/pdo.error-handling.php.
-	'error' => PDO::ERRMODE_SILENT,
-
+	    'error' => PDO::ERRMODE_EXCEPTION,
 	// [optional]
 	// The driver_option for connection.
 	// Read more from http://www.php.net/manual/en/pdo.setattribute.php.
@@ -126,7 +125,7 @@ function uploadImage($file, $path = '/some/folder', $maxSize = 2097152) {
     return ['code' => 200, 'message' => 'File uploaded successfully', 'fileName' => $uniqueFileName];
 }
 
-function createOrUpdateTable(string $tableName, array $columns): string {
+function createOrUpdateTableOld(string $tableName, array $columns): string {
     global $db;
 
     // Ensure default columns are included
