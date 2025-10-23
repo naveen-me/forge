@@ -49,8 +49,9 @@ router.post('/payment/:paymentId/cancel', authenticateToken, async (req, res) =>
 router.get('/user/payments/pending', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id; // From auth middleware
+        const token = req.headers.authorization?.split(' ')[1]; // Extract token from header
         
-        const pendingPayments = await PaymentService.getUserPendingPayments(userId);
+        const pendingPayments = await PaymentService.getUserPendingPayments(userId, token);
         res.json({ success: true, data: pendingPayments });
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -89,8 +90,9 @@ router.post('/payment/complete', authenticateToken, async (req, res) => {
 router.get('/user/payments', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id; // From auth middleware
+        const token = req.headers.authorization?.split(' ')[1]; // Extract token from header
         
-        const payments = await PaymentService.getUserPaymentHistory(userId);
+        const payments = await PaymentService.getUserPaymentHistory(userId, token);
         res.json({ success: true, data: payments });
     } catch (error) {
         res.status(500).json({ error: error.message });

@@ -9,6 +9,28 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:4000',
         changeOrigin: true,
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            // Ensure authorization header is preserved
+            if (req.headers.authorization) {
+              proxyReq.setHeader('authorization', req.headers.authorization);
+            }
+          });
+          return proxy;
+        }
+      },
+      '/auth': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+        configure: (proxy, options) => {
+          proxy.on('proxyReq', (proxyReq, req, res) => {
+            // Ensure authorization header is preserved
+            if (req.headers.authorization) {
+              proxyReq.setHeader('authorization', req.headers.authorization);
+            }
+          });
+          return proxy;
+        }
       },
     },
   },

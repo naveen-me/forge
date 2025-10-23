@@ -39,23 +39,36 @@ app.use((req, res, next) => {
 
 // API Routes
 app.use('/api', apiRoutes);
-app.use('/api/auth', authRoutes);
-app.use('/api/subscription', subscriptionRoutes);
-app.use('/api/payment', paymentRoutes);
-app.use('/api/upi', upiManagementRoutes);
 
-// Serve static files from Vue app
+// Auth Routes - separate route for authentication
+app.use('/auth', authRoutes);
+
+// Serve static files from Vue app if the dist directory exists
 const webappPath = path.join(__dirname, '..', 'webapp', 'dist');
-app.use(express.static(webappPath));
+const fs = await import('fs');
+if (fs.existsSync(webappPath)) {
+    app.use(express.static(webappPath));
 
-// Handle all other routes by serving the Vue app
-app.get('*', (req, res) => {
-    res.sendFile(path.join(webappPath, 'index.html'), (err) => {
-        if (err) {
-            res.status(500).send(err);
-        }
+    // Handle all other routes by serving the Vue app
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(webappPath, 'index.html'), (err) => {
+            if (err) {
+                res.status(500).send(err);
+            }
+        });
     });
-});
+} else {
+    // If dist directory doesn't exist, provide API-only mode
+    console.log('Warning: webapp/dist directory does not exist. Running in API-only mode.');
+    
+    // Handle all other routes with a proper API response
+    app.get('*', (req, res) => {
+        res.status(404).json({ 
+            error: 'Route not found',
+            message: 'This is an API server. The frontend has not been built yet or is not available.'
+        });
+    });
+}
 
 // Initialize Database
 initDb().then(() => {

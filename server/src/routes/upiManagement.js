@@ -8,10 +8,12 @@ const router = express.Router();
 // Get all system UPI details
 router.get('/upi-details', authenticateToken, async (req, res) => {
     try {
+        const token = req.headers.authorization?.split(' ')[1]; // Extract token from header
         // Get from PHP server
         const phpResponse = await callPhpApi('/api/v1/action', {
             action: 'upi',
-            task: 'get-all'
+            task: 'get-all',
+            token: token  // Include token for PHP validation
         });
         
         res.json(phpResponse);
@@ -25,6 +27,7 @@ router.get('/upi-details', authenticateToken, async (req, res) => {
 router.post('/upi-details', authenticateToken, async (req, res) => {
     try {
         const { upiId, upiVpa, displayName } = req.body;
+        const token = req.headers.authorization?.split(' ')[1]; // Extract token from header
         
         if (!upiId || !upiVpa) {
             return res.status(400).json({ error: 'UPI ID and UPI VPA are required' });
@@ -36,7 +39,8 @@ router.post('/upi-details', authenticateToken, async (req, res) => {
             task: 'add',
             upiId,
             upiVpa,
-            displayName: displayName || upiId
+            displayName: displayName || upiId,
+            token: token  // Include token for PHP validation
         });
         
         res.json(phpResponse);
@@ -51,6 +55,7 @@ router.put('/upi-details/:id', authenticateToken, async (req, res) => {
     try {
         const id = parseInt(req.params.id);
         const { upiId, upiVpa, displayName, isActive, isPrimary } = req.body;
+        const token = req.headers.authorization?.split(' ')[1]; // Extract token from header
         
         // Update in PHP server
         const phpResponse = await callPhpApi('/api/v1/action', {
@@ -61,7 +66,8 @@ router.put('/upi-details/:id', authenticateToken, async (req, res) => {
             upiVpa,
             displayName,
             isActive,
-            isPrimary
+            isPrimary,
+            token: token  // Include token for PHP validation
         });
         
         res.json(phpResponse);
@@ -75,12 +81,14 @@ router.put('/upi-details/:id', authenticateToken, async (req, res) => {
 router.put('/upi-details/:id/set-primary', authenticateToken, async (req, res) => {
     try {
         const id = parseInt(req.params.id);
+        const token = req.headers.authorization?.split(' ')[1]; // Extract token from header
         
         // Set primary in PHP server
         const phpResponse = await callPhpApi('/api/v1/action', {
             action: 'upi',
             task: 'set-primary',
-            id
+            id,
+            token: token  // Include token for PHP validation
         });
         
         res.json(phpResponse);
@@ -94,12 +102,14 @@ router.put('/upi-details/:id/set-primary', authenticateToken, async (req, res) =
 router.delete('/upi-details/:id', authenticateToken, async (req, res) => {
     try {
         const id = parseInt(req.params.id);
+        const token = req.headers.authorization?.split(' ')[1]; // Extract token from header
         
         // Delete from PHP server
         const phpResponse = await callPhpApi('/api/v1/action', {
             action: 'upi',
             task: 'delete',
-            id
+            id,
+            token: token  // Include token for PHP validation
         });
         
         res.json(phpResponse);
