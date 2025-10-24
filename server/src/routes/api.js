@@ -17,7 +17,7 @@ router.get('/subscription/plans', getPlans);
 
 // Protected Routes
 router.use('/subscription', authenticateToken, subscriptionRoutes);
-router.use('/payment', paymentRoutes);
+router.use('/payment', authenticateToken, paymentRoutes);
 router.use('/upi', authenticateToken, upiRoutes);
 
 router.get('/stats', getStats);

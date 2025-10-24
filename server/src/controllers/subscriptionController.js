@@ -70,7 +70,8 @@ export const subscribe = async (req, res) => {
             }
 
             // Create payment record and generate UPI QR - but store payment in PHP DB instead of local
-            const paymentDetails = await PaymentService.createSubscriptionPayment(userId, planId);
+            // Pass the user token for UPI API authentication
+            const paymentDetails = await PaymentService.createSubscriptionPayment(userId, planId, req.headers.authorization?.split(' ')[1]);
             
             res.json({ 
                 success: true, 
@@ -129,7 +130,7 @@ export const purchaseFeature = async (req, res) => {
         }
 
         // Create payment record and generate UPI QR
-        const paymentDetails = await PaymentService.createFeaturePayment(userId, featureId);
+        const paymentDetails = await PaymentService.createFeaturePayment(userId, featureId, req.headers.authorization?.split(' ')[1]);
         
         res.json({ 
             success: true, 
@@ -200,7 +201,7 @@ export const verifyAndActivateSubscription = async (req, res) => {
 
         // Verify the payment and activate the subscription
         try {
-            const result = await PaymentService.verifyPayment(paymentId);
+            const result = await PaymentService.verifyPayment(paymentId, {}, req.headers.authorization?.split(' ')[1], 'paid');
             
             res.json({ 
                 success: true, 

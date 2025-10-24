@@ -26,7 +26,7 @@ export class PaymentService {
     /**
      * Create a subscription payment record using PHP DB as source of truth
      */
-    static async createSubscriptionPayment(userId, planId) {
+    static async createSubscriptionPayment(userId, planId, userToken = null) {
         // Get plan details from PHP server - no local DB dependency
         const plansResponse = await callPhpApi('/api/v1/action', {
             action: 'subscription',
@@ -43,10 +43,18 @@ export class PaymentService {
         }
 
         // Get UPI details from PHP server - no local DB dependency
-        const upiResponse = await callPhpApi('/api/v1/action', {
+        // Include user token as the UPI service requires authentication
+        const upiRequestData = {
             action: 'upi',
             task: 'get-primary'
-        });
+        };
+        
+        // Add user token if provided
+        if (userToken) {
+            upiRequestData.token = userToken;
+        }
+        
+        const upiResponse = await callPhpApi('/api/v1/action', upiRequestData);
 
         if (!upiResponse.success || !upiResponse.data) {
             throw new Error('Unable to get UPI details from server');
@@ -64,7 +72,7 @@ export class PaymentService {
         });
 
         // Create payment record in PHP DB via API
-        const createPaymentResponse = await callPhpApi('/api/v1/action', {
+        const createPaymentRequestData = {
             action: 'payment',
             task: 'create',
             userId: userId,
@@ -76,15 +84,24 @@ export class PaymentService {
             upi_qr_data: upiQRData,
             status: 'pending',
             expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now
-        });
+        };
+        
+        // Include user token since payment API requires authentication
+        if (userToken) {
+            createPaymentRequestData.token = userToken;
+        }
+        
+        const createPaymentResponse = await callPhpApi('/api/v1/action', createPaymentRequestData);
 
         if (!createPaymentResponse.success) {
             throw new Error(createPaymentResponse.message || 'Failed to create payment record in PHP DB');
         }
 
-        // Return payment information
+        // Return payment information, using the actual payment ID from PHP
+        const actualPaymentId = createPaymentResponse.paymentId || transactionId;
+        
         return {
-            paymentId: createPaymentResponse.paymentId || transactionId,
+            paymentId: actualPaymentId,
             transactionId,
             amount: plan.price,
             upiQRData,
@@ -97,7 +114,7 @@ export class PaymentService {
     /**
      * Create a feature purchase payment record using PHP DB as source of truth
      */
-    static async createFeaturePayment(userId, featureId) {
+    static async createFeaturePayment(userId, featureId, userToken = null) {
         // Check if user already purchased this feature using PHP DB
         const userSubscriptionResponse = await callPhpApi('/api/v1/action', {
             action: 'subscription',
@@ -130,10 +147,18 @@ export class PaymentService {
         }
 
         // Get UPI details from PHP server
-        const upiResponse = await callPhpApi('/api/v1/action', {
+        // Include user token as the UPI service requires authentication
+        const upiRequestData = {
             action: 'upi',
             task: 'get-primary'
-        });
+        };
+        
+        // Add user token if provided
+        if (userToken) {
+            upiRequestData.token = userToken;
+        }
+        
+        const upiResponse = await callPhpApi('/api/v1/action', upiRequestData);
 
         if (!upiResponse.success || !upiResponse.data) {
             throw new Error('Unable to get UPI details from server');
@@ -155,7 +180,7 @@ export class PaymentService {
         });
 
         // Create payment record in PHP DB via API
-        const createPaymentResponse = await callPhpApi('/api/v1/action', {
+        const createPaymentRequestData = {
             action: 'payment',
             task: 'create',
             userId: userId,
@@ -167,15 +192,24 @@ export class PaymentService {
             upi_qr_data: upiQRData,
             status: 'pending',
             expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours from now
-        });
+        };
+        
+        // Include user token since payment API requires authentication
+        if (userToken) {
+            createPaymentRequestData.token = userToken;
+        }
+        
+        const createPaymentResponse = await callPhpApi('/api/v1/action', createPaymentRequestData);
 
         if (!createPaymentResponse.success) {
             throw new Error(createPaymentResponse.message || 'Failed to create payment record in PHP DB');
         }
 
-        // Return payment information
+        // Return payment information, using the actual payment ID from PHP
+        const actualPaymentId = createPaymentResponse.paymentId || transactionId;
+        
         return {
-            paymentId: createPaymentResponse.paymentId || transactionId,
+            paymentId: actualPaymentId,
             transactionId,
             amount: featurePrice,
             upiQRData,
@@ -192,33 +226,94 @@ export class PaymentService {
     /**
      * Verify and update payment status using PHP DB as source of truth
      */
-    static async verifyPayment(paymentId, verificationData = {}) {
-        // Update payment status in PHP DB via API
-        const response = await callPhpApi('/api/v1/action', {
-            action: 'payment',
-            task: 'update-status',
-            paymentId: paymentId,
-            status: 'paid',
-            paymentDate: new Date().toISOString(),
-            verificationData: verificationData
-        });
-
-        if (!response.success) {
-            throw new Error(response.message || 'Failed to verify payment in PHP DB');
-        }
-
-        // Process the payment completion based on type by syncing with PHP
-        // For now, we'll need to determine the payment type by making another call
+    static async verifyPayment(paymentId, verificationData = {}, userToken = null, status = 'paid') {
         try {
-            // Since we don't have the payment details locally, we'll just return success
-            // The PHP server should handle the rest based on the payment type internally
+            // First, get the existing payment details to ensure we have all required fields
+            let existingPaymentDetails = null;
+            try {
+                const paymentDetailsResponse = await callPhpApi('/api/v1/action', {
+                    action: 'payment',
+                    task: 'get-details',
+                    paymentId: paymentId,
+                    token: userToken
+                });
+                
+                if (paymentDetailsResponse.success && paymentDetailsResponse.data) {
+                    existingPaymentDetails = paymentDetailsResponse.data;
+                }
+            } catch (detailsError) {
+                console.log('Could not fetch existing payment details:', detailsError.message);
+            }
+
+            // Update payment status in PHP DB via API
+            const requestData = {
+                action: 'payment',
+                task: 'update-status',
+                paymentId: paymentId,
+                status: status,
+                paymentDate: new Date().toISOString(),
+                verificationData: verificationData
+            };
+            
+            // Include user token since payment API requires authentication
+            if (userToken) {
+                requestData.token = userToken;
+            }
+            
+            // When creating a new record (fallback), include required fields if we have them
+            if (existingPaymentDetails) {
+                requestData.userId = existingPaymentDetails.user_id;
+                requestData.paymentType = existingPaymentDetails.payment_type;
+                requestData.itemId = existingPaymentDetails.item_id;
+                requestData.amount = existingPaymentDetails.amount;
+            }
+            
+            const response = await callPhpApi('/api/v1/action', requestData);
+
+            if (!response.success) {
+                throw new Error(response.message || 'Failed to verify payment in PHP DB');
+            }
+
+            // If the status is 'paid', activate the subscription/feature
+            if (status === 'paid') {
+                try {
+                    const payment = existingPaymentDetails;
+                    
+                    if (payment && payment.payment_type === 'subscription') {
+                        // Update subscription status in PHP
+                        await callPhpApi('/api/v1/action', {
+                            action: 'subscription',
+                            task: 'update',
+                            userId: payment.user_id,
+                            planId: payment.item_id,
+                            endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(), // 1 year from now
+                            status: 'active'
+                        });
+                    } else if (payment && payment.payment_type === 'feature') {
+                        // Update feature purchase in PHP
+                        await callPhpApi('/api/v1/action', {
+                            action: 'feature',
+                            task: 'purchase',
+                            userId: payment.user_id,
+                            featureId: payment.item_id,
+                            purchaseDate: new Date().toISOString()
+                        });
+                    }
+                } catch (activationError) {
+                    console.error('Error in post-payment activation:', activationError);
+                    // Don't throw error as the payment status was updated successfully
+                    // The activation is best-effort
+                }
+            }
+
+            // Return success result
             return {
                 success: true,
                 paymentId,
-                status: 'paid'
+                status: status
             };
         } catch (error) {
-            console.error('Error in post-payment processing:', error);
+            console.error('Error in payment verification:', error);
             throw error;
         }
     }
@@ -420,17 +515,24 @@ export class PaymentService {
     /**
      * Sync payment status to PHP server
      */
-    static async syncPaymentStatusToPhp(paymentId, status) {
+    static async syncPaymentStatusToPhp(paymentId, status, userToken = null) {
         try {
             // Call PHP API to update payment status with minimal required info
             // We don't need to fetch payment details from local DB anymore
-            const response = await callPhpApi('/api/v1/action', {
+            const requestData = {
                 action: 'payment',
                 task: 'update-status',
                 paymentId: paymentId,
                 status: status,
                 // Other fields are optional for PHP to fill in from its own records
-            });
+            };
+            
+            // Include user token since payment API requires authentication
+            if (userToken) {
+                requestData.token = userToken;
+            }
+            
+            const response = await callPhpApi('/api/v1/action', requestData);
             
             return response;
         } catch (error) {
@@ -442,13 +544,20 @@ export class PaymentService {
     /**
      * Get payment details by ID from PHP DB
      */
-    static async getPaymentDetails(paymentId) {
+    static async getPaymentDetails(paymentId, userToken = null) {
         try {
-            const response = await callPhpApi('/api/v1/action', {
+            const requestData = {
                 action: 'payment',
                 task: 'get-details',
                 paymentId: paymentId
-            });
+            };
+            
+            // Include user token since payment API requires authentication
+            if (userToken) {
+                requestData.token = userToken;
+            }
+            
+            const response = await callPhpApi('/api/v1/action', requestData);
             
             if (response.success) {
                 return response.data;
@@ -464,13 +573,20 @@ export class PaymentService {
     /**
      * Check payment status by ID from PHP DB
      */
-    static async checkPaymentStatus(paymentId) {
+    static async checkPaymentStatus(paymentId, userToken = null) {
         try {
-            const response = await callPhpApi('/api/v1/action', {
+            const requestData = {
                 action: 'payment',
                 task: 'get-details',
                 paymentId: paymentId
-            });
+            };
+            
+            // Include user token since payment API requires authentication
+            if (userToken) {
+                requestData.token = userToken;
+            }
+            
+            const response = await callPhpApi('/api/v1/action', requestData);
             
             if (response.success) {
                 // Return standardized status information
@@ -494,13 +610,21 @@ export class PaymentService {
     /**
      * Get primary UPI detail from PHP server - no local DB fallback for security
      */
-    static async getPrimaryUPIXDetail() {
+    static async getPrimaryUPIXDetail(userToken = null) {
         try {
-            // Try to get from PHP server only
-            const phpResponse = await callPhpApi('/api/v1/action', {
+            // Build the request data
+            const requestData = {
                 action: 'upi',
                 task: 'get-primary'
-            });
+            };
+            
+            // Include user token for authentication if provided
+            if (userToken) {
+                requestData.token = userToken;
+            }
+            
+            // Try to get from PHP server only
+            const phpResponse = await callPhpApi('/api/v1/action', requestData);
             
             if (phpResponse.success && phpResponse.data) {
                 return phpResponse.data;
@@ -517,13 +641,21 @@ export class PaymentService {
     /**
      * Get all UPI details from PHP server - no local DB fallback for security
      */
-    static async getAllUPIXDetails() {
+    static async getAllUPIXDetails(userToken = null) {
         try {
-            // Try to get from PHP server only
-            const phpResponse = await callPhpApi('/api/v1/action', {
+            // Build the request data
+            const requestData = {
                 action: 'upi',
                 task: 'get-all'
-            });
+            };
+            
+            // Include user token for authentication if provided
+            if (userToken) {
+                requestData.token = userToken;
+            }
+            
+            // Try to get from PHP server only
+            const phpResponse = await callPhpApi('/api/v1/action', requestData);
             
             if (phpResponse.success && phpResponse.data) {
                 return phpResponse.data;
@@ -588,17 +720,24 @@ export class PaymentService {
     /**
      * Cancel a pending payment in PHP DB
      */
-    static async cancelPayment(paymentId) {
+    static async cancelPayment(paymentId, userToken = null) {
         // First verify payment is pending by calling PHP API
         // In a full implementation, we'd have a check-status endpoint
         // For now, we'll just make the cancel call and let PHP handle validation
         
-        const response = await callPhpApi('/api/v1/action', {
+        const requestData = {
             action: 'payment',
             task: 'update-status',
             paymentId: paymentId,
             status: 'cancelled'
-        });
+        };
+        
+        // Include user token since payment API requires authentication
+        if (userToken) {
+            requestData.token = userToken;
+        }
+        
+        const response = await callPhpApi('/api/v1/action', requestData);
 
         if (!response.success) {
             throw new Error(response.message || 'Failed to cancel payment in PHP DB');

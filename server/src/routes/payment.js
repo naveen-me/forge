@@ -4,11 +4,13 @@ import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
-// Get payment details by ID (public endpoint for status checks)
-router.get('/payment/:paymentId', async (req, res) => {
+// Get payment details by ID
+router.get('/:paymentId', authenticateToken, async (req, res) => {
     try {
-        const paymentId = parseInt(req.params.paymentId);
-        const paymentDetails = await PaymentService.getPaymentDetails(paymentId);
+        const paymentId = req.params.paymentId; // Keep as string since payment IDs may not be numeric
+        const token = req.headers.authorization?.split(' ')[1]; // Extract token from header
+        
+        const paymentDetails = await PaymentService.getPaymentDetails(paymentId, token);
         
         if (!paymentDetails) {
             return res.status(404).json({ error: 'Payment not found' });
@@ -21,12 +23,13 @@ router.get('/payment/:paymentId', async (req, res) => {
 });
 
 // Verify payment and update status (manual verification endpoint)
-router.post('/payment/:paymentId/verify', authenticateToken, async (req, res) => {
+router.post('/:paymentId/verify', authenticateToken, async (req, res) => {
     try {
-        const paymentId = parseInt(req.params.paymentId);
+        const paymentId = req.params.paymentId; // Keep as string since payment IDs may not be numeric
         const verificationData = req.body || {};
+        const token = req.headers.authorization?.split(' ')[1]; // Extract token from header
         
-        const result = await PaymentService.verifyPayment(paymentId, verificationData);
+        const result = await PaymentService.verifyPayment(paymentId, verificationData, token);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -34,11 +37,12 @@ router.post('/payment/:paymentId/verify', authenticateToken, async (req, res) =>
 });
 
 // Cancel a pending payment
-router.post('/payment/:paymentId/cancel', authenticateToken, async (req, res) => {
+router.post('/:paymentId/cancel', authenticateToken, async (req, res) => {
     try {
-        const paymentId = parseInt(req.params.paymentId);
+        const paymentId = req.params.paymentId; // Keep as string since payment IDs may not be numeric
+        const token = req.headers.authorization?.split(' ')[1]; // Extract token from header
         
-        const result = await PaymentService.cancelPayment(paymentId);
+        const result = await PaymentService.cancelPayment(paymentId, token);
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -46,7 +50,7 @@ router.post('/payment/:paymentId/cancel', authenticateToken, async (req, res) =>
 });
 
 // Get user's pending payments
-router.get('/user/payments/pending', authenticateToken, async (req, res) => {
+router.get('/user/pending', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id; // From auth middleware
         const token = req.headers.authorization?.split(' ')[1]; // Extract token from header
@@ -59,27 +63,47 @@ router.get('/user/payments/pending', authenticateToken, async (req, res) => {
 });
 
 // Check payment status
-router.get('/payment/:paymentId/status', authenticateToken, async (req, res) => {
+router.get('/:paymentId/status', authenticateToken, async (req, res) => {
     try {
-        const paymentId = parseInt(req.params.paymentId);
+        const paymentId = req.params.paymentId; // Keep as string since payment IDs may not be numeric
+        const token = req.headers.authorization?.split(' ')[1]; // Extract token from header
         
-        const status = await PaymentService.checkPaymentStatus(paymentId);
+        const status = await PaymentService.checkPaymentStatus(paymentId, token);
         res.json({ success: true, data: status });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-// Complete payment flow with manual verification (for testing)
-router.post('/payment/complete', authenticateToken, async (req, res) => {
+// Request payment verification - user indicates they have paid, but needs manual verification
+router.post('/complete', authenticateToken, async (req, res) => {
     try {
         const { paymentId } = req.body;
+        const token = req.headers.authorization?.split(' ')[1]; // Extract token from header
         
         if (!paymentId) {
             return res.status(400).json({ error: 'Payment ID is required' });
         }
         
-        const result = await PaymentService.verifyPayment(paymentId);
+        // Update payment status to awaiting verification
+        const result = await PaymentService.verifyPayment(paymentId, {}, token, 'awaiting_verification');
+        res.json(result);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Admin endpoint to finalize verified payment (admin confirms payment received and activates subscription)
+router.post('/:paymentId/finalize', authenticateToken, async (req, res) => {
+    try {
+        const paymentId = req.params.paymentId; // Keep as string since payment IDs may not be numeric
+        const token = req.headers.authorization?.split(' ')[1]; // Extract token from header
+        
+        // Update payment status to paid
+        const result = await PaymentService.verifyPayment(paymentId, {}, token, 'paid');
+        
+        // TODO: Add subscription/feature activation logic here
+        
         res.json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
@@ -87,7 +111,7 @@ router.post('/payment/complete', authenticateToken, async (req, res) => {
 });
 
 // Get user's payment history
-router.get('/user/payments', authenticateToken, async (req, res) => {
+router.get('/user', authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id; // From auth middleware
         const token = req.headers.authorization?.split(' ')[1]; // Extract token from header
