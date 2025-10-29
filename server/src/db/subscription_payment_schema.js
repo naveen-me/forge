@@ -34,7 +34,7 @@ export const initPaymentDb = () => {
                     payment_method TEXT NOT NULL,
                     transaction_id TEXT UNIQUE, -- UPI transaction ID
                     upi_qr_data TEXT, -- QR code data for payment
-                    status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'paid', 'failed', 'cancelled', 'refunded')),
+                    status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'verifying', 'paid', 'failed', 'cancelled', 'refunded')),
                     payment_date TEXT,
                     verification_date TEXT,
                     expires_at TEXT, -- When the payment request expires

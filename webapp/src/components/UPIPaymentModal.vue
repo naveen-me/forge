@@ -14,7 +14,7 @@
         <h4 class="text-lg font-semibold mb-2">{{ paymentData.purpose }}</h4>
         <p class="text-2xl font-bold text-green-600 mb-4">₹{{ paymentData.amount }}</p>
         
-        <div class="mb-4">
+        <div v-if="showQrCode" class="mb-4">
           <p class="text-sm text-gray-600 mb-2">Scan QR Code to Pay</p>
           <div class="flex justify-center">
             <vue-qrcode 
@@ -32,9 +32,9 @@
           <p class="text-xs">Expires: {{ formatDate(paymentData.expiresAt) }}</p>
         </div>
 
-        <div class="flex space-x-2">
+        <div v-if="showQrCode" class="flex space-x-2">
           <button 
-            @click="verifyPayment" 
+            @click="initiateVerification" 
             :disabled="verifying"
             class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded disabled:opacity-50"
           >
@@ -54,6 +54,10 @@
           >
             Cancel
           </button>
+        </div>
+
+        <div v-if="statusMessage" class="mt-4 text-center">
+          <p class="text-gray-600">{{ statusMessage }}</p>
         </div>
 
         <div v-if="verifying" class="mt-4 text-center">
@@ -85,20 +89,26 @@ const emit = defineEmits(['close', 'payment-verified']);
 
 const verifying = ref(false);
 const checkingStatus = ref(false);
+const statusMessage = ref('');
+const showQrCode = ref(true);
+let pollingInterval = null;
+let pollingCounter = 0;
 
 const closeModal = () => {
+  if (pollingInterval) {
+    clearInterval(pollingInterval);
+  }
   emit('close');
 };
 
-const verifyPayment = async () => {
+const initiateVerification = async () => {
   if (!props.paymentData) return;
   
   try {
     verifying.value = true;
+    statusMessage.value = 'Initiating payment verification...';
     
-    // In a real app, you would have a more sophisticated verification system
-    // For now, we'll call an API endpoint to mark the payment as completed
-    const response = await fetch(`/api/payment/complete`, {
+    const response = await fetch(`/api/payment/initiate-verification`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -110,18 +120,33 @@ const verifyPayment = async () => {
     });
 
     if (response.ok) {
-      emit('payment-verified');
-      closeModal();
+      // Start polling for payment status
+      startPollingPaymentStatus();
     } else {
       const error = await response.json();
-      alert(`Payment verification failed: ${error.error || 'Unknown error'}`);
+      statusMessage.value = `Payment verification failed: ${error.error || 'Unknown error'}`;
+      verifying.value = false;
     }
   } catch (error) {
-    console.error('Error verifying payment:', error);
-    alert('Error verifying payment. Please try again later.');
-  } finally {
+    console.error('Error initiating payment verification:', error);
+    statusMessage.value = 'Error initiating payment verification. Please try again later.';
     verifying.value = false;
   }
+};
+
+const startPollingPaymentStatus = () => {
+  pollingCounter = 0;
+  pollingInterval = setInterval(async () => {
+    pollingCounter++;
+    if (pollingCounter > 3) {
+      clearInterval(pollingInterval);
+      verifying.value = false;
+      showQrCode.value = false;
+      statusMessage.value = 'It will take some time to verify the payment. Please check the payment history later.';
+      return;
+    }
+    await checkPaymentStatus();
+  }, 5000); // Poll every 5 seconds
 };
 
 const checkPaymentStatus = async () => {
@@ -129,6 +154,7 @@ const checkPaymentStatus = async () => {
   
   try {
     checkingStatus.value = true;
+    statusMessage.value = 'Checking payment status...';
     
     const response = await fetch(`/api/payment/${props.paymentData.id}/status`, {
       headers: {
@@ -139,19 +165,21 @@ const checkPaymentStatus = async () => {
     if (response.ok) {
       const result = await response.json();
       if (result.data.status === 'paid') {
-        alert('Payment has been verified successfully!');
-        emit('payment-verified');
-        closeModal();
+        statusMessage.value = 'Payment has been verified successfully!';
+        setTimeout(() => {
+          emit('payment-verified');
+          closeModal();
+        }, 2000);
       } else {
-        alert(`Payment status: ${result.data.status}. Please complete the payment.`);
+        statusMessage.value = `Payment status: ${result.data.status}.`;
       }
     } else {
       const error = await response.json();
-      alert(`Failed to check payment status: ${error.error || 'Unknown error'}`);
+      statusMessage.value = `Failed to check payment status: ${error.error || 'Unknown error'}`;
     }
   } catch (error) {
     console.error('Error checking payment status:', error);
-    alert('Error checking payment status. Please try again later.');
+    statusMessage.value = 'Error checking payment status. Please try again later.';
   } finally {
     checkingStatus.value = false;
   }

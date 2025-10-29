@@ -110,7 +110,7 @@ export const useSubscriptionStore = defineStore('subscription', () => {
 
     async function fetchPaymentHistory() {
         try {
-            const response = await api.get('/payment/user/payments');
+            const response = await api.get('/payment/user');
             if (response.data.success) {
                 paymentHistory.value = response.data.data;
             }

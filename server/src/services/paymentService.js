@@ -68,7 +68,7 @@ export class PaymentService {
             upiId: upiDetails.upi_vpa,
             amount: plan.price,
             transactionId: transactionId,
-            purpose: `Subscription: ${plan.name}`
+            purpose: transactionId
         });
 
         // Create payment record in PHP DB via API
@@ -105,7 +105,7 @@ export class PaymentService {
             transactionId,
             amount: plan.price,
             upiQRData,
-            purpose: `Subscription: ${plan.name}`,
+            purpose: transactionId,
             expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
         };
     }
@@ -116,11 +116,18 @@ export class PaymentService {
      */
     static async createFeaturePayment(userId, featureId, userToken = null) {
         // Check if user already purchased this feature using PHP DB
-        const userSubscriptionResponse = await callPhpApi('/api/v1/action', {
+        const requestParams = {
             action: 'subscription',
             task: 'get-user-subscription',
             userId: userId
-        });
+        };
+        
+        // Add token if provided for PHP validation
+        if (userToken) {
+            requestParams.token = userToken;
+        }
+        
+        const userSubscriptionResponse = await callPhpApi('/api/v1/action', requestParams);
         
         if (userSubscriptionResponse.success && userSubscriptionResponse.data?.purchased_features) {
             const purchasedFeature = userSubscriptionResponse.data.purchased_features.find(f => f.id == featureId);
@@ -176,7 +183,7 @@ export class PaymentService {
             upiId: upiDetails.upi_vpa,
             amount: featurePrice,
             transactionId: transactionId,
-            purpose: `Feature: Feature ${featureId}`
+            purpose: transactionId
         });
 
         // Create payment record in PHP DB via API
@@ -213,7 +220,7 @@ export class PaymentService {
             transactionId,
             amount: featurePrice,
             upiQRData,
-            purpose: `Feature: Feature ${featureId}`,
+            purpose: transactionId,
             expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
         };
     }
