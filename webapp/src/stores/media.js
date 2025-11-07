@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia';
+import { mediaService } from '../services/api';
 
 export const useMediaStore = defineStore('media', {
   state: () => ({
@@ -6,289 +7,103 @@ export const useMediaStore = defineStore('media', {
     currentFolderId: null,
     currentPath: [],
     selectedItems: [],
-    allFolders: []
   }),
+
+  getters: {
+    folders: (state) => state.items.filter(item => item.type === 'folder'),
+    videos: (state) => state.items.filter(item => item.type === 'file'),
+    allItems: (state) => state.items,
+  },
 
   actions: {
     async fetchFolderContents(folderId = null) {
       try {
-        const response = await fetch(`${process.env.VUE_APP_API_BASE_URL || 'http://localhost:3001'}/api/media/folder/${folderId || ''}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        this.items = await response.json();
+        const response = await mediaService.getFolderContents(folderId);
+        this.items = response.data;
         this.currentFolderId = folderId;
+        // We will need a separate action to fetch the breadcrumb path
       } catch (error) {
         console.error('Error fetching folder contents:', error);
-        throw error;
+        // Here you might want to set an error state
       }
     },
 
-    async setCurrentFolder(folderId) {
-      this.currentFolderId = folderId;
+    async createFolder(name, parentId = null) {
+        await mediaService.createFolder(name, parentId);
+        await this.fetchFolderContents(parentId);
     },
 
-    async createFolder(folderData) {
-      try {
-        const response = await fetch(`${process.env.VUE_APP_API_BASE_URL || 'http://localhost:3001'}/api/media/folder`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(folderData),
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const newFolder = await response.json();
-        // Add the new folder to the current items list
-        this.items.push(newFolder);
-        return newFolder;
-      } catch (error) {
-        console.error('Error creating folder:', error);
-        throw error;
-      }
+    async addFiles(files, parentId = null) {
+        await mediaService.addFiles(files, parentId);
+        await this.fetchFolderContents(parentId);
     },
-
-    async addFiles(fileData) {
-      try {
-        const response = await fetch(`${process.env.VUE_APP_API_BASE_URL || 'http://localhost:3001'}/api/media/files`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(fileData),
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const newFiles = await response.json();
-        // Add the new files to the current items list
-        this.items.push(...newFiles);
-        return newFiles;
-      } catch (error) {
-        console.error('Error adding files:', error);
-        throw error;
-      }
-    },
-
-    async renameItem(itemData) {
-      const { id, name } = itemData;
-      try {
-        const response = await fetch(`${process.env.VUE_APP_API_BASE_URL || 'http://localhost:3001'}/api/media/${id}/rename`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ name }),
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const updatedItem = await response.json();
-        
-        // Update the item in the current items list
-        const index = this.items.findIndex(item => item.id === id);
-        if (index !== -1) {
-          this.items[index] = updatedItem;
-        }
-        
-        // Update any references in other parts of the state if needed
-        
-        return updatedItem;
-      } catch (error) {
-        console.error('Error renaming item:', error);
-        throw error;
-      }
-    },
-
-    async moveItem(itemData) {
-      const { id, parentId } = itemData;
-      try {
-        const response = await fetch(`${process.env.VUE_APP_API_BASE_URL || 'http://localhost:3001'}/api/media/${id}/move`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ parentId }),
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const movedItem = await response.json();
-        
-        // Update the item in the current items list
-        const index = this.items.findIndex(item => item.id === id);
-        if (index !== -1) {
-          this.items[index] = movedItem;
-        }
-        
-        // Remove item from current list if it was moved to a different folder
-        if (this.currentFolderId !== parentId) {
-          this.items.splice(index, 1);
-        }
-        
-        return movedItem;
-      } catch (error) {
-        console.error('Error moving item:', error);
-        throw error;
-      }
-    },
-
-    async deleteItem(itemId) {
-      try {
-        const response = await fetch(`${process.env.VUE_APP_API_BASE_URL || 'http://localhost:3001'}/api/media/${itemId}`, {
-          method: 'DELETE',
-        });
-        
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        // Remove the item from the current items list
-        this.items = this.items.filter(item => item.id !== itemId);
-        
-        // Also remove from selected items if it was selected
-        this.selectedItems = this.selectedItems.filter(id => id !== itemId);
-        
-        return await response.json();
-      } catch (error) {
-        console.error('Error deleting item:', error);
-        throw error;
-      }
-    },
-
-    async searchItems(query) {
-      if (!query) {
-        // If no query, return to normal folder view
+    
+    async renameItem(id, name) {
+        await mediaService.renameItem(id, name);
         await this.fetchFolderContents(this.currentFolderId);
-        return;
-      }
-      
-      try {
-        const response = await fetch(`${process.env.VUE_APP_API_BASE_URL || 'http://localhost:3001'}/api/media/search/${encodeURIComponent(query)}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        this.items = await response.json();
-      } catch (error) {
-        console.error('Error searching items:', error);
-        throw error;
-      }
     },
 
-    async fetchAllFolders() {
-      try {
-        // Fetch all folders recursively
-        const allFolders = await this.fetchFoldersRecursively();
-        this.allFolders = allFolders;
-        return allFolders;
-      } catch (error) {
-        console.error('Error fetching all folders:', error);
-        throw error;
-      }
+    async moveItems(itemIds, destinationFolderId) {
+        for (const id of itemIds) {
+            await mediaService.moveItem(id, destinationFolderId);
+        }
+        this.selectedItems = [];
+        await this.fetchFolderContents(this.currentFolderId);
     },
 
-    async fetchFoldersRecursively(parentId = null, level = 0) {
-      try {
-        const response = await fetch(`${process.env.VUE_APP_API_BASE_URL || 'http://localhost:3001'}/api/media/folder/${parentId || ''}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+    async deleteSelectedItems() {
+        for (const id of this.selectedItems) {
+            await mediaService.deleteItem(id);
         }
-        
-        const items = await response.json();
-        const folders = items.filter(item => item.type === 'folder');
-        
-        // Add level property for indentation purposes
-        folders.forEach(folder => folder.level = level);
-        
-        // Recursively fetch subfolders
-        for (const folder of folders) {
-          const subfolders = await this.fetchFoldersRecursively(folder.id, level + 1);
-          folders.push(...subfolders);
-        }
-        
-        return folders;
-      } catch (error) {
-        console.error('Error fetching folders recursively:', error);
-        throw error;
-      }
+        this.selectedItems = [];
+        await this.fetchFolderContents(this.currentFolderId);
     },
 
-    async fetchFolderPath(folderId) {
-      try {
-        // This would require a backend endpoint that returns the path to a folder
-        // For now, we'll implement a simple version that builds the path
-        const path = await this.buildFolderPath(folderId);
-        this.breadcrumb = path;
-        return path;
-      } catch (error) {
-        console.error('Error fetching folder path:', error);
-        throw error;
-      }
+    async search(query) {
+        if (!query) {
+            await this.fetchFolderContents(this.currentFolderId);
+            return;
+        }
+        try {
+            const response = await mediaService.searchItems(query);
+            this.items = response.data;
+        } catch (error) {
+            console.error('Error searching items:', error);
+        }
     },
 
-    async buildFolderPath(folderId) {
-      if (!folderId) return [];
-      
-      try {
-        // Fetch folder info
-        const allFolders = this.allFolders.length > 0 ? this.allFolders : await this.fetchAllFolders();
-        
-        // Find the folder
-        let currentFolder = allFolders.find(f => f.id === folderId);
-        if (!currentFolder) {
-          // If not in cache, fetch directly
-          // This would require a specific API endpoint; for now we'll skip
-          return [];
+    async fetchPath(folderId = null) {
+        try {
+            const response = await mediaService.getFolderPath(folderId);
+            this.currentPath = response.data;
+        } catch (error) {
+            console.error('Error fetching folder path:', error);
+            this.currentPath = [];
         }
-        
-        const path = [];
-        while (currentFolder) {
-          path.unshift({ id: currentFolder.id, name: currentFolder.name });
-          
-          // Find parent
-          if (currentFolder.parentId) {
-            currentFolder = allFolders.find(f => f.id === currentFolder.parentId);
-          } else {
-            break; // Reached root
-          }
-        }
-        
-        return path;
-      } catch (error) {
-        console.error('Error building folder path:', error);
-        return [];
-      }
     },
 
-    async fetchCurrentPath(folderId) {
-      if (!folderId) {
-        this.currentPath = [];
-        return;
-      }
-      
-      try {
-        // Fetch all folders if not already cached
-        if (this.allFolders.length === 0) {
-          await this.fetchAllFolders();
+    setCurrentFolderId(folderId) {
+        this.currentFolderId = folderId;
+        this.selectedItems = [];
+        this.fetchFolderContents(folderId);
+        this.fetchPath(folderId);
+    },
+
+    toggleItemSelected(itemId) {
+        const index = this.selectedItems.indexOf(itemId);
+        if (index > -1) {
+            this.selectedItems.splice(index, 1);
+        } else {
+            this.selectedItems.push(itemId);
         }
-        
-        // Build the path to the current folder
-        const path = await this.buildFolderPath(folderId);
-        this.currentPath = path;
-      } catch (error) {
-        console.error('Error fetching current path:', error);
-        this.currentPath = [];
-      }
+    },
+
+    clearSelection() {
+        this.selectedItems = [];
+    },
+
+    selectAll(itemIds) {
+        this.selectedItems = [...itemIds];
     }
-  }
+  },
 });

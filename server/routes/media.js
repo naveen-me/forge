@@ -65,6 +65,33 @@ router.post('/folder', async (req, res) => {
   }
 });
 
+// Get folder path for breadcrumbs
+router.get('/folder/:id/path', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id || id === 'null') {
+      return res.json([]);
+    }
+
+    let path = [];
+    let current = await MediaItem.findByPk(id);
+
+    while (current) {
+      path.unshift(current.toJSON());
+      if (current.parentId) {
+        current = await MediaItem.findByPk(current.parentId);
+      } else {
+        current = null;
+      }
+    }
+    
+    res.json(path);
+  } catch (error) {
+    console.error('Error fetching folder path:', error);
+    res.status(500).json({ error: 'Failed to fetch folder path' });
+  }
+});
+
 const { spawn } = require('child_process');
 
 // Add files (store file paths)
@@ -149,6 +176,29 @@ router.put('/:id/move', async (req, res) => {
   } catch (error) {
     console.error('Error moving item:', error);
     res.status(500).json({ error: 'Failed to move item' });
+  }
+});
+
+// Trigger thumbnail generation
+router.post('/:id/thumbnail', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const item = await MediaItem.findByPk(id);
+    if (!item || item.type !== 'file') {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    // Spawn worker to generate thumbnail in the background
+    const worker = spawn('node', ['worker.js', '--generate-thumbnail', item.id], {
+      detached: true,
+      stdio: 'ignore'
+    });
+    worker.unref();
+
+    res.json({ message: 'Thumbnail generation started' });
+  } catch (error) {
+    console.error('Error triggering thumbnail generation:', error);
+    res.status(500).json({ error: 'Failed to trigger thumbnail generation' });
   }
 });
 
