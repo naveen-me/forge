@@ -8,9 +8,9 @@
           <span class="material-icons text-base">create_new_folder</span>
           <span>New Folder</span>
         </button>
-        <button @click="handleAddFiles" class="flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-primary text-white text-sm">
+        <button @click="handleAddFiles" :disabled="isAddingFiles" class="flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-primary text-white text-sm" :class="{'opacity-50 cursor-not-allowed': isAddingFiles}">
           <span class="material-icons text-base">add</span>
-          <span>Add Files</span>
+          <span>{{ isAddingFiles ? 'Adding...' : 'Add Files' }}</span>
         </button>
       </div>
     </div>
@@ -24,7 +24,12 @@
               <span class="material-icons text-base mr-1.5">folder</span> Media Library
             </a>
           </li>
-          <!-- Breadcrumb items will be dynamically generated -->
+          <li v-for="folder in store.currentPath" :key="folder.id">
+            <div class="flex items-center">
+              <span class="material-icons text-subtext-light dark:text-subtext-dark text-base">chevron_right</span>
+              <a @click="navigateToFolder(folder.id)" href="#" class="ms-1 text-xs font-medium text-subtext-light hover:text-primary md:ms-2 dark:text-subtext-dark dark:hover:text-white">{{ folder.name }}</a>
+            </div>
+          </li>
         </ol>
       </nav>
     </div>
@@ -163,8 +168,25 @@
     <NewFolderModal :open="newFolderModalOpen" @close="newFolderModalOpen = false" @create="submitNewFolder" />
     
     <!-- Video Player Popup -->
-    <div v-if="playingVideo" @click="closeVideoPlayer" class="fixed inset-0 bg-black/80 flex items-center justify-center z-40">
-        <!-- Video player implementation -->
+    <div v-if="playingVideo" @click="closeVideoPlayer" class="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+      <div @click.stop class="bg-card-dark rounded-lg shadow-2xl w-full max-w-4xl relative">
+        <div class="aspect-video">
+          <video class="w-full h-full rounded-t-lg" controls autoplay>
+            <source :src="`http://localhost:3001/api/stream/video/${playingVideo.id}`" :type="playingVideo.mimeType" />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        <div class="p-6">
+          <h3 class="text-2xl font-bold text-text-dark">{{ playingVideo.name }}</h3>
+          <div class="flex items-center gap-4 text-lg text-subtext-dark mt-2">
+            <span>{{ playingVideo.mimeType }}</span>
+            <span>·</span>
+            <span>{{ playingVideo.dimensions }}</span>
+            <span>·</span>
+            <span>{{ formatFileSize(playingVideo.size) }}</span>
+          </div>
+        </div>
+      </div>
     </div>
 
   </div>
@@ -190,9 +212,11 @@ const copyModalOpen = ref(false);
 const newFolderModalOpen = ref(false);
 const playingVideo = ref(null);
 const searchQuery = ref('');
+const isAddingFiles = ref(false);
 
 onMounted(() => {
   store.fetchFolderContents();
+  store.fetchPath();
 });
 
 const isSelected = (itemId) => store.selectedItems.includes(itemId);
@@ -210,6 +234,7 @@ const submitNewFolder = async (folderName) => {
 };
 
 const handleAddFiles = async () => {
+    isAddingFiles.value = true;
     try {
         const response = await api.selectFiles();
         const filePaths = response.data.files;
@@ -219,6 +244,8 @@ const handleAddFiles = async () => {
         }
     } catch (error) {
         console.error("Error selecting or adding files:", error);
+    } finally {
+        isAddingFiles.value = false;
     }
 };
 
@@ -245,7 +272,11 @@ const handleSearch = () => {
     store.search(searchQuery.value);
 };
 
-const playVideo = (video) => { /* Video player logic */ };
+const playVideo = (video) => {
+  if (!video.isMissing) {
+    playingVideo.value = video;
+  }
+};
 const closeVideoPlayer = () => { playingVideo.value = null; };
 
 const formatFileSize = (bytes) => {

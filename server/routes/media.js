@@ -65,6 +65,33 @@ router.post('/folder', async (req, res) => {
   }
 });
 
+// Get folder path for breadcrumbs
+router.get('/folder/:id/path', async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id || id === 'null') {
+      return res.json([]);
+    }
+
+    let path = [];
+    let current = await MediaItem.findByPk(id);
+
+    while (current) {
+      path.unshift(current.toJSON());
+      if (current.parentId) {
+        current = await MediaItem.findByPk(current.parentId);
+      } else {
+        current = null;
+      }
+    }
+    
+    res.json(path);
+  } catch (error) {
+    console.error('Error fetching folder path:', error);
+    res.status(500).json({ error: 'Failed to fetch folder path' });
+  }
+});
+
 const { spawn } = require('child_process');
 
 // Add files (store file paths)

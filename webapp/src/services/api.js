@@ -100,6 +100,11 @@ const mediaService = {
   
   getAllFolders() {
     return mediaApi.get('/folder'); 
+  },
+
+  getFolderPath(folderId) {
+    const url = folderId ? `/folder/${folderId}/path` : '/folder/null/path';
+    return mediaApi.get(url);
   }
 };
 

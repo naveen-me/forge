@@ -72,10 +72,21 @@ export const useMediaStore = defineStore('media', {
         }
     },
 
+    async fetchPath(folderId = null) {
+        try {
+            const response = await mediaService.getFolderPath(folderId);
+            this.currentPath = response.data;
+        } catch (error) {
+            console.error('Error fetching folder path:', error);
+            this.currentPath = [];
+        }
+    },
+
     setCurrentFolderId(folderId) {
         this.currentFolderId = folderId;
         this.selectedItems = [];
         this.fetchFolderContents(folderId);
+        this.fetchPath(folderId);
     },
 
     toggleItemSelected(itemId) {
