@@ -179,6 +179,29 @@ router.put('/:id/move', async (req, res) => {
   }
 });
 
+// Trigger thumbnail generation
+router.post('/:id/thumbnail', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const item = await MediaItem.findByPk(id);
+    if (!item || item.type !== 'file') {
+      return res.status(404).json({ error: 'File not found' });
+    }
+
+    // Spawn worker to generate thumbnail in the background
+    const worker = spawn('node', ['worker.js', '--generate-thumbnail', item.id], {
+      detached: true,
+      stdio: 'ignore'
+    });
+    worker.unref();
+
+    res.json({ message: 'Thumbnail generation started' });
+  } catch (error) {
+    console.error('Error triggering thumbnail generation:', error);
+    res.status(500).json({ error: 'Failed to trigger thumbnail generation' });
+  }
+});
+
 // Delete an item
 router.delete('/:id', async (req, res) => {
   try {

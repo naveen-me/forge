@@ -36,20 +36,51 @@
 
     <!-- Search, Sort, and View Controls -->
     <div class="flex flex-col md:flex-row gap-4 mb-4">
-      <div class="w-full flex-grow flex flex-col sm:flex-row gap-2">
+      <div class="w-full md:w-1/2 flex-grow flex flex-col sm:flex-row gap-2">
         <div class="relative flex-grow">
           <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-subtext-light dark:text-subtext-dark text-lg">search</span>
           <input v-model="searchQuery" @input="handleSearch" type="text" placeholder="Search" class="w-full pl-10 pr-4 py-2 rounded-md border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark text-text-light dark:text-text-dark focus:ring-primary focus:border-primary text-sm h-full" />
         </div>
         <div class="flex gap-2 justify-end">
-          <div class="relative">
-            <button @click="sortOpen = !sortOpen" class="flex items-center gap-2 px-3 py-2 rounded-md border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark text-text-light dark:text-text-dark text-sm h-full">
+          <div class="relative" ref="sortDropdownRef">
+            <button @click.stop="sortOpen = !sortOpen" class="flex items-center gap-2 px-3 py-2 rounded-md border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark text-text-light dark:text-text-dark text-sm h-full">
               <span class="material-icons text-base">sort</span>
               <span>Sort By</span>
               <span class="material-icons text-base">expand_more</span>
             </button>
-            <div v-if="sortOpen" @click.outside="sortOpen = false" class="absolute z-10 mt-1 w-56 bg-card-light dark:bg-card-dark rounded-lg shadow-lg border border-border-light dark:border-border-dark">
-              <!-- Sorting options can be implemented here -->
+            <div v-show="sortOpen" class="absolute z-10 mt-1 w-56 bg-card-light dark:bg-card-dark rounded-lg shadow-lg border border-border-light dark:border-border-dark">
+              <ul class="py-1 text-sm">
+                <li>
+                  <a href="#" @click.prevent="setSort('name', 'asc'); sortOpen = false" class="flex items-center justify-between px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-text-light dark:text-text-dark">
+                    <span class="flex items-center gap-2"><span class="material-icons text-base">arrow_upward</span> Name</span>
+                    <span v-if="currentSort.field === 'name' && currentSort.direction === 'asc'" class="material-icons text-lg text-primary">check</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="#" @click.prevent="setSort('name', 'desc'); sortOpen = false" class="flex items-center justify-between px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-text-light dark:text-text-dark">
+                    <span class="flex items-center gap-2"><span class="material-icons text-base">arrow_downward</span> Name</span>
+                    <span v-if="currentSort.field === 'name' && currentSort.direction === 'desc'" class="material-icons text-lg text-primary">check</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="#" @click.prevent="setSort('dateCreated', 'desc'); sortOpen = false" class="flex items-center justify-between px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-text-light dark:text-text-dark">
+                    Date Created
+                    <span v-if="currentSort.field === 'dateCreated' && currentSort.direction === 'desc'" class="material-icons text-lg text-primary">check</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="#" @click.prevent="setSort('size', 'desc'); sortOpen = false" class="flex items-center justify-between px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-text-light dark:text-text-dark">
+                    File Size
+                    <span v-if="currentSort.field === 'size' && currentSort.direction === 'desc'" class="material-icons text-lg text-primary">check</span>
+                  </a>
+                </li>
+                <li class="border-t border-border-light dark:border-border-dark">
+                  <a href="#" @click.prevent="setSort('modified', 'desc'); sortOpen = false" class="flex items-center justify-between px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-text-light dark:text-text-dark font-semibold text-primary dark:text-white">
+                    Last Modified
+                    <span v-if="currentSort.field === 'modified' && currentSort.direction === 'desc'" class="material-icons text-lg">check</span>
+                  </a>
+                </li>
+              </ul>
             </div>
           </div>
           <div class="flex items-center border border-border-light dark:border-border-dark rounded-md bg-card-light dark:bg-card-dark h-full">
@@ -62,7 +93,7 @@
           </div>
         </div>
       </div>
-      <div class="w-full" v-if="store.selectedItems.length > 0">
+      <div class="w-full md:w-1/2" :class="{'md:ml-4': store.selectedItems.length > 0}" v-if="store.selectedItems.length > 0">
         <div class="flex flex-col sm:flex-row justify-between items-center p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
           <div class="flex items-center gap-2 mb-2 sm:mb-0 sm:mr-4 whitespace-nowrap">
             <p class="font-medium text-primary dark:text-blue-300 text-sm">{{ store.selectedItems.length }} items selected</p>
@@ -89,19 +120,21 @@
     <div class="mb-6">
       <h2 class="text-lg font-semibold text-text-light dark:text-text-dark mb-3">Folders</h2>
       <div v-if="view === 'grid'" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-        <div v-for="folder in store.folders" :key="folder.id" @click="toggleSelection(folder.id)" @dblclick="navigateToFolder(folder.id)" :class="{'bg-blue-50 dark:bg-blue-900/20': isSelected(folder.id)}" class="relative group bg-card-light dark:bg-card-dark rounded-lg shadow-around border-2 border-transparent p-2.5 flex items-center gap-3 cursor-pointer">
-          <input type="checkbox" :checked="isSelected(folder.id)" class="form-checkbox h-4 w-4 rounded-full text-primary bg-white/50 border-gray-400/70 focus:ring-0 focus:ring-offset-0" />
+        <div v-for="folder in store.folders" :key="folder.id" @dblclick="navigateToFolder(folder.id)" :class="{'bg-blue-50 dark:bg-blue-900/20': isSelected(folder.id)}" class="relative group bg-card-light dark:bg-card-dark rounded-lg shadow-around border-2 border-transparent p-2.5 flex items-center gap-3 cursor-pointer">
+          <input type="checkbox" :checked="isSelected(folder.id)" @click.stop="toggleSelection(folder.id)" class="form-checkbox h-4 w-4 rounded-full text-primary bg-white/50 border-gray-400/70 focus:ring-0 focus:ring-offset-0 absolute top-2.5 left-2.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
           <span class="material-icons text-subtext-light dark:text-subtext-dark text-2xl">folder</span>
           <div class="flex-grow">
-            <p class="font-semibold text-text-light dark:text-text-dark truncate text-sm">{{ folder.name }}</p>
+            <input v-if="renamingItemId === folder.id" v-model="renamingText" @blur="finishRenaming" @keyup.enter="finishRenaming" @keyup.esc="cancelRenaming" type="text" class="font-semibold text-text-light dark:text-text-dark bg-gray-100 dark:bg-gray-800 rounded-md px-2 py-0.5 border border-primary focus:outline-none focus:ring-1 focus:ring-primary w-full text-sm" />
+            <p v-else @click="startRenaming(folder)" class="font-semibold text-text-light dark:text-text-dark truncate text-sm cursor-pointer">{{ folder.name }}</p>
           </div>
         </div>
       </div>
       <div v-if="view === 'list'" class="bg-card-light dark:bg-card-dark rounded-lg shadow-sm text-sm">
-        <div v-for="folder in store.folders" :key="folder.id" @click="toggleSelection(folder.id)" @dblclick="navigateToFolder(folder.id)" :class="{'bg-blue-50 dark:bg-blue-900/20': isSelected(folder.id)}" class="flex items-center p-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg cursor-pointer">
-          <input type="checkbox" :checked="isSelected(folder.id)" class="form-checkbox h-4 w-4 rounded-full text-primary bg-gray-100 border-gray-300 focus:ring-0 focus:ring-offset-0 dark:bg-gray-600 dark:border-gray-500" />
+        <div v-for="folder in store.folders" :key="folder.id" @dblclick="navigateToFolder(folder.id)" :class="{'bg-blue-50 dark:bg-blue-900/20': isSelected(folder.id)}" class="flex items-center p-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg cursor-pointer">
+          <input type="checkbox" :checked="isSelected(folder.id)" @click.stop="toggleSelection(folder.id)" class="form-checkbox h-4 w-4 rounded-full text-primary bg-gray-100 border-gray-300 focus:ring-0 focus:ring-offset-0 dark:bg-gray-600 dark:border-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" />
           <span class="material-icons text-subtext-light dark:text-subtext-dark text-xl mx-3">folder</span>
-          <span class="font-semibold text-text-light dark:text-text-dark flex-grow">{{ folder.name }}</span>
+          <input v-if="renamingItemId === folder.id" v-model="renamingText" @blur="finishRenaming" @keyup.enter="finishRenaming" @keyup.esc="cancelRenaming" type="text" class="font-semibold text-text-light dark:text-text-dark bg-gray-100 dark:bg-gray-800 rounded-md px-2 py-0.5 border border-primary focus:outline-none focus:ring-1 focus:ring-primary w-full flex-grow text-sm" />
+          <span v-else @click="startRenaming(folder)" class="font-semibold text-text-light dark:text-text-dark flex-grow cursor-pointer">{{ folder.name }}</span>
         </div>
       </div>
     </div>
@@ -111,8 +144,10 @@
       <h2 class="text-lg font-semibold text-text-light dark:text-text-dark mb-3">Videos</h2>
       <div v-if="view === 'grid'" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         <div v-for="video in store.videos" :key="video.id" :class="{'bg-blue-50 dark:bg-blue-900/20': isSelected(video.id), 'opacity-60': video.isMissing}" class="relative group bg-card-light dark:bg-card-dark rounded-lg shadow-around overflow-hidden border-2 border-transparent">
-          <input type="checkbox" :checked="isSelected(video.id)" @click.stop="toggleSelection(video.id)" class="form-checkbox h-4 w-4 rounded-full text-primary bg-white/50 border-gray-400/70 focus:ring-0 focus:ring-offset-0 absolute top-2.5 left-2.5 z-10" />
+          <input type="checkbox" :checked="isSelected(video.id)" @click.stop="toggleSelection(video.id)" class="form-checkbox h-4 w-4 rounded-full text-primary bg-white/50 border-gray-400/70 focus:ring-0 focus:ring-offset-0 absolute top-2.5 left-2.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
           <div class="aspect-video bg-gray-200 dark:bg-gray-700 flex items-center justify-center relative">
+            <img v-if="video.thumbnailPath" :src="`http://localhost:3001${video.thumbnailPath}`" class="w-full h-full object-cover" />
+            <span v-else class="material-icons text-gray-400 dark:text-gray-500 text-4xl opacity-50 group-hover:opacity-20 transition-opacity">movie</span>
             <div v-if="!video.isMissing" @click="playVideo(video)" class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
               <button class="bg-white/30 backdrop-blur-sm rounded-full p-2 text-white w-12 h-12 flex items-center justify-center">
                 <span class="material-icons text-3xl">play_arrow</span>
@@ -121,23 +156,36 @@
             <div v-if="video.isMissing" class="absolute inset-0 bg-black/50 flex items-center justify-center text-white">
               <span class="material-icons text-lg">error_outline</span>
             </div>
+            <span v-if="video.dimensions" class="absolute bottom-1.5 right-1.5 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded">{{ video.dimensions }}</span>
           </div>
           <div class="p-2.5">
-            <p class="font-semibold text-text-light dark:text-text-dark truncate text-sm">{{ video.name }}</p>
-            <p class="text-xs text-subtext-light dark:text-subtext-dark mt-1">{{ video.mimeType }} · {{ formatFileSize(video.size) }}</p>
+            <input v-if="renamingItemId === video.id" v-model="renamingText" @blur="finishRenaming" @keyup.enter="finishRenaming" @keyup.esc="cancelRenaming" type="text" class="font-semibold text-text-light dark:text-text-dark bg-gray-100 dark:bg-gray-800 rounded-md px-2 py-0.5 border border-primary focus:outline-none focus:ring-1 focus:ring-primary w-full text-sm" />
+            <p v-else @click="startRenaming(video)" class="font-semibold text-text-light dark:text-text-dark truncate text-sm cursor-pointer">{{ video.name }}</p>
+            <p class="text-xs text-subtext-light dark:text-subtext-dark mt-1">{{ video.extension ? video.extension.toUpperCase() : (video.mimeType ? video.mimeType.split('/')[1].toUpperCase() : '') }} · {{ formatFileSize(video.size) }}</p>
             <span v-if="video.isMissing" class="text-red-500 dark:text-red-400 text-xs font-semibold mt-1 inline-block">Source Missing</span>
           </div>
         </div>
       </div>
       <div v-if="view === 'list'" class="bg-card-light dark:bg-card-dark rounded-lg shadow-sm overflow-hidden text-sm">
         <table class="w-full text-left text-subtext-light dark:text-subtext-dark">
-          <!-- Table Head -->
+          <thead class="text-xs text-subtext-light dark:text-subtext-dark uppercase bg-gray-50 dark:bg-gray-700">
+            <tr>
+              <th class="p-3" scope="col"><input class="form-checkbox h-4 w-4 rounded-full text-primary bg-gray-100 border-gray-300 focus:ring-0 focus:ring-offset-0 dark:bg-gray-600 dark:border-gray-500" type="checkbox"/></th>
+              <th class="p-3" scope="col">File Name</th>
+              <th class="p-3" scope="col">Format</th>
+              <th class="p-3" scope="col">Dimensions</th>
+              <th class="p-3" scope="col">File Size</th>
+              <th class="p-3" scope="col"></th>
+            </tr>
+          </thead>
           <tbody>
-            <tr v-for="video in store.videos" :key="video.id" :class="{'bg-blue-50 dark:bg-blue-900/20': isSelected(video.id), 'opacity-60': video.isMissing}" class="border-t dark:border-border-dark hover:bg-gray-50 dark:hover:bg-gray-800">
-              <td class="p-3"><input type="checkbox" :checked="isSelected(video.id)" @change.stop="toggleSelection(video.id)" class="form-checkbox h-4 w-4 rounded-full text-primary bg-gray-100 border-gray-300 focus:ring-0 focus:ring-offset-0 dark:bg-gray-600 dark:border-gray-500" /></td>
+            <tr v-for="video in store.videos" :key="video.id" :class="{'bg-blue-50 dark:bg-blue-900/20': isSelected(video.id), 'opacity-60': video.isMissing}" class="border-t dark:border-border-dark hover:bg-gray-50 dark:hover:bg-gray-800 group">
+              <td class="p-3"><input type="checkbox" :checked="isSelected(video.id)" @change.stop="toggleSelection(video.id)" class="form-checkbox h-4 w-4 rounded-full text-primary bg-gray-100 border-gray-300 focus:ring-0 focus:ring-offset-0 dark:bg-gray-600 dark:border-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" /></td>
               <td class="p-3 font-medium text-text-light dark:text-text-dark">
                 <div class="flex items-center gap-3">
                   <div class="relative group w-16 h-10 rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
+                     <img v-if="video.thumbnailPath" :src="`http://localhost:3001${video.thumbnailPath}`" class="w-full h-full object-cover" />
+                     <span v-else class="material-icons text-gray-400 dark:text-gray-500 text-2xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-50 group-hover:opacity-20 transition-opacity">movie</span>
                      <div v-if="!video.isMissing" @click="playVideo(video)" class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
                       <button class="bg-white/30 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-white">
                         <span class="material-icons text-xl">play_arrow</span>
@@ -147,11 +195,12 @@
                         <span class="material-icons text-lg">error_outline</span>
                     </div>
                   </div>
-                  <span>{{ video.name }}</span>
+                  <input v-if="renamingItemId === video.id" v-model="renamingText" @blur="finishRenaming" @keyup.enter="finishRenaming" @keyup.esc="cancelRenaming" type="text" class="font-semibold text-text-light dark:text-text-dark bg-gray-100 dark:bg-gray-800 rounded-md px-2 py-0.5 border border-primary focus:outline-none focus:ring-1 focus:ring-primary w-full text-sm" />
+                  <span v-else @click="startRenaming(video)" class="cursor-pointer">{{ video.name }}</span>
                 </div>
               </td>
-              <td class="p-3">{{ video.mimeType }}</td>
-              <td class="p-3">{{ video.dimensions }}</td>
+              <td class="p-3">{{ video.extension ? video.extension.toUpperCase() : (video.mimeType ? video.mimeType.split('/')[1].toUpperCase() : '') }}</td>
+              <td class="p-3">{{ video.dimensions || '-' }}</td>
               <td class="p-3">{{ formatFileSize(video.size) }}</td>
               <td class="p-3 text-right">
                 <span v-if="video.isMissing" class="text-red-500 dark:text-red-400 text-xs font-semibold bg-red-100 dark:bg-red-900/30 px-2 py-1 rounded-full">Source Missing</span>
@@ -179,7 +228,7 @@
         <div class="p-6">
           <h3 class="text-2xl font-bold text-text-dark">{{ playingVideo.name }}</h3>
           <div class="flex items-center gap-4 text-lg text-subtext-dark mt-2">
-            <span>{{ playingVideo.mimeType }}</span>
+            <span>{{ playingVideo.extension ? playingVideo.extension.toUpperCase() : (playingVideo.mimeType ? playingVideo.mimeType.split('/')[1].toUpperCase() : '') }}</span>
             <span>·</span>
             <span>{{ playingVideo.dimensions }}</span>
             <span>·</span>
@@ -193,7 +242,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useMediaStore } from '../stores/media';
 import { mediaService as api } from '../services/api';
 
@@ -213,6 +262,10 @@ const newFolderModalOpen = ref(false);
 const playingVideo = ref(null);
 const searchQuery = ref('');
 const isAddingFiles = ref(false);
+const renamingItemId = ref(null);
+const renamingText = ref('');
+const currentSort = ref({ field: 'modified', direction: 'desc' });
+const sortDropdownRef = ref(null);
 
 onMounted(() => {
   store.fetchFolderContents();
@@ -224,6 +277,24 @@ const toggleSelection = (itemId) => store.toggleItemSelected(itemId);
 
 const navigateToFolder = (folderId) => {
   store.setCurrentFolderId(folderId);
+};
+
+const startRenaming = (item) => {
+  renamingItemId.value = item.id;
+  renamingText.value = item.name;
+};
+
+const finishRenaming = async () => {
+  if (renamingItemId.value && renamingText.value) {
+    await store.renameItem(renamingItemId.value, renamingText.value);
+  }
+  renamingItemId.value = null;
+  renamingText.value = '';
+};
+
+const cancelRenaming = () => {
+  renamingItemId.value = null;
+  renamingText.value = '';
 };
 
 const submitNewFolder = async (folderName) => {
@@ -286,6 +357,31 @@ const formatFileSize = (bytes) => {
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
+
+const setSort = (field, direction) => {
+  currentSort.value = { field, direction };
+  // Apply sorting to store data
+  store.sortItems(field, direction);
+};
+
+// Add click outside handling
+const handleClickOutside = (event) => {
+  if (!sortDropdownRef.value?.contains(event.target)) {
+    sortOpen.value = false;
+  }
+};
+
+// Add event listener when mounted and remove when component is unmounted
+onMounted(() => {
+  store.fetchFolderContents();
+  store.fetchPath();
+  document.addEventListener('click', handleClickOutside);
+});
+
+// Clean up event listener when component is unmounted
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside);
+});
 </script>
 
 <style>
@@ -294,5 +390,14 @@ const formatFileSize = (bytes) => {
     outline: none !important;
     box-shadow: none !important;
     border-color: #007AFF !important;
+}
+
+/* Shadow styles as defined in the design */
+.shadow-subtle {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05) !important;
+}
+
+.shadow-around {
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1) !important;
 }
 </style>
