@@ -11,8 +11,6 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/public', express.static(path.join(__dirname, 'public')));
-
 // Import routes
 const mediaRoutes = require('./routes/media');
 const streamRoutes = require('./routes/stream');
