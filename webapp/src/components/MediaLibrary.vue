@@ -2,7 +2,7 @@
   <div class="p-6 bg-background-light dark:bg-background-dark font-sans">
     <!-- Header -->
     <div class="flex flex-col md:flex-row justify-between md:items-center mb-4 gap-3">
-      <h1 class="text-2xl font-bold text-text-light dark:text-text-dark">Library</h1>
+      <h1 class="text-2xl font-bold text-text-light dark:text-text-dark">Media Library</h1>
       <div class="flex flex-col md:flex-row gap-2">
         <button @click="newFolderModalOpen = true" class="flex items-center justify-center gap-2 px-3 py-2 rounded-md border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark text-text-light dark:text-text-dark text-sm">
           <span class="material-icons text-base">create_new_folder</span>
@@ -18,7 +18,7 @@
     <!-- Breadcrumbs -->
     <div class="mb-4">
       <nav aria-label="Breadcrumb" class="flex">
-        <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+        <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse p-0 pr-0">
           <li class="inline-flex items-center">
             <a @click="navigateToFolder(null)" href="#" class="inline-flex items-center text-xs font-medium text-subtext-light hover:text-primary dark:text-subtext-dark dark:hover:text-white">
               <span class="material-icons text-base mr-1.5">folder</span> Media Library
@@ -35,8 +35,8 @@
     </div>
 
     <!-- Search, Sort, and View Controls -->
-    <div class="flex flex-col md:flex-row gap-4 mb-4">
-      <div class="w-full md:w-1/2 flex-grow flex flex-col sm:flex-row gap-2">
+    <div class="flex flex-col md:flex-row mb-4">
+      <div class="w-full md:w-1/2 flex flex-col sm:flex-row gap-2">
         <div class="relative flex-grow">
           <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-subtext-light dark:text-subtext-dark text-lg">search</span>
           <input v-model="searchQuery" @input="handleSearch" type="text" placeholder="Search" class="w-full pl-10 pr-4 py-2 rounded-md border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark text-text-light dark:text-text-dark focus:ring-primary focus:border-primary text-sm h-full" />
@@ -94,11 +94,11 @@
         </div>
       </div>
       <div class="w-full md:w-1/2" :class="{'md:ml-4': store.selectedItems.length > 0}" v-if="store.selectedItems.length > 0">
-        <div class="flex flex-col sm:flex-row justify-between items-center p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-          <div class="flex items-center gap-2 mb-2 sm:mb-0 sm:mr-4 whitespace-nowrap">
-            <p class="font-medium text-primary dark:text-blue-300 text-sm">{{ store.selectedItems.length }} items selected</p>
+        <div class="flex flex-col sm:flex-row justify-between items-center bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+          <div class="flex items-center gap-2 sm:mb-0 sm:mr-4 h-full whitespace-nowrap">
+            <p class="font-medium text-primary dark:text-blue-300 text-sm m-0 px-3">{{ store.selectedItems.length }} items selected</p>
           </div>
-          <div class="flex gap-1.5 flex-wrap justify-center">
+          <div class="flex gap-1.5 flex-wrap justify-center p-2">
             <button @click="copyModalOpen = true" class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white dark:bg-card-dark text-text-light dark:text-text-dark border border-border-light dark:border-border-dark shadow-sm text-xs">
               <span class="material-icons text-base">content_copy</span>
               <span>Copy</span>
@@ -121,7 +121,7 @@
       <h2 class="text-lg font-semibold text-text-light dark:text-text-dark mb-3">Folders</h2>
       <div v-if="view === 'grid'" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         <div v-for="folder in store.folders" :key="folder.id" @dblclick="navigateToFolder(folder.id)" :class="{'bg-blue-50 dark:bg-blue-900/20': isSelected(folder.id)}" class="relative group bg-card-light dark:bg-card-dark rounded-lg shadow-around border-2 border-transparent p-2.5 flex items-center gap-3 cursor-pointer">
-          <input type="checkbox" :checked="isSelected(folder.id)" @click.stop="toggleSelection(folder.id)" class="form-checkbox h-4 w-4 rounded-full text-primary bg-white/50 border-gray-400/70 focus:ring-0 focus:ring-offset-0 absolute top-2.5 left-2.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <input type="checkbox" :checked="isSelected(folder.id)" @click.stop="toggleSelection(folder.id)" class="form-checkbox h-4 w-4 rounded-full text-primary bg-white/50 border-gray-400/70 focus:ring-0 focus:ring-offset-0 absolute top-2.5 left-2.5 z-10" />
           <span class="material-icons text-subtext-light dark:text-subtext-dark text-2xl">folder</span>
           <div class="flex-grow">
             <input v-if="renamingItemId === folder.id" v-model="renamingText" @blur="finishRenaming" @keyup.enter="finishRenaming" @keyup.esc="cancelRenaming" type="text" class="font-semibold text-text-light dark:text-text-dark bg-gray-100 dark:bg-gray-800 rounded-md px-2 py-0.5 border border-primary focus:outline-none focus:ring-1 focus:ring-primary w-full text-sm" />
@@ -131,7 +131,7 @@
       </div>
       <div v-if="view === 'list'" class="bg-card-light dark:bg-card-dark rounded-lg shadow-sm text-sm">
         <div v-for="folder in store.folders" :key="folder.id" @dblclick="navigateToFolder(folder.id)" :class="{'bg-blue-50 dark:bg-blue-900/20': isSelected(folder.id)}" class="flex items-center p-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg cursor-pointer">
-          <input type="checkbox" :checked="isSelected(folder.id)" @click.stop="toggleSelection(folder.id)" class="form-checkbox h-4 w-4 rounded-full text-primary bg-gray-100 border-gray-300 focus:ring-0 focus:ring-offset-0 dark:bg-gray-600 dark:border-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <input type="checkbox" :checked="isSelected(folder.id)" @click.stop="toggleSelection(folder.id)" class="form-checkbox h-4 w-4 rounded-full text-primary bg-gray-100 border-gray-300 focus:ring-0 focus:ring-offset-0 dark:bg-gray-600 dark:border-gray-500" />
           <span class="material-icons text-subtext-light dark:text-subtext-dark text-xl mx-3">folder</span>
           <input v-if="renamingItemId === folder.id" v-model="renamingText" @blur="finishRenaming" @keyup.enter="finishRenaming" @keyup.esc="cancelRenaming" type="text" class="font-semibold text-text-light dark:text-text-dark bg-gray-100 dark:bg-gray-800 rounded-md px-2 py-0.5 border border-primary focus:outline-none focus:ring-1 focus:ring-primary w-full flex-grow text-sm" />
           <span v-else @click="startRenaming(folder)" class="font-semibold text-text-light dark:text-text-dark flex-grow cursor-pointer">{{ folder.name }}</span>
@@ -144,7 +144,7 @@
       <h2 class="text-lg font-semibold text-text-light dark:text-text-dark mb-3">Videos</h2>
       <div v-if="view === 'grid'" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         <div v-for="video in store.videos" :key="video.id" :class="{'bg-blue-50 dark:bg-blue-900/20': isSelected(video.id), 'opacity-60': video.isMissing}" class="relative group bg-card-light dark:bg-card-dark rounded-lg shadow-around overflow-hidden border-2 border-transparent">
-          <input type="checkbox" :checked="isSelected(video.id)" @click.stop="toggleSelection(video.id)" class="form-checkbox h-4 w-4 rounded-full text-primary bg-white/50 border-gray-400/70 focus:ring-0 focus:ring-offset-0 absolute top-2.5 left-2.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <input type="checkbox" :checked="isSelected(video.id)" @click.stop="toggleSelection(video.id)" class="form-checkbox h-4 w-4 rounded-full text-primary bg-white/50 border-gray-400/70 focus:ring-0 focus:ring-offset-0 absolute top-2.5 left-2.5 z-10" />
           <div class="aspect-video bg-gray-200 dark:bg-gray-700 flex items-center justify-center relative">
             <img v-if="video.thumbnailPath" :src="`http://localhost:3001${video.thumbnailPath}`" class="w-full h-full object-cover" />
             <span v-else class="material-icons text-gray-400 dark:text-gray-500 text-4xl opacity-50 group-hover:opacity-20 transition-opacity">movie</span>
@@ -180,7 +180,7 @@
           </thead>
           <tbody>
             <tr v-for="video in store.videos" :key="video.id" :class="{'bg-blue-50 dark:bg-blue-900/20': isSelected(video.id), 'opacity-60': video.isMissing}" class="border-t dark:border-border-dark hover:bg-gray-50 dark:hover:bg-gray-800 group">
-              <td class="p-3"><input type="checkbox" :checked="isSelected(video.id)" @change.stop="toggleSelection(video.id)" class="form-checkbox h-4 w-4 rounded-full text-primary bg-gray-100 border-gray-300 focus:ring-0 focus:ring-offset-0 dark:bg-gray-600 dark:border-gray-500 opacity-0 group-hover:opacity-100 transition-opacity" /></td>
+              <td class="p-3"><input type="checkbox" :checked="isSelected(video.id)" @change.stop="toggleSelection(video.id)" class="form-checkbox h-4 w-4 rounded-full text-primary bg-gray-100 border-gray-300 focus:ring-0 focus:ring-offset-0 dark:bg-gray-600 dark:border-gray-500" /></td>
               <td class="p-3 font-medium text-text-light dark:text-text-dark">
                 <div class="flex items-center gap-3">
                   <div class="relative group w-16 h-10 rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
