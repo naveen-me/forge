@@ -2,6 +2,17 @@ const express = require('express');
 const { MediaItem } = require('../models/MediaItem');
 const { checkFileExists } = require('../utils/fileUtils');
 const router = express.Router();
+const dialog = require('node-file-dialog');
+
+// Select files
+router.get('/select-files', async (req, res) => {
+  try {
+    const files = await dialog({ type: 'open-files' });
+    res.json({ files });
+  } catch (e) {
+    res.json({ files: [] });
+  }
+});
 
 // Get items in a folder
 router.get('/folder/:parentId?', async (req, res) => {
@@ -54,6 +65,8 @@ router.post('/folder', async (req, res) => {
   }
 });
 
+const { spawn } = require('child_process');
+
 // Add files (store file paths)
 router.post('/files', async (req, res) => {
   try {
@@ -83,6 +96,13 @@ router.post('/files', async (req, res) => {
       createdFiles.push(newFile);
     }
     
+    // Spawn worker process to extract metadata in the background
+    const worker = spawn('node', ['worker.js'], {
+      detached: true,
+      stdio: 'ignore'
+    });
+    worker.unref();
+
     res.status(201).json(createdFiles);
   } catch (error) {
     console.error('Error adding files:', error);
