@@ -1,112 +1,44 @@
-import express from 'express';
-import http from 'http';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import dotenv from 'dotenv';
-import cors from 'cors';
-import { WebSocketServer } from 'ws';
+const express = require('express');
+const cors = require('cors');
+const path = require('path');
+const { sequelize } = require('./models/MediaItem');
 
-// Import routes
-import apiRoutes from './src/routes/api.js';
-import authRoutes from './src/routes/auth.js';
-import subscriptionRoutes from './src/routes/subscription.js';
-import paymentRoutes from './src/routes/payment.js';
-import upiManagementRoutes from './src/routes/upiManagement.js';
-
-// Import database initializer
-import { initDb } from './src/db/database.js';
-
-// Basic setup
-dotenv.config();
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// App and server initialization
 const app = express();
-const server = http.createServer(app);
-const port = process.env.PORT || 4000;
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Logger Middleware
-app.use((req, res, next) => {
-    console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-    next();
-});
+// Import routes
+const mediaRoutes = require('./routes/media');
+const streamRoutes = require('./routes/stream');
 
-// API Routes
-app.use('/api', apiRoutes);
+// Routes
+app.use('/api/media', mediaRoutes);
+app.use('/api/stream', streamRoutes);
 
-// Auth Routes - separate route for authentication
-app.use('/auth', authRoutes);
-
-// Serve static files from Vue app if the dist directory exists
-const webappPath = path.join(__dirname, '..', 'webapp', 'dist');
-const fs = await import('fs');
-if (fs.existsSync(webappPath)) {
-    app.use(express.static(webappPath));
-
-    // Handle all other routes by serving the Vue app
-    app.get('*', (req, res) => {
-        res.sendFile(path.join(webappPath, 'index.html'), (err) => {
-            if (err) {
-                res.status(500).send(err);
-            }
-        });
-    });
-} else {
-    // If dist directory doesn't exist, provide API-only mode
-    console.log('Warning: webapp/dist directory does not exist. Running in API-only mode.');
-    
-    // Handle all other routes with a proper API response
-    app.get('*', (req, res) => {
-        res.status(404).json({ 
-            error: 'Route not found',
-            message: 'This is an API server. The frontend has not been built yet or is not available.'
-        });
-    });
-}
-
-// Initialize Database
-initDb().then(() => {
-    console.log('Database initialized.');
-}).catch(err => {
-    console.error('Database initialization failed:', err);
-});
-
-// WebSocket Server
-const wss = new WebSocketServer({ server });
-wss.on('connection', (ws) => {
-    console.log('Client connected to WebSocket');
-    ws.on('message', (message) => {
-        console.log(`Received message: ${message}`);
-        wss.clients.forEach(client => {
-            if (client.readyState === ws.OPEN) {
-                client.send(`Echo: ${message}`);
-            }
-        });
-    });
-    ws.on('close', () => {
-        console.log('Client disconnected');
-    });
-});
-
-// Graceful Shutdown
-const shutdown = () => {
-    console.log('Shutting down gracefully...');
-    server.close(() => {
-        console.log('Server closed.');
-        process.exit(0);
-    });
+// Initialize database
+const initializeDatabase = async () => {
+  try {
+    await sequelize.sync({ force: false }); // Create tables if they don't exist
+    console.log('Database connected and synchronized');
+  } catch (error) {
+    console.error('Error initializing database:', error);
+    process.exit(1);
+  }
 };
 
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+// Start server
+const startServer = async () => {
+  await initializeDatabase();
+  
+  app.listen(PORT, () => {
+    console.log(`Media Library Server running on port ${PORT}`);
+  });
+};
 
-// Start the server
-server.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}`);
-});
+startServer().catch(console.error);
+
+module.exports = app;

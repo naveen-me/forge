@@ -5,6 +5,13 @@ import Register from '../components/Register.vue';
 import Subscription from '../components/Subscription.vue';
 import Features from '../components/Features.vue';
 import UPIXManagement from '../components/UPIXManagement.vue';
+import MediaLibrary from '../components/MediaLibrary.vue';
+import Overlays from '../components/Overlays.vue';
+import Ads from '../components/Ads.vue';
+import Live from '../components/Live.vue';
+import Scheduler from '../components/Scheduler.vue';
+import UserProfile from '../components/UserProfile.vue';
+import Settings from '../views/Settings.vue';
 import { useAuthStore } from '../store';
 import { useSubscriptionStore } from '../store';
 
@@ -43,6 +50,48 @@ const routes = [
         component: UPIXManagement,
         meta: { requiresAuth: true },
     },
+    {
+        path: '/media-library',
+        name: 'MediaLibrary',
+        component: MediaLibrary,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/overlays',
+        name: 'Overlays',
+        component: Overlays,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/ads',
+        name: 'Ads',
+        component: Ads,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/live',
+        name: 'Live',
+        component: Live,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/scheduler',
+        name: 'Scheduler',
+        component: Scheduler,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/profile',
+        name: 'UserProfile',
+        component: UserProfile,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/settings',
+        name: 'Settings',
+        component: Settings,
+        meta: { requiresAuth: true },
+    },
 ];
 
 const router = createRouter({
@@ -58,8 +107,6 @@ router.beforeEach(async (to, from, next) => {
         return;
     }
     
-    // If the route requires subscription check or is the dashboard, 
-    // fetch user subscription status
     if (to.meta.requiresAuth && auth.isAuthenticated) {
         const subscription = useSubscriptionStore();
         await subscription.fetchUserSubscription();

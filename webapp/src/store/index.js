@@ -28,16 +28,31 @@ export const useAuthStore = defineStore('auth', () => {
     function logout() {
         token.value = null;
         localStorage.removeItem('token');
+        localStorage.removeItem('userSubscription');
     }
 
     return { token, isAuthenticated, register, login, logout };
 });
 
 export const useSubscriptionStore = defineStore('subscription', () => {
+    const storedSubscriptionData = JSON.parse(localStorage.getItem('userSubscription'));
+    const now = new Date().getTime();
+    const twelveHours = 12 * 60 * 60 * 1000;
+
+    let initialSubscription = null;
+    let initialPurchasedFeatures = [];
+    let initialAvailableFeatures = [];
+
+    if (storedSubscriptionData && (now - storedSubscriptionData.timestamp < twelveHours)) {
+        initialSubscription = storedSubscriptionData.subscription;
+        initialPurchasedFeatures = storedSubscriptionData.purchased_features || [];
+        initialAvailableFeatures = storedSubscriptionData.available_features || [];
+    }
+
     const plans = ref([]);
-    const userSubscription = ref(null);
-    const purchasedFeatures = ref([]);
-    const availableFeatures = ref([]);
+    const userSubscription = ref(initialSubscription);
+    const purchasedFeatures = ref(initialPurchasedFeatures);
+    const availableFeatures = ref(initialAvailableFeatures);
     const paymentHistory = ref([]);
     const upiDetails = ref([]);
 
@@ -81,12 +96,31 @@ export const useSubscriptionStore = defineStore('subscription', () => {
     }
 
     async function fetchUserSubscription() {
+        const storedSubscriptionData = JSON.parse(localStorage.getItem('userSubscription'));
+        const now = new Date().getTime();
+        const twelveHours = 12 * 60 * 60 * 1000;
+
+        if (storedSubscriptionData && (now - storedSubscriptionData.timestamp < twelveHours)) {
+            userSubscription.value = storedSubscriptionData.subscription;
+            purchasedFeatures.value = storedSubscriptionData.purchased_features || [];
+            availableFeatures.value = storedSubscriptionData.available_features || [];
+            return; // Exit if cached data is fresh
+        }
+
         try {
             const response = await api.get('/subscription/my-subscription');
             if (response.data.success) {
-                userSubscription.value = response.data.subscription;
-                purchasedFeatures.value = response.data.purchased_features || [];
-                availableFeatures.value = response.data.available_features || [];
+                const newSubscriptionData = {
+                    subscription: response.data.subscription,
+                    purchased_features: response.data.purchased_features || [],
+                    available_features: response.data.available_features || [],
+                    timestamp: new Date().getTime(),
+                };
+                localStorage.setItem('userSubscription', JSON.stringify(newSubscriptionData));
+
+                userSubscription.value = newSubscriptionData.subscription;
+                purchasedFeatures.value = newSubscriptionData.purchased_features;
+                availableFeatures.value = newSubscriptionData.available_features;
             }
         } catch (error) {
             console.error('Failed to fetch user subscription:', error);
@@ -98,6 +132,7 @@ export const useSubscriptionStore = defineStore('subscription', () => {
             const response = await api.delete('/subscription/cancel');
             if (response.data.success) {
                 userSubscription.value = null; // Clear the subscription
+                localStorage.removeItem('userSubscription');
                 return response.data;
             } else {
                 throw new Error(response.data.error || 'Failed to cancel subscription');

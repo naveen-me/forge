@@ -1,6 +1,7 @@
 import sqlite3 from 'sqlite3';
 import dotenv from 'dotenv';
 import { initPaymentDb, addPaymentColumnsToSubscriptions, addPaymentColumnsToUserFeatures } from './subscription_payment_schema.js';
+import { initMediaLibraryDb } from './media_library_schema.js';
 
 dotenv.config();
 
@@ -121,6 +122,7 @@ export const initDb = () => {
                                     
                                     // Initialize payment-related tables after seeding
                                     initPaymentDb()
+                                        .then(initMediaLibraryDb)
                                         .then(() => resolve())
                                         .catch(err => reject(err));
                                 });
