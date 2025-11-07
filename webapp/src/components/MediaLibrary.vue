@@ -33,7 +33,7 @@
 </nav>
 </div>
 <div class="flex flex-col md:flex-row gap-4 mb-4">
-<div class="w-full flex-grow flex flex-col sm:flex-row gap-2">
+<div class="w-full flex-grow flex flex-col sm:flex-row gap-2" :class="{'w-1/2': selectedItems.length === 0}">
 <div class="relative flex-grow">
 <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-subtext-light dark:text-subtext-dark text-lg">search</span>
 <input v-model="searchQuery" @input="searchItems" class="w-full pl-10 pr-4 py-2 rounded-md border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark text-text-light dark:text-text-dark focus:ring-primary focus:border-primary text-sm h-full" placeholder="Search" type="text"/>
@@ -45,7 +45,7 @@
 <span>Sort By</span>
 <span class="material-icons text-base">expand_more</span>
 </button>
-<div v-if="sortOpen" @click.outside="sortOpen = false" class="absolute z-10 mt-1 w-56 bg-card-light dark:bg-card-dark rounded-lg shadow-lg border border-border-light dark:border-border-dark">
+<div v-if="sortOpen" @click.outside="sortOpen = false" class="absolute z-20 mt-1 w-56 bg-card-light dark:bg-card-dark rounded-lg shadow-lg border border-border-light dark:border-border-dark">
 <ul class="py-1 text-sm">
 <li><a @click="setSort('name', 'asc')" class="flex items-center justify-between px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-text-light dark:text-text-dark cursor-pointer"><span class="flex items-center gap-2"><span class="material-icons text-base">arrow_upward</span> Name</span></a></li>
 <li><a @click="setSort('name', 'desc')" class="flex items-center justify-between px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-text-light dark:text-text-dark cursor-pointer"><span class="flex items-center gap-2"><span class="material-icons text-base">arrow_downward</span> Name</span></a></li>
@@ -91,23 +91,23 @@
 <h2 class="text-lg font-semibold text-text-light dark:text-text-dark mb-3">Folders</h2>
 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4" v-if="view === 'grid'">
 <div v-for="folder in folders" :key="folder.id" class="relative group bg-card-light dark:bg-card-dark rounded-lg shadow-around border-2 border-transparent p-2.5 flex items-center gap-3" :class="{'bg-blue-50 dark:bg-blue-900/20': selectedItems.includes(folder.id)}">
-<input v-model="selectedItems" :value="folder.id" type="checkbox" class="form-checkbox h-4 w-4 rounded-full text-primary bg-white/50 border-gray-400/70 focus:ring-0 focus:ring-offset-0"/>
+<input v-model="selectedItems" :value="folder.id" type="checkbox" class="form-checkbox h-4 w-4 rounded-full text-primary bg-white/50 border-gray-400/70 focus:ring-0 focus:ring-offset-0" :class="{'opacity-100': selectedItems.length > 0, 'opacity-0 group-hover:opacity-100': selectedItems.length === 0}"/>
 <span class="material-icons text-subtext-light dark:text-subtext-dark text-2xl">folder</span>
 <div class="flex-grow">
 <input v-if="renamingFolderId === folder.id" v-model="renamingName" @keyup.enter="renameItem(folder.id, renamingName)" @blur="renameItem(folder.id, renamingName)" class="font-semibold text-text-light dark:text-text-dark bg-gray-100 dark:bg-gray-800 rounded-md px-2 py-0.5 border border-primary focus:outline-none focus:ring-1 focus:ring-primary w-full text-sm" type="text" ref="renameInput"/>
-<p v-else @dblclick="startRenaming(folder)" class="font-semibold text-text-light dark:text-text-dark truncate text-sm">{{ folder.name }}</p>
+<p v-else @click="startRenaming(folder)" class="font-semibold text-text-light dark:text-text-dark truncate text-sm">{{ folder.name }}</p>
 <p class="text-xs text-subtext-light dark:text-subtext-dark">{{ getFolderItemCount(folder.id) }} videos</p>
 </div>
 </div>
 </div>
 <div class="bg-card-light dark:bg-card-dark rounded-lg shadow-sm text-sm" v-if="view === 'list'">
 <div class="space-y-px">
-<div v-for="folder in folders" :key="folder.id" class="flex items-center p-2.5 hover:bg-gray-50 dark:hover:bg-gray-800" :class="{'bg-blue-50 dark:bg-blue-900/20': selectedItems.includes(folder.id)}">
-<input v-model="selectedItems" :value="folder.id" type="checkbox" class="form-checkbox h-4 w-4 rounded-full text-primary bg-gray-100 border-gray-300 focus:ring-0 focus:ring-offset-0 dark:bg-gray-600 dark:border-gray-500"/>
+<div v-for="folder in folders" :key="folder.id" class="flex items-center p-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 group" :class="{'bg-blue-50 dark:bg-blue-900/20': selectedItems.includes(folder.id)}">
+<input v-model="selectedItems" :value="folder.id" type="checkbox" class="form-checkbox h-4 w-4 rounded-full text-primary bg-gray-100 border-gray-300 focus:ring-0 focus:ring-offset-0 dark:bg-gray-600 dark:border-gray-500" :class="{'opacity-100': selectedItems.length > 0, 'opacity-0 group-hover:opacity-100': selectedItems.length === 0}"/>
 <span class="material-icons text-subtext-light dark:text-subtext-dark text-xl mx-3">folder</span>
 <div class="font-semibold text-text-light dark:text-text-dark flex-grow">
 <input v-if="renamingFolderId === folder.id" v-model="renamingName" @keyup.enter="renameItem(folder.id, renamingName)" @blur="renameItem(folder.id, renamingName)" class="font-semibold text-text-light dark:text-text-dark bg-gray-100 dark:bg-gray-800 rounded-md px-2 py-0.5 border border-primary focus:outline-none focus:ring-1 focus:ring-primary w-full text-sm" type="text" ref="renameInput"/>
-<span v-else @dblclick="startRenaming(folder)">{{ folder.name }}</span>
+<span v-else @click="startRenaming(folder)">{{ folder.name }}</span>
 </div>
 <span class="text-xs text-subtext-light dark:text-subtext-dark">{{ getFolderItemCount(folder.id) }} videos</span>
 </div>
@@ -120,7 +120,8 @@
 <div v-for="video in videos" :key="video.id" class="relative group bg-card-light dark:bg-card-dark rounded-lg shadow-around overflow-hidden border-2 border-transparent" :class="{'bg-blue-50 dark:bg-blue-900/20': selectedItems.includes(video.id), 'opacity-60': video.isMissing}">
 <input v-model="selectedItems" :value="video.id" type="checkbox" class="form-checkbox h-4 w-4 rounded-full text-primary bg-white/50 border-gray-400/70 focus:ring-0 focus:ring-offset-0 absolute top-2.5 left-2.5 z-10"/>
 <div class="aspect-video bg-gray-200 dark:bg-gray-700 flex items-center justify-center relative">
-<span class="material-icons text-gray-400 dark:text-gray-500 text-4xl opacity-50 group-hover:opacity-20 transition-opacity" :class="{'text-blue-500 dark:text-blue-400': !video.isMissing}">
+<img v-if="video.thumbnailPath" :src="`${API_BASE_URL}/${video.thumbnailPath}`" class="w-full h-full object-cover"/>
+<span v-else class="material-icons text-gray-400 dark:text-gray-500 text-4xl opacity-50 group-hover:opacity-20 transition-opacity" :class="{'text-blue-500 dark:text-blue-400': !video.isMissing}">
 {{ video.isMissing ? 'error_outline' : 'movie' }}
 </span>
 <div v-if="!video.isMissing" class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" @click="playVideo(video)">
@@ -137,7 +138,7 @@
 </div>
 <div class="p-2.5">
 <input v-if="renamingVideoId === video.id" v-model="renamingName" @keyup.enter="renameItem(video.id, renamingName)" @blur="renameItem(video.id, renamingName)" class="font-semibold text-text-light dark:text-text-dark bg-gray-100 dark:bg-gray-800 rounded-md px-2 py-0.5 border border-primary focus:outline-none focus:ring-1 focus:ring-primary w-full text-sm" type="text" ref="renameInput"/>
-<p v-else @dblclick="startRenaming(video)" class="font-semibold text-text-light dark:text-text-dark truncate text-sm">{{ video.name }}</p>
+<p v-else @click="startRenaming(video)" class="font-semibold text-text-light dark:text-text-dark truncate text-sm">{{ video.name }}</p>
 <p class="text-xs text-subtext-light dark:text-subtext-dark mt-1">
 {{ video.mimeType?.split('/')[1]?.toUpperCase() || 'FILE' }} · {{ formatFileSize(video.size) }}
 </p>
@@ -162,14 +163,15 @@ Source Missing
 </tr>
 </thead>
 <tbody>
-<tr v-for="video in videos" :key="video.id" class="border-t dark:border-border-dark hover:bg-gray-50 dark:hover:bg-gray-800" :class="{'bg-blue-50 dark:bg-blue-900/20': selectedItems.includes(video.id)}">
+<tr v-for="video in videos" :key="video.id" class="border-t dark:border-border-dark hover:bg-gray-50 dark:hover:bg-gray-800 group" :class="{'bg-blue-50 dark:bg-blue-900/20': selectedItems.includes(video.id)}">
 <td class="p-3">
-<input v-model="selectedItems" :value="video.id" type="checkbox" class="form-checkbox h-4 w-4 rounded-full text-primary bg-gray-100 border-gray-300 focus:ring-0 focus:ring-offset-0 dark:bg-gray-600 dark:border-gray-500"/>
+<input v-model="selectedItems" :value="video.id" type="checkbox" class="form-checkbox h-4 w-4 rounded-full text-primary bg-gray-100 border-gray-300 focus:ring-0 focus:ring-offset-0 dark:bg-gray-600 dark:border-gray-500" :class="{'opacity-100': selectedItems.length > 0, 'opacity-0 group-hover:opacity-100': selectedItems.length === 0}"/>
 </td>
 <td class="p-3 font-medium text-text-light dark:text-text-dark">
 <div class="flex items-center gap-3">
 <div class="relative group w-16 h-10 rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
-<span class="material-icons text-gray-400 dark:text-gray-500 text-2xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 group-hover:opacity-20 transition-opacity" :class="{'text-blue-500 dark:text-blue-400': !video.isMissing}">
+<img v-if="video.thumbnailPath" :src="`${API_BASE_URL}/${video.thumbnailPath}`" class="w-full h-full object-cover"/>
+<span v-else class="material-icons text-gray-400 dark:text-gray-500 text-2xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 group-hover:opacity-20 transition-opacity" :class="{'text-blue-500 dark:text-blue-400': !video.isMissing}">
 {{ video.isMissing ? 'error_outline' : 'movie' }}
 </span>
 <div v-if="!video.isMissing" class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer" @click="playVideo(video)">
@@ -179,7 +181,7 @@ Source Missing
 </div>
 </div>
 <input v-if="renamingVideoId === video.id" v-model="renamingName" @keyup.enter="renameItem(video.id, renamingName)" @blur="renameItem(video.id, renamingName)" class="font-semibold text-text-light dark:text-text-dark bg-gray-100 dark:bg-gray-800 rounded-md px-2 py-0.5 border border-primary focus:outline-none focus:ring-1 focus:ring-primary w-full text-sm" type="text" ref="renameInput"/>
-<span v-else @dblclick="startRenaming(video)">{{ video.name }}</span>
+<span v-else @click="startRenaming(video)">{{ video.name }}</span>
 </div>
 </td>
 <td class="p-3">{{ video.mimeType?.split('/')[1]?.toUpperCase() || 'FILE' }}</td>

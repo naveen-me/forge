@@ -6,6 +6,8 @@ const { MediaItem } = require('./models/MediaItem');
  * @param {string} filePath - Path to the video file
  * @returns {Promise<Object>} - Promise that resolves to metadata object
  */
+const path = require('path');
+
 function extractVideoMetadata(filePath) {
   return new Promise((resolve, reject) => {
     ffmpeg.ffprobe(filePath, (err, metadata) => {
@@ -22,14 +24,32 @@ function extractVideoMetadata(filePath) {
         duration: parseFloat(format.duration) || null,
         size: parseInt(format.size) || null,
         dimensions: null,
-        mimeType: null
+        mimeType: null,
+        thumbnailPath: null
       };
 
       if (videoStream) {
         result.dimensions = `${videoStream.width}x${videoStream.height}`;
       }
 
-      resolve(result);
+      const thumbnailFilename = `${path.basename(filePath, path.extname(filePath))}.png`;
+      const thumbnailPath = path.join('public', 'thumbnails', thumbnailFilename);
+
+      ffmpeg(filePath)
+        .on('end', () => {
+          result.thumbnailPath = thumbnailPath;
+          resolve(result);
+        })
+        .on('error', (err) => {
+          console.error('Error generating thumbnail:', err);
+          resolve(result); // Resolve without thumbnail if there's an error
+        })
+        .screenshots({
+          timestamps: ['50%'],
+          filename: thumbnailFilename,
+          folder: path.join(__dirname, 'public', 'thumbnails'),
+          size: '320x240'
+        });
     });
   });
 }
@@ -57,7 +77,8 @@ async function processFileMetadata(fileId, filePath) {
           {
             size: metadata.size || size,
             duration: metadata.duration,
-            dimensions: metadata.dimensions
+            dimensions: metadata.dimensions,
+            thumbnailPath: metadata.thumbnailPath
           },
           { where: { id: fileId } }
         );
