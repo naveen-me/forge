@@ -161,7 +161,7 @@
           <div class="p-2.5">
             <input v-if="renamingItemId === video.id" v-model="renamingText" @blur="finishRenaming" @keyup.enter="finishRenaming" @keyup.esc="cancelRenaming" type="text" class="font-semibold text-text-light dark:text-text-dark bg-gray-100 dark:bg-gray-800 rounded-md px-2 py-0.5 border border-primary focus:outline-none focus:ring-1 focus:ring-primary w-full text-sm" />
             <p v-else @click="startRenaming(video)" class="font-semibold text-text-light dark:text-text-dark truncate text-sm cursor-pointer">{{ video.name }}</p>
-            <p class="text-xs text-subtext-light dark:text-subtext-dark mt-1">{{ video.extension ? video.extension.toUpperCase() : (video.mimeType ? video.mimeType.split('/')[1].toUpperCase() : '') }} · {{ formatFileSize(video.size) }}</p>
+            <p class="text-xs text-subtext-light dark:text-subtext-dark mt-1">{{ video.extension ? video.extension.toUpperCase() : (video.mimeType && video.mimeType.includes('/') ? video.mimeType.split('/')[1].toUpperCase() : (video.mimeType ? video.mimeType.split(',')[0].toUpperCase() : '')) }} · {{ formatFileSize(video.size) }}</p>
             <span v-if="video.isMissing" class="text-red-500 dark:text-red-400 text-xs font-semibold mt-1 inline-block">Source Missing</span>
           </div>
         </div>
@@ -199,7 +199,7 @@
                   <span v-else @click="startRenaming(video)" class="cursor-pointer">{{ video.name }}</span>
                 </div>
               </td>
-              <td class="p-3">{{ video.extension ? video.extension.toUpperCase() : (video.mimeType ? video.mimeType.split('/')[1].toUpperCase() : '') }}</td>
+              <td class="p-3">{{ video.extension ? video.extension.toUpperCase() : (video.mimeType && video.mimeType.includes('/') ? video.mimeType.split('/')[1].toUpperCase() : (video.mimeType ? video.mimeType.split(',')[0].toUpperCase() : '')) }}</td>
               <td class="p-3">{{ video.dimensions || '-' }}</td>
               <td class="p-3">{{ formatFileSize(video.size) }}</td>
               <td class="p-3 text-right">
@@ -228,7 +228,7 @@
         <div class="p-6">
           <h3 class="text-2xl font-bold text-text-dark">{{ playingVideo.name }}</h3>
           <div class="flex items-center gap-4 text-lg text-subtext-dark mt-2">
-            <span>{{ playingVideo.extension ? playingVideo.extension.toUpperCase() : (playingVideo.mimeType ? playingVideo.mimeType.split('/')[1].toUpperCase() : '') }}</span>
+            <span>{{ playingVideo.extension ? playingVideo.extension.toUpperCase() : (playingVideo.mimeType && playingVideo.mimeType.includes('/') ? playingVideo.mimeType.split('/')[1].toUpperCase() : (playingVideo.mimeType ? playingVideo.mimeType.split(',')[0].toUpperCase() : '')) }}</span>
             <span>·</span>
             <span>{{ playingVideo.dimensions }}</span>
             <span>·</span>

@@ -1,14 +1,19 @@
 const express = require('express');
 const { MediaItem } = require('../models/MediaItem');
 const { checkFileExists } = require('../utils/fileUtils');
+const { processMediaItem } = require('../src/services/mediaProcessorService.js');
+const { authenticateToken } = require('../src/middleware/auth.js'); // Import auth middleware
 const router = express.Router();
 const dialog = require('node-file-dialog');
+
+// Apply authentication middleware to all media routes
+router.use(authenticateToken);
 
 // Select files
 router.get('/select-files', async (req, res) => {
   try {
     let files = await dialog({ type: 'open-files' });
-    
+
     // Clean file paths by trimming whitespace including \r characters
     if (Array.isArray(files)) {
       files = files.map(file => {
@@ -18,7 +23,7 @@ router.get('/select-files', async (req, res) => {
         return file;
       });
     }
-    
+
     res.json({ files });
   } catch (e) {
     res.json({ files: [] });
@@ -29,9 +34,16 @@ router.get('/select-files', async (req, res) => {
 router.get('/folder/:parentId?', async (req, res) => {
   try {
     const parentId = req.params.parentId || null;
+
+    const whereClause = { parentId: parentId };
     
+    // If parentId is null or 'null', we want items where parentId is null (top-level items)
+    if (parentId === null || parentId === 'null' || parentId === 'undefined') {
+      whereClause.parentId = null;
+    }
+
     const items = await MediaItem.findAll({
-      where: { parentId },
+      where: whereClause,
       order: [
         ['type', 'ASC'], // Folders first
         ['name', 'ASC']
@@ -58,17 +70,17 @@ router.get('/folder/:parentId?', async (req, res) => {
 router.post('/folder', async (req, res) => {
   try {
     const { name, parentId } = req.body;
-    
+
     if (!name) {
       return res.status(400).json({ error: 'Folder name is required' });
     }
-    
+
     const newFolder = await MediaItem.create({
       name,
       type: 'folder',
       parentId: parentId || null
     });
-    
+
     res.status(201).json(newFolder);
   } catch (error) {
     console.error('Error creating folder:', error);
@@ -95,7 +107,7 @@ router.get('/folder/:id/path', async (req, res) => {
         current = null;
       }
     }
-    
+
     res.json(path);
   } catch (error) {
     console.error('Error fetching folder path:', error);
@@ -109,37 +121,38 @@ const { spawn } = require('child_process');
 router.post('/files', async (req, res) => {
   try {
     const { files, parentId } = req.body;
-    
+
     if (!files || !Array.isArray(files) || files.length === 0) {
       return res.status(400).json({ error: 'Files array is required' });
     }
-    
+
     const createdFiles = [];
-    
+
     for (const file of files) {
       const { name, path: filePath, size, mimeType } = file;
-      
+
       // Extract name from file path if not provided
       const fileName = name || filePath.split(/[\\/]/).pop();
-      
+
       const newFile = await MediaItem.create({
         name: fileName,
         type: 'file',
         filePath,
-        size,
-        mimeType,
-        parentId: parentId || null
+        size: size || null,  // Set to null to indicate no metadata yet
+        mimeType: mimeType || null,
+        duration: null,      // No duration yet
+        dimensions: null,    // No dimensions yet
+        parentId: parentId || null,
+        status: 'processing' // Mark as processing
       });
-      
+
       createdFiles.push(newFile);
+
+      // Process the file to extract metadata in the background
+      processMediaItem(newFile.id).catch(error => {
+        console.error(`Error processing media item ${newFile.id}:`, error);
+      });
     }
-    
-    // Spawn worker process to extract metadata in the background
-    const worker = spawn('node', ['worker.js'], {
-      detached: true,
-      stdio: 'ignore'
-    });
-    worker.unref();
 
     res.status(201).json(createdFiles);
   } catch (error) {
@@ -153,16 +166,16 @@ router.put('/:id/rename', async (req, res) => {
   try {
     const { id } = req.params;
     const { name } = req.body;
-    
+
     if (!name) {
       return res.status(400).json({ error: 'Name is required' });
     }
-    
+
     const item = await MediaItem.findByPk(id);
     if (!item) {
       return res.status(404).json({ error: 'Item not found' });
     }
-    
+
     await item.update({ name });
     res.json(item);
   } catch (error) {
@@ -176,12 +189,12 @@ router.put('/:id/move', async (req, res) => {
   try {
     const { id } = req.params;
     const { parentId } = req.body;
-    
+
     const item = await MediaItem.findByPk(id);
     if (!item) {
       return res.status(404).json({ error: 'Item not found' });
     }
-    
+
     await item.update({ parentId: parentId || null });
     res.json(item);
   } catch (error) {
@@ -217,12 +230,12 @@ router.post('/:id/thumbnail', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     const item = await MediaItem.findByPk(id);
     if (!item) {
       return res.status(404).json({ error: 'Item not found' });
     }
-    
+
     await item.destroy();
     res.json({ message: 'Item deleted successfully' });
   } catch (error) {
@@ -235,7 +248,7 @@ router.delete('/:id', async (req, res) => {
 router.get('/search/:query', async (req, res) => {
   try {
     const { query } = req.params;
-    
+
     const items = await MediaItem.findAll({
       where: {
         name: {

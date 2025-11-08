@@ -1,5 +1,7 @@
 const ffmpeg = require('fluent-ffmpeg');
 const { MediaItem } = require('./models/MediaItem');
+const fs = require('fs');
+const path = require('path');
 
 /**
  * Extract video metadata using FFmpeg
@@ -17,12 +19,12 @@ function extractVideoMetadata(filePath) {
 
       const format = metadata.format;
       const videoStream = metadata.streams.find(stream => stream.codec_type === 'video');
-      
+
       const result = {
         duration: parseFloat(format.duration) || null,
         size: parseInt(format.size) || null,
         dimensions: null,
-        mimeType: null
+        mimeType: format.format_name || null
       };
 
       if (videoStream) {
@@ -42,39 +44,49 @@ function extractVideoMetadata(filePath) {
 async function processFileMetadata(fileId, filePath) {
   try {
     // Get basic file info
-    const stats = require('fs').statSync(filePath);
+    const stats = fs.statSync(filePath);
     let size = stats.size;
-    
+
     // Extract video-specific metadata if it's a video file
-    const extension = require('path').extname(filePath).toLowerCase();
+    const extension = path.extname(filePath).toLowerCase();
     const videoExtensions = ['.mp4', '.mov', '.avi', '.mkv', '.wmv', '.flv', '.webm', '.m4v'];
-    
+
     if (videoExtensions.includes(extension)) {
       try {
         const metadata = await extractVideoMetadata(filePath);
-        // Update database with extracted metadata
+        // Update database with extracted metadata using Sequelize
         await MediaItem.update(
           {
             size: metadata.size || size,
             duration: metadata.duration,
-            dimensions: metadata.dimensions
+            dimensions: metadata.dimensions,
+            mimeType: metadata.mimeType
           },
           { where: { id: fileId } }
         );
       } catch (metadataError) {
         console.error(`Error extracting metadata for file ${filePath}:`, metadataError);
         // Still update with basic size info if metadata extraction fails
-        await MediaItem.update({ size }, { where: { id: fileId } });
+        await MediaItem.update({ 
+          size: size,
+          status: 'available' // Set to available even if metadata extraction failed
+        }, { where: { id: fileId } });
       }
     } else {
       // For non-video files, just update size
-      await MediaItem.update({ size }, { where: { id: fileId } });
+      await MediaItem.update({ 
+        size: size,
+        status: 'available'
+      }, { where: { id: fileId } });
     }
   } catch (error) {
     console.error(`Error processing file ${filePath}:`, error);
-    // Update with error status in database if needed
+    // Update with error status in database
     await MediaItem.update(
-      { size: -1 }, // Use -1 to indicate error
+      { 
+        size: -1, // Use -1 to indicate error
+        status: 'error'
+      }, 
       { where: { id: fileId } }
     );
   }
@@ -85,7 +97,7 @@ async function processFileMetadata(fileId, filePath) {
  */
 async function processPendingFiles() {
   try {
-    // Find all files that don't have metadata yet (size is null)
+    // Find all files that don't have metadata yet (size is still null)
     const pendingFiles = await MediaItem.findAll({
       where: {
         type: 'file',
