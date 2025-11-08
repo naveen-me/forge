@@ -7,7 +7,18 @@ const dialog = require('node-file-dialog');
 // Select files
 router.get('/select-files', async (req, res) => {
   try {
-    const files = await dialog({ type: 'open-files' });
+    let files = await dialog({ type: 'open-files' });
+    
+    // Clean file paths by trimming whitespace including \r characters
+    if (Array.isArray(files)) {
+      files = files.map(file => {
+        if (typeof file === 'string') {
+          return file.trim(); // Remove leading/trailing whitespace including \r, \n
+        }
+        return file;
+      });
+    }
+    
     res.json({ files });
   } catch (e) {
     res.json({ files: [] });
