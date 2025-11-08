@@ -3,7 +3,7 @@ import axios from 'axios';
 // Pinia stores should not be used directly in service files like this
 // because it creates a circular dependency issue during app initialization.
 // Instead, the interceptor should get the store instance when the request is made.
-// import { useAuthStore } from '../store'; 
+import { useAuthStore } from '../store'; 
 
 // API instance for regular endpoints (under /api)
 const api = axios.create({
@@ -24,8 +24,6 @@ const authApi = axios.create({
 // Request interceptor to add auth token to regular API calls
 api.interceptors.request.use(
     async (config) => {
-        // Dynamically import the store to avoid circular dependencies
-        const { useAuthStore } = await import('../store');
         const authStore = useAuthStore();
         if (authStore.token) {
             config.headers.Authorization = `Bearer ${authStore.token}`;
@@ -45,7 +43,6 @@ api.interceptors.response.use(
     async (error) => {
         if (error.response?.status === 401 || error.response?.status === 403) {
             // Dynamically import the store
-            const { useAuthStore } = await import('../store');
             const authStore = useAuthStore();
             authStore.logout();
             window.location.href = '/login'; // Force redirect to login
@@ -57,11 +54,41 @@ api.interceptors.response.use(
 // --- Media Library API Methods ---
 
 const mediaApi = axios.create({
-  baseURL: 'http://localhost:3001/api/media',
+  baseURL: '/api/media',  // Use relative path to go through Vite proxy
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
+// Add the same auth interceptor for media API calls
+mediaApi.interceptors.request.use(
+  async (config) => {
+    const authStore = useAuthStore();
+    if (authStore.token) {
+      config.headers.Authorization = `Bearer ${authStore.token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add the same response interceptor for media API calls
+mediaApi.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      // Dynamically import the store
+      const authStore = useAuthStore();
+      authStore.logout();
+      window.location.href = '/login'; // Force redirect to login
+    }
+    return Promise.reject(error);
+  }
+);
 
 
 const mediaService = {
@@ -108,6 +135,15 @@ const mediaService = {
   }
 };
 
+
+authApi.interceptors.response.use(
+    (response) => {
+        return response;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
 
 // Export all instances and the new service
 export { api, authApi, mediaService };
