@@ -5,7 +5,9 @@ const Overlay = require('../models/Overlay');
 // Get all overlays
 router.get('/', async (req, res) => {
   try {
-    const overlays = await Overlay.findAll({ order: [['order', 'ASC']] });
+    const [overlays] = await Overlay.sequelize.query(
+      'SELECT * FROM Overlays ORDER BY "order" ASC'
+    );
     res.json(overlays);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -71,7 +73,13 @@ router.post('/order', async (req, res) => {
   try {
     const { order } = req.body;
     for (let i = 0; i < order.length; i++) {
-      await Overlay.update({ order: i }, { where: { id: order[i] } });
+      await Overlay.sequelize.query(
+        'UPDATE Overlays SET "order" = ? WHERE id = ?',
+        {
+          replacements: [i, order[i]],
+          type: Overlay.sequelize.QueryTypes.UPDATE
+        }
+      );
     }
     res.status(200).send();
   } catch (error) {

@@ -34,7 +34,7 @@ const loadRoutes = async () => {
 // Initialize database
 const initializeDatabase = async () => {
   try {
-    await sequelize.sync({ force: false }); // Create tables if they don't exist
+    await sequelize.sync({ alter: true }); // Alter tables to match model definitions
     console.log('Database connected and synchronized');
   } catch (error) {
     console.error('Error initializing database:', error);
