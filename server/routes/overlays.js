@@ -5,7 +5,7 @@ const Overlay = require('../models/Overlay');
 // Get all overlays
 router.get('/', async (req, res) => {
   try {
-    const overlays = await Overlay.findAll();
+    const overlays = await Overlay.findAll({ order: [['order', 'ASC']] });
     res.json(overlays);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -61,6 +61,19 @@ router.delete('/:id', async (req, res) => {
     } else {
       res.status(404).json({ error: 'Overlay not found' });
     }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update overlay order
+router.post('/order', async (req, res) => {
+  try {
+    const { order } = req.body;
+    for (let i = 0; i < order.length; i++) {
+      await Overlay.update({ order: i }, { where: { id: order[i] } });
+    }
+    res.status(200).send();
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

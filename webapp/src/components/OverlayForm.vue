@@ -7,7 +7,7 @@
       </div>
     </div>
     <div ref="preview" class="flex-1 relative w-full aspect-16/9 bg-gray-200 rounded-xl overflow-hidden mb-6">
-      <div ref="interactive" class="absolute bg-cover bg-center" :style="interactiveStyle" v-html="formData.type === 'text' ? formData.source : ''"></div>
+      <div v-for="overlay in overlaysInPreview" :key="overlay.id" class="absolute bg-cover bg-center" :style="getInteractiveStyle(overlay)" v-html="overlay.type === 'text' ? overlay.source : ''"></div>
     </div>
     <div class="flex-1 flex flex-col">
       <form class="space-y-4 flex-1 overflow-y-auto pr-2">
@@ -15,7 +15,7 @@
           <label class="block text-sm font-medium text-gray-700">Source</label>
           <div class="mt-1 flex items-center">
             <input v-model="formData.source" class="block w-full rounded-lg bg-gray-100 border-gray-200 shadow-sm focus:border-primary focus:ring-primary sm:text-sm text-gray-900" type="text"/>
-            <button @click="showMediaLibrary = true" class="ml-2 flex h-10 items-center justify-center rounded-lg bg-gray-200 px-4 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-300">Browse</button>
+            <button @click.prevent="showMediaLibrary = true" class="ml-2 flex h-10 items-center justify-center rounded-lg bg-gray-200 px-4 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-300">Browse</button>
           </div>
         </div>
         <div v-if="formData.type === 'text'">
@@ -136,6 +136,7 @@ const OBS_CANVAS_HEIGHT = 1080;
 
 const props = defineProps({
   selectedOverlay: Object,
+  allOverlays: Array,
 });
 
 const emit = defineEmits(['update', 'delete']);
@@ -175,17 +176,25 @@ const insertLink = () => {
   }
 };
 
-const interactiveStyle = computed(() => {
-  if (!formData.value || !preview.value) return {};
+const overlaysInPreview = computed(() => {
+  if (!props.selectedOverlay) return [];
+  if (props.selectedOverlay.type === 'group') {
+    return props.allOverlays.filter(o => o.parentId === props.selectedOverlay.id);
+  }
+  return [props.selectedOverlay];
+});
+
+const getInteractiveStyle = (overlay) => {
+  if (!overlay || !preview.value) return {};
   const previewRect = preview.value.getBoundingClientRect();
   const scaleX = previewRect.width / OBS_CANVAS_WIDTH;
   const scaleY = previewRect.height / OBS_CANVAS_HEIGHT;
 
-  if (formData.value.type === 'text') {
+  if (overlay.type === 'text') {
     return {
-      width: `${formData.value.width * scaleX}px`,
-      height: `${formData.value.height * scaleY}px`,
-      transform: `translate(${formData.value.x * scaleX}px, ${formData.value.y * scaleY}px)`,
+      width: `${overlay.width * scaleX}px`,
+      height: `${overlay.height * scaleY}px`,
+      transform: `translate(${overlay.x * scaleX}px, ${overlay.y * scaleY}px)`,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
@@ -200,12 +209,12 @@ const interactiveStyle = computed(() => {
   }
 
   return {
-    width: `${formData.value.width * scaleX}px`,
-    height: `${formData.value.height * scaleY}px`,
-    transform: `translate(${formData.value.x * scaleX}px, ${formData.value.y * scaleY}px)`,
-    backgroundImage: `url(${formData.value.source})`,
+    width: `${overlay.width * scaleX}px`,
+    height: `${overlay.height * scaleY}px`,
+    transform: `translate(${overlay.x * scaleX}px, ${overlay.y * scaleY}px)`,
+    backgroundImage: `url(${overlay.source})`,
   };
-});
+};
 
 const scrollFilterEnabled = computed({
   get: () => !!formData.value.filters?.scroll,

@@ -5,11 +5,11 @@
       <h1 class="text-2xl font-bold text-text-light dark:text-text-dark">Media Library</h1>
       <div class="flex flex-col md:flex-row gap-2">
         <button @click="newFolderModalOpen = true" class="flex items-center justify-center gap-2 px-3 py-2 rounded-md border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark text-text-light dark:text-text-dark text-sm">
-          <span class="material-icons text-base">create_new_folder</span>
+          <span class="material-symbols-outlined text-base">create_new_folder</span>
           <span>New Folder</span>
         </button>
         <button @click="handleAddFiles" :disabled="isAddingFiles" class="flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-primary text-white text-sm" :class="{'opacity-50 cursor-not-allowed': isAddingFiles}">
-          <span class="material-icons text-base">add</span>
+          <span class="material-symbols-outlined text-base">add</span>
           <span>{{ isAddingFiles ? 'Adding...' : 'Add Files' }}</span>
         </button>
       </div>
@@ -21,12 +21,12 @@
         <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse p-0 pr-0">
           <li class="inline-flex items-center">
             <a @click="navigateToFolder(null)" href="#" class="inline-flex items-center text-xs font-medium text-subtext-light hover:text-primary dark:text-subtext-dark dark:hover:text-white">
-              <span class="material-icons text-base mr-1.5">folder</span> Media Library
+              <span class="material-symbols-outlined text-base mr-1.5">folder</span> Media Library
             </a>
           </li>
           <li v-for="folder in store.currentPath" :key="folder.id">
             <div class="flex items-center">
-              <span class="material-icons text-subtext-light dark:text-subtext-dark text-base">chevron_right</span>
+              <span class="material-symbols-outlined text-subtext-light dark:text-subtext-dark text-base">chevron_right</span>
               <a @click="navigateToFolder(folder.id)" href="#" class="ms-1 text-xs font-medium text-subtext-light hover:text-primary md:ms-2 dark:text-subtext-dark dark:hover:text-white">{{ folder.name }}</a>
             </div>
           </li>
@@ -38,46 +38,46 @@
     <div class="flex flex-col md:flex-row mb-4">
       <div class="w-full md:w-1/2 flex flex-col sm:flex-row gap-2">
         <div class="relative flex-grow">
-          <span class="material-icons absolute left-3 top-1/2 -translate-y-1/2 text-subtext-light dark:text-subtext-dark text-lg">search</span>
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-subtext-light dark:text-subtext-dark text-lg">search</span>
           <input v-model="searchQuery" @input="handleSearch" type="text" placeholder="Search" class="w-full pl-10 pr-4 py-2 rounded-md border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark text-text-light dark:text-text-dark focus:ring-primary focus:border-primary text-sm h-full" />
         </div>
         <div class="flex gap-2 justify-end">
           <div class="relative" ref="sortDropdownRef">
             <button @click.stop="sortOpen = !sortOpen" class="flex items-center gap-2 px-3 py-2 rounded-md border border-border-light dark:border-border-dark bg-card-light dark:bg-card-dark text-text-light dark:text-text-dark text-sm h-full">
-              <span class="material-icons text-base">sort</span>
+              <span class="material-symbols-outlined text-base">sort</span>
               <span>Sort By</span>
-              <span class="material-icons text-base">expand_more</span>
+              <span class="material-symbols-outlined text-base">expand_more</span>
             </button>
             <div v-show="sortOpen" class="absolute z-10 mt-1 w-56 bg-card-light dark:bg-card-dark rounded-lg shadow-lg border border-border-light dark:border-border-dark">
               <ul class="py-1 text-sm">
                 <li>
                   <a href="#" @click.prevent="setSort('name', 'asc'); sortOpen = false" class="flex items-center justify-between px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-text-light dark:text-text-dark">
-                    <span class="flex items-center gap-2"><span class="material-icons text-base">arrow_upward</span> Name</span>
-                    <span v-if="currentSort.field === 'name' && currentSort.direction === 'asc'" class="material-icons text-lg text-primary">check</span>
+                    <span class="flex items-center gap-2"><span class="material-symbols-outlined text-base">arrow_upward</span> Name</span>
+                    <span v-if="currentSort.field === 'name' && currentSort.direction === 'asc'" class="material-symbols-outlined text-lg text-primary">check</span>
                   </a>
                 </li>
                 <li>
                   <a href="#" @click.prevent="setSort('name', 'desc'); sortOpen = false" class="flex items-center justify-between px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-text-light dark:text-text-dark">
-                    <span class="flex items-center gap-2"><span class="material-icons text-base">arrow_downward</span> Name</span>
-                    <span v-if="currentSort.field === 'name' && currentSort.direction === 'desc'" class="material-icons text-lg text-primary">check</span>
+                    <span class="flex items-center gap-2"><span class="material-symbols-outlined text-base">arrow_downward</span> Name</span>
+                    <span v-if="currentSort.field === 'name' && currentSort.direction === 'desc'" class="material-symbols-outlined text-lg text-primary">check</span>
                   </a>
                 </li>
                 <li>
                   <a href="#" @click.prevent="setSort('dateCreated', 'desc'); sortOpen = false" class="flex items-center justify-between px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-text-light dark:text-text-dark">
                     Date Created
-                    <span v-if="currentSort.field === 'dateCreated' && currentSort.direction === 'desc'" class="material-icons text-lg text-primary">check</span>
+                    <span v-if="currentSort.field === 'dateCreated' && currentSort.direction === 'desc'" class="material-symbols-outlined text-lg text-primary">check</span>
                   </a>
                 </li>
                 <li>
                   <a href="#" @click.prevent="setSort('size', 'desc'); sortOpen = false" class="flex items-center justify-between px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-text-light dark:text-text-dark">
                     File Size
-                    <span v-if="currentSort.field === 'size' && currentSort.direction === 'desc'" class="material-icons text-lg text-primary">check</span>
+                    <span v-if="currentSort.field === 'size' && currentSort.direction === 'desc'" class="material-symbols-outlined text-lg text-primary">check</span>
                   </a>
                 </li>
                 <li class="border-t border-border-light dark:border-border-dark">
                   <a href="#" @click.prevent="setSort('modified', 'desc'); sortOpen = false" class="flex items-center justify-between px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 text-text-light dark:text-text-dark font-semibold text-primary dark:text-white">
                     Last Modified
-                    <span v-if="currentSort.field === 'modified' && currentSort.direction === 'desc'" class="material-icons text-lg">check</span>
+                    <span v-if="currentSort.field === 'modified' && currentSort.direction === 'desc'" class="material-symbols-outlined text-lg">check</span>
                   </a>
                 </li>
               </ul>
@@ -85,10 +85,10 @@
           </div>
           <div class="flex items-center border border-border-light dark:border-border-dark rounded-md bg-card-light dark:bg-card-dark h-full">
             <button @click="view = 'grid'" :class="{ 'bg-gray-200 dark:bg-gray-600 rounded-l-md': view === 'grid' }" class="p-2 text-text-light dark:text-text-dark h-full">
-              <span class="material-icons text-xl">grid_view</span>
+              <span class="material-symbols-outlined text-xl">grid_view</span>
             </button>
             <button @click="view = 'list'" :class="{ 'bg-gray-200 dark:bg-gray-600 rounded-r-md': view === 'list' }" class="p-2 text-text-light dark:text-text-dark h-full">
-              <span class="material-icons text-xl">list</span>
+              <span class="material-symbols-outlined text-xl">list</span>
             </button>
           </div>
         </div>
@@ -100,15 +100,15 @@
           </div>
           <div class="flex gap-1.5 flex-wrap justify-center p-2">
             <button @click="copyModalOpen = true" class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white dark:bg-card-dark text-text-light dark:text-text-dark border border-border-light dark:border-border-dark shadow-sm text-xs">
-              <span class="material-icons text-base">content_copy</span>
+              <span class="material-symbols-outlined text-base">content_copy</span>
               <span>Copy</span>
             </button>
             <button @click="moveModalOpen = true" class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white dark:bg-card-dark text-text-light dark:text-text-dark border border-border-light dark:border-border-dark shadow-sm text-xs">
-              <span class="material-icons text-base">drive_file_move</span>
+              <span class="material-symbols-outlined text-base">drive_file_move</span>
               <span>Move</span>
             </button>
             <button @click="deleteModalOpen = true" class="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-600 text-white text-xs">
-              <span class="material-icons text-base">delete</span>
+              <span class="material-symbols-outlined text-base">delete</span>
               <span>Delete</span>
             </button>
           </div>
@@ -122,7 +122,7 @@
       <div v-if="view === 'grid'" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
         <div v-for="folder in store.folders" :key="folder.id" @dblclick="navigateToFolder(folder.id)" :class="{'bg-blue-50 dark:bg-blue-900/20': isSelected(folder.id)}" class="relative group bg-card-light dark:bg-card-dark rounded-lg shadow-around border-2 border-transparent p-2.5 flex items-center gap-3 cursor-pointer">
           <input type="checkbox" :checked="isSelected(folder.id)" @click.stop="toggleSelection(folder.id)" class="form-checkbox h-4 w-4 rounded-full text-primary bg-white/50 border-gray-400/70 focus:ring-0 focus:ring-offset-0 absolute top-2.5 left-2.5 z-10" />
-          <span class="material-icons text-subtext-light dark:text-subtext-dark text-2xl">folder</span>
+          <span class="material-symbols-outlined text-subtext-light dark:text-subtext-dark text-2xl">folder</span>
           <div class="flex-grow">
             <input v-if="renamingItemId === folder.id" v-model="renamingText" @blur="finishRenaming" @keyup.enter="finishRenaming" @keyup.esc="cancelRenaming" type="text" class="font-semibold text-text-light dark:text-text-dark bg-gray-100 dark:bg-gray-800 rounded-md px-2 py-0.5 border border-primary focus:outline-none focus:ring-1 focus:ring-primary w-full text-sm" />
             <p v-else @click="startRenaming(folder)" class="font-semibold text-text-light dark:text-text-dark truncate text-sm cursor-pointer">{{ folder.name }}</p>
@@ -132,7 +132,7 @@
       <div v-if="view === 'list'" class="bg-card-light dark:bg-card-dark rounded-lg shadow-sm text-sm">
         <div v-for="folder in store.folders" :key="folder.id" @dblclick="navigateToFolder(folder.id)" :class="{'bg-blue-50 dark:bg-blue-900/20': isSelected(folder.id)}" class="flex items-center p-2.5 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg cursor-pointer">
           <input type="checkbox" :checked="isSelected(folder.id)" @click.stop="toggleSelection(folder.id)" class="form-checkbox h-4 w-4 rounded-full text-primary bg-gray-100 border-gray-300 focus:ring-0 focus:ring-offset-0 dark:bg-gray-600 dark:border-gray-500" />
-          <span class="material-icons text-subtext-light dark:text-subtext-dark text-xl mx-3">folder</span>
+          <span class="material-symbols-outlined text-subtext-light dark:text-subtext-dark text-xl mx-3">folder</span>
           <input v-if="renamingItemId === folder.id" v-model="renamingText" @blur="finishRenaming" @keyup.enter="finishRenaming" @keyup.esc="cancelRenaming" type="text" class="font-semibold text-text-light dark:text-text-dark bg-gray-100 dark:bg-gray-800 rounded-md px-2 py-0.5 border border-primary focus:outline-none focus:ring-1 focus:ring-primary w-full flex-grow text-sm" />
           <span v-else @click="startRenaming(folder)" class="font-semibold text-text-light dark:text-text-dark flex-grow cursor-pointer">{{ folder.name }}</span>
         </div>
@@ -147,14 +147,14 @@
           <input type="checkbox" :checked="isSelected(video.id)" @click.stop="toggleSelection(video.id)" class="form-checkbox h-4 w-4 rounded-full text-primary bg-white/50 border-gray-400/70 focus:ring-0 focus:ring-offset-0 absolute top-2.5 left-2.5 z-10" />
           <div class="aspect-video bg-gray-200 dark:bg-gray-700 flex items-center justify-center relative">
             <img v-if="video.thumbnailPath" :src="`http://localhost:3001${video.thumbnailPath}`" class="w-full h-full object-cover" />
-            <span v-else class="material-icons text-gray-400 dark:text-gray-500 text-4xl opacity-50 group-hover:opacity-20 transition-opacity">movie</span>
+            <span v-else class="material-symbols-outlined text-gray-400 dark:text-gray-500 text-4xl opacity-50 group-hover:opacity-20 transition-opacity">movie</span>
             <div v-if="!video.isMissing" @click="playVideo(video)" class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
               <button class="bg-white/30 backdrop-blur-sm rounded-full p-2 text-white w-12 h-12 flex items-center justify-center">
-                <span class="material-icons text-3xl">play_arrow</span>
+                <span class="material-symbols-outlined text-3xl">play_arrow</span>
               </button>
             </div>
             <div v-if="video.isMissing" class="absolute inset-0 bg-black/50 flex items-center justify-center text-white">
-              <span class="material-icons text-lg">error_outline</span>
+              <span class="material-symbols-outlined text-lg">error_outline</span>
             </div>
             <span v-if="video.dimensions" class="absolute bottom-1.5 right-1.5 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded">{{ video.dimensions }}</span>
           </div>
@@ -185,14 +185,14 @@
                 <div class="flex items-center gap-3">
                   <div class="relative group w-16 h-10 rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
                      <img v-if="video.thumbnailPath" :src="`http://localhost:3001${video.thumbnailPath}`" class="w-full h-full object-cover" />
-                     <span v-else class="material-icons text-gray-400 dark:text-gray-500 text-2xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-50 group-hover:opacity-20 transition-opacity">movie</span>
+                     <span v-else class="material-symbols-outlined text-gray-400 dark:text-gray-500 text-2xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-50 group-hover:opacity-20 transition-opacity">movie</span>
                      <div v-if="!video.isMissing" class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-5">
                       <button @click="playVideo(video)" class="bg-white/30 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-white">
-                        <span class="material-icons text-xl">play_arrow</span>
+                        <span class="material-symbols-outlined text-xl">play_arrow</span>
                       </button>
                     </div>
                      <div v-if="video.isMissing" class="absolute inset-0 bg-black/50 flex items-center justify-center text-white">
-                        <span class="material-icons text-lg">error_outline</span>
+                        <span class="material-symbols-outlined text-lg">error_outline</span>
                     </div>
                   </div>
                   <input v-if="renamingItemId === video.id" v-model="renamingText" @blur="finishRenaming" @keyup.enter="finishRenaming" @keyup.esc="cancelRenaming" type="text" class="font-semibold text-text-light dark:text-text-dark bg-gray-100 dark:bg-gray-800 rounded-md px-2 py-0.5 border border-primary focus:outline-none focus:ring-1 focus:ring-primary w-full text-sm" />
