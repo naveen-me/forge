@@ -2,8 +2,31 @@
   <div v-if="selectedOverlay" class="flex-1 flex flex-col">
     <div class="flex items-center justify-between mb-4">
       <div class="group relative flex-1">
-        <h2 class="text-2xl font-bold text-gray-900 cursor-pointer" @click="editingName = true">{{ formData.name }}</h2>
-        <input v-if="editingName" v-model="formData.name" @blur="editingName = false; $emit('update', formData)" @keyup.enter="editingName = false; $emit('update', formData)" class="text-2xl font-bold text-gray-900 bg-transparent border-b-2 border-primary outline-none w-full" type="text"/>
+        <div class="flex items-center gap-2">
+          <div class="flex-1">
+            <input 
+              v-if="editingName"
+              v-model="formData.name" 
+              @blur="handleNameBlur" 
+              @keyup.enter="handleNameBlur"
+              ref="nameInput"
+              class="text-2xl font-bold text-gray-900 bg-transparent border-b-2 border-primary pb-1 w-full outline-none" 
+              type="text"
+              autofocus />
+            <div 
+              v-else
+              @click="enableNameEditing"
+              class="text-2xl font-bold text-gray-900 border-b border-gray-300 pb-1 cursor-pointer w-full">
+              {{ formData.name }}
+            </div>
+          </div>
+          <button 
+            @click="enableNameEditing" 
+            class="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 hover:text-gray-600 focus:outline-none"
+            title="Edit name">
+            <span class="material-symbols-outlined text-base">edit</span>
+          </button>
+        </div>
       </div>
     </div>
     <div ref="preview" class="flex-1 relative w-full aspect-16/9 bg-gray-200 rounded-xl overflow-hidden mb-6">
@@ -142,6 +165,7 @@ const formData = ref({});
 const editingName = ref(false);
 const preview = ref(null);
 const interactive = ref(null);
+const nameInput = ref(null);
 const textEditor = ref(null);
 const isTextEditorFocused = ref(false);
 const editorContent = ref('');
@@ -254,6 +278,24 @@ const openFileBrowser = async () => {
     console.error('Error selecting file:', error);
   } finally {
     isBrowsingFiles.value = false;
+  }
+};
+
+const enableNameEditing = () => {
+  editingName.value = true;
+  // Focus the input field after enabling editing
+  setTimeout(() => {
+    if (nameInput.value) {
+      nameInput.value.focus();
+      nameInput.value.select(); // Select all text for easier editing
+    }
+  }, 0);
+};
+
+const handleNameBlur = () => {
+  editingName.value = false;
+  if (formData.value.name.trim()) {
+    emit('update', formData.value);
   }
 };
 
