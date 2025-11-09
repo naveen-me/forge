@@ -6,7 +6,7 @@ import Subscription from '../components/Subscription.vue';
 import Features from '../components/Features.vue';
 import UPIXManagement from '../components/UPIXManagement.vue';
 import MediaLibrary from '../components/MediaLibrary.vue';
-import Overlays from '../components/Overlays.vue';
+import Overlays from '../views/Overlays.vue';
 import Ads from '../components/Ads.vue';
 import Live from '../components/Live.vue';
 import Scheduler from '../components/Scheduler.vue';

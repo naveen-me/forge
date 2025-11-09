@@ -9,9 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@ckeditor/ckeditor5-build-classic": "^41.4.2",
+    "@ckeditor/ckeditor5-vue": "^7.3.0",
     "axios": "^1.7.2",
     "bootstrap": "^5.3.8",
     "boxicons": "^2.1.4",
+    "interact.js": "^1.2.8",
     "pinia": "^2.1.7",
     "qrcode.vue": "^3.6.0",
     "vue": "^3.4.21",
