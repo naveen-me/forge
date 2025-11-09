@@ -15,7 +15,9 @@
           <label class="block text-sm font-medium text-gray-700">Source</label>
           <div class="mt-1 flex items-center">
             <input v-model="formData.source" class="block w-full rounded-lg bg-gray-100 border-gray-200 shadow-sm focus:border-primary focus:ring-primary sm:text-sm text-gray-900" type="text"/>
-            <button @click.prevent="showMediaLibrary = true" class="ml-2 flex h-10 items-center justify-center rounded-lg bg-gray-200 px-4 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-300">Browse</button>
+            <button @click.prevent="openFileBrowser" :disabled="isBrowsingFiles" class="ml-2 flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-white transition-colors hover:bg-primary/90" :class="{'opacity-50 cursor-not-allowed': isBrowsingFiles}" title="Browse files directly">
+              {{ isBrowsingFiles ? 'Browsing...' : 'Browse' }}
+            </button>
           </div>
         </div>
         <div v-if="formData.type === 'text'">
@@ -119,11 +121,6 @@
   <div v-else class="flex items-center justify-center h-full">
     <p class="text-gray-500">Select an overlay to edit its properties.</p>
   </div>
-  <div v-if="showMediaLibrary" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center">
-    <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl h-full max-h-[80vh] p-6">
-      <MediaLibrary @file-selected="handleFileSelect" />
-    </div>
-  </div>
 </template>
 
 <script setup>
@@ -145,10 +142,10 @@ const formData = ref({});
 const editingName = ref(false);
 const preview = ref(null);
 const interactive = ref(null);
-const showMediaLibrary = ref(false);
 const textEditor = ref(null);
 const isTextEditorFocused = ref(false);
 const editorContent = ref('');
+const isBrowsingFiles = ref(false);
 
 // Methods for text editor formatting
 const updateTextContent = () => {
@@ -240,9 +237,24 @@ watch(() => props.selectedOverlay, (newOverlay) => {
   }
 }, { immediate: true, deep: true });
 
-const handleFileSelect = (file) => {
-  formData.value.source = file.filePath;
-  showMediaLibrary.value = false;
+const openFileBrowser = async () => {
+  isBrowsingFiles.value = true;
+  try {
+    // Import media service
+    const { mediaService } = await import('../services/api.js');
+    const response = await mediaService.selectFiles();
+    
+    if (response.data.files && response.data.files.length > 0) {
+      // Use the first selected file
+      formData.value.source = response.data.files[0];
+      // Update the overlay with the new source
+      emit('update', formData.value);
+    }
+  } catch (error) {
+    console.error('Error selecting file:', error);
+  } finally {
+    isBrowsingFiles.value = false;
+  }
 };
 
 onMounted(() => {
