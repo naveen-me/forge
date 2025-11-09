@@ -7,7 +7,7 @@
       </div>
     </div>
     <div ref="preview" class="flex-1 relative w-full aspect-16/9 bg-gray-200 rounded-xl overflow-hidden mb-6">
-      <div ref="interactive" class="absolute bg-cover bg-center" :style="interactiveStyle"></div>
+      <div ref="interactive" class="absolute bg-cover bg-center" :style="interactiveStyle" v-html="formData.type === 'text' ? formData.source : ''"></div>
     </div>
     <div class="flex-1 flex flex-col">
       <form class="space-y-4 flex-1 overflow-y-auto pr-2">
@@ -21,7 +21,41 @@
         <div v-if="formData.type === 'text'">
           <label class="block text-sm font-medium text-gray-700">Text Content</label>
           <div class="mt-1">
-            <ckeditor :editor="editor" v-model="formData.source" :config="editorConfig"></ckeditor>
+            <div v-if="isTextEditorFocused" class="border rounded p-2 bg-white">
+              <div ref="textEditor" contenteditable="true" 
+                   class="min-h-[120px] p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   @input="updateTextContent"
+                   @focus="isTextEditorFocused = true"
+                   @blur="isTextEditorFocused = false"
+                   :class="{'prose max-w-none': true}"
+                   v-html="editorContent">
+              </div>
+              <div class="flex flex-wrap items-center gap-1 mt-2 p-2 border rounded bg-gray-50">
+                <button type="button" @click="applyFormatting('bold')" class="px-2 py-1 text-sm border rounded hover:bg-gray-100" title="Bold">
+                  <span class="font-bold">B</span>
+                </button>
+                <button type="button" @click="applyFormatting('italic')" class="px-2 py-1 text-sm border rounded hover:bg-gray-100" title="Italic">
+                  <span class="italic">I</span>
+                </button>
+                <button type="button" @click="applyFormatting('underline')" class="px-2 py-1 text-sm border rounded hover:bg-gray-100" title="Underline">
+                  <span class="underline">U</span>
+                </button>
+                <div class="flex items-center border-r pr-2 border-gray-300">
+                  <label class="text-xs mr-1">Color:</label>
+                  <input type="color" @input="applyColor('foreColor', $event.target.value)" class="w-6 h-6 p-0.5 border rounded">
+                </div>
+                <div class="flex items-center">
+                  <label class="text-xs mr-1">BG:</label>
+                  <input type="color" @input="applyColor('backColor', $event.target.value)" class="w-6 h-6 p-0.5 border rounded">
+                </div>
+                <button type="button" @click="insertLink" class="ml-2 px-2 py-1 text-sm border rounded hover:bg-gray-100" title="Insert Link">
+                  <span class="material-symbols-outlined text-base">link</span>
+                </button>
+              </div>
+            </div>
+            <div v-else @dblclick="isTextEditorFocused = true" class="min-h-[120px] p-3 border-2 border-dashed rounded bg-gray-50 cursor-pointer hover:border-blue-300"
+                 v-html="formData.source || '<div class=\'text-gray-400 italic\'>Double-click to edit text...</div>'">
+            </div>
           </div>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -95,8 +129,6 @@
 <script setup>
 import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
 import interact from 'interact.js';
-import CKEditor from '@ckeditor/ckeditor5-vue';
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 import MediaLibrary from './MediaLibrary.vue';
 
 const OBS_CANVAS_WIDTH = 1920;
@@ -113,10 +145,34 @@ const editingName = ref(false);
 const preview = ref(null);
 const interactive = ref(null);
 const showMediaLibrary = ref(false);
+const textEditor = ref(null);
+const isTextEditorFocused = ref(false);
+const editorContent = ref('');
 
-const editor = ClassicEditor;
-const editorConfig = {
-  toolbar: [ 'bold', 'italic', 'underline', '|', 'fontColor', 'fontBackgroundColor' ]
+// Methods for text editor formatting
+const updateTextContent = () => {
+  if (textEditor.value) {
+    formData.value.source = textEditor.value.innerHTML;
+    editorContent.value = textEditor.value.innerHTML;
+  }
+};
+
+const applyFormatting = (command) => {
+  document.execCommand(command, false, null);
+  setTimeout(updateTextContent, 0); // Use timeout to ensure DOM updates
+};
+
+const applyColor = (command, value) => {
+  document.execCommand(command, false, value);
+  setTimeout(updateTextContent, 0);
+};
+
+const insertLink = () => {
+  const url = prompt('Enter the URL:');
+  if (url) {
+    document.execCommand('createLink', false, url);
+    setTimeout(updateTextContent, 0);
+  }
 };
 
 const interactiveStyle = computed(() => {
@@ -130,7 +186,16 @@ const interactiveStyle = computed(() => {
       width: `${formData.value.width * scaleX}px`,
       height: `${formData.value.height * scaleY}px`,
       transform: `translate(${formData.value.x * scaleX}px, ${formData.value.y * scaleY}px)`,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '4px',
       color: 'white',
+      fontSize: '14px',
+      overflow: 'hidden',
+      textAlign: 'center',
+      wordWrap: 'break-word',
+      wordBreak: 'break-word',
     }
   }
 
@@ -159,8 +224,10 @@ const scrollFilterEnabled = computed({
 watch(() => props.selectedOverlay, (newOverlay) => {
   if (newOverlay) {
     formData.value = JSON.parse(JSON.stringify(newOverlay));
+    editorContent.value = formData.value.source || '';
   } else {
     formData.value = {};
+    editorContent.value = '';
   }
 }, { immediate: true, deep: true });
 
