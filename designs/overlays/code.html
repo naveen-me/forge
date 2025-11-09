@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Overlay Manager</title>
+<link href="data:image/x-icon;base64," rel="icon" type="image/x-icon"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#1173d4",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        display: ["Inter"],
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        full: "9999px"
+                    },
+                    aspectRatio: {
+                        '16/9': '16 / 9',
+                    },
+                },
+            },
+        };
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings:
+                'FILL' 0,
+                'wght' 400,
+                'GRAD' 0,
+                'opsz' 24
+        }
+    </style>
+</head>
+<body class="bg-background-light font-display text-gray-800">
+<div class="flex h-screen flex-col">
+<header class="flex h-16 shrink-0 items-center justify-between border-b border-gray-200 px-6">
+<div class="flex items-center gap-4">
+<svg class="h-6 w-6 text-primary" fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path clip-rule="evenodd" d="M24 18.4228L42 11.475V34.3663C42 34.7796 41.7457 35.1504 41.3601 35.2992L24 42V18.4228Z" fill="currentColor" fill-rule="evenodd"></path>
+<path clip-rule="evenodd" d="M24 8.18819L33.4123 11.574L24 15.2071L14.5877 11.574L24 8.18819ZM9 15.8487L21 20.4805V37.6263L9 32.9945V15.8487ZM27 37.6263V20.4805L39 15.8487V32.9945L27 37.6263ZM25.354 2.29885C24.4788 1.98402 23.5212 1.98402 22.646 2.29885L4.98454 8.65208C3.7939 9.08038 3 10.2097 3 11.475V34.3663C3 36.0196 4.01719 37.5026 5.55962 38.098L22.9197 44.7987C23.6149 45.0671 24.3851 45.0671 25.0803 44.7987L42.4404 38.098C43.9828 37.5026 45 36.0196 45 34.3663V11.475C45 10.2097 44.2061 9.08038 43.0155 8.65208L25.354 2.29885Z" fill="currentColor" fill-rule="evenodd"></path>
+</svg>
+<h1 class="text-lg font-bold text-gray-900">Overlay Manager</h1>
+</div>
+<div class="flex items-center gap-2">
+<button class="flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-white transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+<span class="material-symbols-outlined mr-2">add</span>
+                    Add Overlay
+                </button>
+<button class="flex h-10 items-center justify-center rounded-lg bg-gray-200 px-4 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2">
+<span class="material-symbols-outlined mr-2">create_new_folder</span>
+                    Add Group
+                </button>
+</div>
+</header>
+<main class="flex flex-1 overflow-hidden">
+<aside class="w-80 border-r border-gray-200 flex flex-col">
+<div class="p-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">search</span>
+<input class="w-full rounded-lg bg-gray-100 pl-10 pr-4 py-2 text-sm text-gray-900 placeholder:text-gray-500 border border-gray-200 focus:outline-none focus:ring-2 focus:ring-primary" placeholder="Search overlays..." type="text"/>
+</div>
+</div>
+<div class="px-4 pb-2 pt-2">
+<h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Overlays</h2>
+</div>
+<div class="flex-1 overflow-y-auto">
+<nav class="space-y-1 p-2">
+<a class="group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100" href="#">
+<div class="flex items-center gap-3">
+<div class="flex flex-col">
+<span class="text-gray-900">Overlay 1</span>
+<span class="text-xs text-gray-500">Image</span>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-gray-400">drag_indicator</span>
+</div>
+</a>
+<a class="group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100" href="#">
+<div class="flex items-center gap-3">
+<div class="flex flex-col">
+<span class="text-gray-900">Overlay 2</span>
+<span class="text-xs text-gray-500">Video</span>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-gray-400">drag_indicator</span>
+</div>
+</a>
+<div class="space-y-1">
+<a class="group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100" href="#">
+<div class="flex items-center gap-3">
+<div class="flex flex-col">
+<span class="text-gray-900">Group 1</span>
+<span class="text-xs text-gray-500">Group</span>
+</div>
+</div>
+<span class="material-symbols-outlined text-gray-400 group-hover:text-gray-600">expand_more</span>
+</a>
+<div class="pl-6 space-y-1">
+<a class="group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100" href="#">
+<div class="flex items-center gap-3">
+<div class="flex flex-col">
+<span class="text-gray-900">Overlay 3</span>
+<span class="text-xs text-gray-500">Image</span>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-gray-400">drag_indicator</span>
+</div>
+</a>
+<a class="group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100" href="#">
+<div class="flex items-center gap-3">
+<div class="flex flex-col">
+<span class="text-gray-900">Overlay 4</span>
+<span class="text-xs text-gray-500">Video</span>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-gray-400">drag_indicator</span>
+</div>
+</a>
+</div>
+</div>
+</nav>
+</div>
+</aside>
+<section class="flex-1 flex flex-col p-6 overflow-hidden">
+<div class="flex-1 flex flex-col">
+<div class="flex items-center justify-between mb-4">
+<div class="group relative flex-1">
+<h2 class="text-2xl font-bold text-gray-900 cursor-pointer" onclick="this.style.display='none'; this.nextElementSibling.style.display='block'; this.nextElementSibling.focus()">Overlay 3</h2>
+<input class="hidden text-2xl font-bold text-gray-900 bg-transparent border-b-2 border-primary outline-none w-full" onblur="this.style.display='none'; this.previousElementSibling.style.display='block';" type="text" value="Overlay 3"/>
+</div>
+<div class="flex items-center gap-4 ml-4">
+<div class="relative inline-block text-left">
+<button class="flex items-center justify-center h-10 w-10 rounded-lg hover:bg-gray-100 text-gray-600" onclick="this.nextElementSibling.classList.toggle('hidden')">
+<span class="material-symbols-outlined">image</span>
+</button>
+<div class="origin-top-right absolute right-0 mt-2 w-40 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden">
+<div class="py-1">
+<a class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" href="#">
+<span class="material-symbols-outlined text-base">image</span>
+<span>Image</span>
+</a>
+<a class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" href="#">
+<span class="material-symbols-outlined text-base">videocam</span>
+<span>Video</span>
+</a>
+</div>
+</div>
+</div>
+<button class="flex items-center justify-center h-10 w-10 rounded-lg hover:bg-gray-100 text-gray-600">
+<span class="material-symbols-outlined">attachment</span>
+</button>
+</div>
+</div>
+<div class="flex-1 relative w-full aspect-16/9 bg-gray-200 rounded-xl overflow-hidden mb-6">
+<div class="absolute inset-0 bg-cover bg-center" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDKYTsAE2YY4LeveVeSzd5DHdP7Zxk-PbNoWD3eWhsplIFs91yylKnsahtQhgEKE1AkP7CB0uP_kiRzzAEhFeDWqCcz2cB6rNU6pfVwscqO_SyQ2dSsyxeip9V-60dnMZs2gPN47gfoFNJEBTMQZMa_Bf-yLQLqJLWIGg6CPqsITJBUMYdkfXyEKZ8cWE6QeSctmGNZQRRS183XZgF1WLFaSPDh2SoBYp_l5C1BZQBAJjErLcF8ipKXBO7SGHjHJxtcI1914-mWVfY");'></div>
+</div>
+<div class="flex-1 flex flex-col">
+<form class="space-y-4 flex-1 overflow-y-auto pr-2">
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div>
+<label class="block text-sm font-medium text-gray-700" for="x">X</label>
+<input class="mt-1 block w-full rounded-lg bg-gray-100 border-gray-200 shadow-sm focus:border-primary focus:ring-primary sm:text-sm text-gray-900" id="x" type="number" value="0"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700" for="y">Y</label>
+<input class="mt-1 block w-full rounded-lg bg-gray-100 border-gray-200 shadow-sm focus:border-primary focus:ring-primary sm:text-sm text-gray-900" id="y" type="number" value="0"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700" for="width">Width</label>
+<input class="mt-1 block w-full rounded-lg bg-gray-100 border-gray-200 shadow-sm focus:border-primary focus:ring-primary sm:text-sm text-gray-900" id="width" type="number" value="1920"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700" for="height">Height</label>
+<input class="mt-1 block w-full rounded-lg bg-gray-100 border-gray-200 shadow-sm focus:border-primary focus:ring-primary sm:text-sm text-gray-900" id="height" type="number" value="1080"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-gray-700" for="opacity">Opacity</label>
+<input class="mt-1 block w-full rounded-lg bg-gray-100 border-gray-200 shadow-sm focus:border-primary focus:ring-primary sm:text-sm text-gray-900" id="opacity" max="1" min="0" step="0.1" type="number" value="1"/>
+</div>
+</div>
+</form>
+<div class="flex justify-between items-center pt-6">
+<button class="flex h-10 items-center justify-center rounded-lg bg-primary px-6 text-sm font-medium text-white transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" type="submit">Save</button>
+<button class="h-10 w-10 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-100 hover:text-red-700 transition-colors">
+<span class="material-symbols-outlined text-2xl">delete</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+</div>
+<div class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center hidden" id="addGroupModal">
+<div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
+<div class="flex items-center justify-between mb-4">
+<h3 class="text-xl font-bold text-gray-900">Create New Group</h3>
+<button class="text-gray-400 hover:text-gray-600" onclick="document.getElementById('addGroupModal').classList.add('hidden')">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="space-y-4">
+<div>
+<label class="block text-sm font-medium text-gray-700" for="groupName">Group Name</label>
+<input class="mt-1 block w-full rounded-lg bg-gray-100 border-gray-200 shadow-sm focus:border-primary focus:ring-primary sm:text-sm text-gray-900" id="groupName" placeholder="Enter group name" type="text"/>
+</div>
+<div>
+<h4 class="text-sm font-medium text-gray-700 mb-2">Select ungrouped items</h4>
+<div class="space-y-2 max-h-60 overflow-y-auto p-2 border rounded-lg">
+<label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+<input class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" type="checkbox"/>
+<div class="flex flex-col">
+<span class="text-gray-900">Overlay 1</span>
+<span class="text-xs text-gray-500">Image</span>
+</div>
+</label>
+<label class="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-100 cursor-pointer">
+<input class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" type="checkbox"/>
+<div class="flex flex-col">
+<span class="text-gray-900">Overlay 2</span>
+<span class="text-xs text-gray-500">Video</span>
+</div>
+</label>
+</div>
+</div>
+</div>
+<div class="flex justify-end mt-6 gap-2">
+<button class="flex h-10 items-center justify-center rounded-lg bg-gray-200 px-4 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-400 focus-visible:ring-offset-2" onclick="document.getElementById('addGroupModal').classList.add('hidden')">Cancel</button>
+<button class="flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-medium text-white transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">Create Group</button>
+</div>
+</div>
+</div>
+<script>
+        document.querySelector('button.bg-gray-200').addEventListener('click', () => {
+            document.getElementById('addGroupModal').classList.remove('hidden');
+        });
+        document.addEventListener('click', function(event) {
+            const dropdownButton = document.querySelector('.relative.inline-block button');
+            const dropdownMenu = dropdownButton.nextElementSibling;
+            if (!dropdownButton.contains(event.target) && !dropdownMenu.contains(event.target)) {
+                dropdownMenu.classList.add('hidden');
+            }
+        });
+    </script>
+</body></html>
