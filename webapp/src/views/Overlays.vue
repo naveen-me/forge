@@ -27,43 +27,47 @@
           <h2 class="text-xs font-semibold uppercase tracking-wider text-gray-500">Overlays</h2>
         </div>
         <div class="flex-1 overflow-y-auto">
-          <nav class="space-y-1 p-2">
-            <div v-for="overlay in topLevelOverlays" :key="overlay.id">
-              <div @click="toggleGroup(overlay.id)" class="group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 cursor-pointer" :class="{ 'bg-gray-100': selectedOverlay === overlay }">
-                <div class="flex items-center gap-3">
-                  <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" @click.stop/>
-                  <span v-if="overlay.type === 'group'" class="material-symbols-outlined text-gray-400 group-hover:text-gray-600">
-                    {{ expandedGroups.includes(overlay.id) ? 'expand_more' : 'chevron_right' }}
-                  </span>
-                  <div class="flex flex-col">
-                    <span class="text-gray-900">{{ overlay.name }}</span>
-                    <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">{{ overlay.type }}</span>
-                  </div>
-                </div>
-                <div class="flex items-center gap-1">
-                  <span class="material-symbols-outlined text-gray-400">drag_indicator</span>
-                </div>
-              </div>
-              <div v-if="overlay.type === 'group' && expandedGroups.includes(overlay.id)" class="pl-6 space-y-1">
-                <div v-for="child in getChildren(overlay.id)" :key="child.id" @click="selectedOverlay = child" class="group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100" :class="{ 'bg-gray-100': selectedOverlay === child }">
+          <draggable v-model="overlays" tag="nav" class="space-y-1 p-2" group="overlays" item-key="id" @end="onDragEnd">
+            <template #item="{ element: overlay }">
+              <div v-if="!overlay.parentId" :data-id="overlay.id">
+                <div @click="handleOverlayClick(overlay)" class="group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 cursor-pointer" :class="{ 'bg-gray-100': selectedOverlay === overlay }">
                   <div class="flex items-center gap-3">
                     <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" @click.stop/>
+                    <span v-if="overlay.type === 'group'" class="material-symbols-outlined text-gray-400 group-hover:text-gray-600">
+                      {{ expandedGroups.includes(overlay.id) ? 'expand_more' : 'chevron_right' }}
+                    </span>
                     <div class="flex flex-col">
-                      <span class="text-gray-900">{{ child.name }}</span>
-                      <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">{{ child.type }}</span>
+                      <span class="text-gray-900">{{ overlay.name }}</span>
+                      <span class="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800">{{ overlay.type }}</span>
                     </div>
                   </div>
-                  <div class="flex items-center gap-1">
+                  <div class="flex items-center gap-1 handle">
                     <span class="material-symbols-outlined text-gray-400">drag_indicator</span>
                   </div>
                 </div>
+                <draggable v-if="overlay.type === 'group' && expandedGroups.includes(overlay.id)" v-model="overlay.children" tag="div" class="pl-6 space-y-1" group="overlays" item-key="id" :data-group-id="overlay.id" handle=".handle">
+                  <template #item="{ element: child }">
+                    <div @click="selectedOverlay = child" class="group flex items-center justify-between rounded-lg px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100" :class="{ 'bg-gray-100': selectedOverlay === child }" :data-id="child.id">
+                      <div class="flex items-center gap-3">
+                        <input type="checkbox" class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" @click.stop/>
+                        <div class="flex flex-col">
+                          <span class="text-gray-900">{{ child.name }}</span>
+                          <span class="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">{{ child.type }}</span>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-1 handle">
+                        <span class="material-symbols-outlined text-gray-400">drag_indicator</span>
+                      </div>
+                    </div>
+                  </template>
+                </draggable>
               </div>
-            </div>
-          </nav>
+            </template>
+          </draggable>
         </div>
       </aside>
       <section class="flex-1 flex flex-col p-6 overflow-hidden">
-        <OverlayForm :selectedOverlay="selectedOverlay" @update="updateOverlay" @delete="deleteOverlay" />
+        <OverlayForm :selectedOverlay="selectedOverlay" :allOverlays="overlays" @update="updateOverlay" @delete="deleteOverlay" />
       </section>
     </main>
     <div v-if="showAddGroupModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center">
@@ -115,6 +119,7 @@
 
 <script setup>
 import { ref, onMounted, computed } from 'vue';
+import draggable from 'vuedraggable';
 import OverlayForm from '../components/OverlayForm.vue';
 import axios from 'axios';
 
@@ -189,20 +194,54 @@ const filteredOverlays = computed(() => {
   );
 });
 
-const topLevelOverlays = computed(() => {
-  return filteredOverlays.value.filter(o => !o.parentId);
-});
-
 const getChildren = (parentId) => {
-  return filteredOverlays.value.filter(o => o.parentId === parentId);
+  return overlays.value.filter(o => o.parentId === parentId);
 };
 
-const toggleGroup = (groupId) => {
-  const index = expandedGroups.value.indexOf(groupId);
-  if (index > -1) {
-    expandedGroups.value.splice(index, 1);
-  } else {
-    expandedGroups.value.push(groupId);
+const topLevelOverlays = computed(() => {
+  const topLevel = filteredOverlays.value.filter(o => !o.parentId);
+  return topLevel.map(overlay => {
+    if (overlay.type === 'group') {
+      return {
+        ...overlay,
+        children: getChildren(overlay.id)
+      };
+    }
+    return overlay;
+  });
+});
+
+const handleOverlayClick = (overlay) => {
+  selectedOverlay.value = overlay;
+  if (overlay.type === 'group') {
+    const index = expandedGroups.value.indexOf(overlay.id);
+    if (index > -1) {
+      expandedGroups.value.splice(index, 1);
+    } else {
+      expandedGroups.value.push(overlay.id);
+    }
+  }
+};
+
+const onDragEnd = (event) => {
+  const { newIndex, oldIndex, to, from } = event;
+  const movedItem = overlays.value.find(o => o.id === event.item.dataset.id);
+  const toContainer = to.parentElement.closest('[data-group-id]');
+  const newParentId = toContainer ? toContainer.dataset.groupId : null;
+
+  if (movedItem) {
+    movedItem.parentId = newParentId;
+    updateOverlay(movedItem);
+  }
+  updateOverlayOrder();
+};
+
+const updateOverlayOrder = async () => {
+  try {
+    const overlayOrder = overlays.value.map(o => o.id);
+    await axios.post('http://localhost:3001/api/overlays/order', { order: overlayOrder });
+  } catch (error) {
+    console.error('Error updating overlay order:', error);
   }
 };
 

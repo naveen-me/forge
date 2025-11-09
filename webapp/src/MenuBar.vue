@@ -8,7 +8,7 @@
         @click="$router.push('/')"
         data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Dashboard"
       >
-        <i class='bx bx-tada-hover' :class="$route.name === 'Dashboard' ? 'bxs-dashboard' : 'bx-dashboard'"></i>
+        <span class="material-symbols-outlined">{{ $route.name === 'Dashboard' ? 'dashboard' : 'dashboard' }}</span>
       </button>
 
       <!-- Media Library -->
@@ -18,7 +18,7 @@
         @click="$router.push('/media-library')"
         data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Media Library"
       >
-        <i class='bx bx-tada-hover' :class="$route.name === 'MediaLibrary' ? 'bxs-folder-open' : 'bx-folder-open'"></i>
+        <span class="material-symbols-outlined">{{ $route.name === 'MediaLibrary' ? 'folder_open' : 'folder_open' }}</span>
       </button>
 
       <!-- Overlays -->
@@ -28,7 +28,7 @@
         @click="$router.push('/overlays')"
         data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Overlays"
       >
-        <i class='bx bx-tada-hover' :class="$route.name === 'Overlays' ? 'bxs-layer' : 'bx-layer'"></i>
+        <span class="material-symbols-outlined">{{ $route.name === 'Overlays' ? 'layers' : 'layers' }}</span>
       </button>
 
       <!-- Ads -->
@@ -38,7 +38,7 @@
         @click="$router.push('/ads')"
         data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Ads"
       >
-        <i class='bx bx-tada-hover' :class="$route.name === 'Ads' ? 'bxs-bulb' : 'bx-bulb'"></i>
+        <span class="material-symbols-outlined">{{ $route.name === 'Ads' ? 'lightbulb' : 'lightbulb' }}</span>
       </button>
 
       <!-- Status -->
@@ -48,7 +48,7 @@
         @click="$router.push('/live')"
         data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Live Preview"
       >
-        <i class='bx bx-tada-hover' :class="$route.name === 'Live' ? 'bxs-broadcast' : 'bx-broadcast'"></i>
+        <span class="material-symbols-outlined">{{ $route.name === 'Live' ? 'sensors' : 'sensors' }}</span>
       </button>
       
       <!-- Calendar -->
@@ -58,7 +58,7 @@
         @click="$router.push('/scheduler')"
         data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Scheduler"
       >
-        <i class='bx bx-tada-hover' :class="$route.name === 'Scheduler' ? 'bxs-calendar' : 'bx-calendar'"></i>
+        <span class="material-symbols-outlined">{{ $route.name === 'Scheduler' ? 'calendar_today' : 'calendar_today' }}</span>
       </button>
       
     </div>
@@ -70,7 +70,7 @@
         @click="$router.push('/profile')"
         data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Profile"
       >
-        <i class='bx bx-tada-hover' :class="$route.name === 'UserProfile' ? 'bxs-user' : 'bx-user'"></i>
+        <span class="material-symbols-outlined">{{ $route.name === 'UserProfile' ? 'person' : 'person' }}</span>
       </button>
 
       <!-- Push Settings to Bottom -->
@@ -81,7 +81,7 @@
           @click="$router.push('/settings')"
           data-bs-toggle="tooltip" data-bs-placement="right" data-bs-title="Settings"
         >
-          <i class='bx bx-tada-hover' :class="$route.name === 'Settings' ? 'bxs-cog' : 'bx-cog'"></i>
+          <span class="material-symbols-outlined">{{ $route.name === 'Settings' ? 'settings' : 'settings' }}</span>
         </button>
       </div>
     </div>
