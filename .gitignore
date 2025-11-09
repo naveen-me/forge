@@ -12,6 +12,11 @@ playout.exe
 # Ignore database files
 *.db
 *.db-journal
+server/models/database.sqlite
+
+# Ignore log files
+server.log
+webapp.log
 
 # Ignore Vue build output
 /webapp/dist/

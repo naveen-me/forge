@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { sequelize } = require('./models/MediaItem');
+const sequelize = require('./src/database');
+const Overlay = require('./models/Overlay');
 require('dotenv').config();
 
 const app = express();
@@ -15,6 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 // Import routes (using dynamic imports for ES modules)
 const mediaRoutes = require('./routes/media');
 const streamRoutes = require('./routes/stream');
+const overlayRoutes = require('./routes/overlays');
 
 // Import ES modules using dynamic imports
 const loadRoutes = async () => {
@@ -24,6 +26,7 @@ const loadRoutes = async () => {
   // Routes
   app.use('/api/media', mediaRoutes);
   app.use('/api/stream', streamRoutes);
+  app.use('/api/overlays', overlayRoutes);
   app.use('/auth', authRoutes);  // Auth endpoints like /auth/login, /auth/register
   app.use('/api', apiRoutes);    // Main API endpoints with auth middleware
 };
