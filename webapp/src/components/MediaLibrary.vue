@@ -186,8 +186,8 @@
                   <div class="relative group w-16 h-10 rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
                      <img v-if="video.thumbnailPath" :src="`http://localhost:3001${video.thumbnailPath}`" class="w-full h-full object-cover" />
                      <span v-else class="material-icons text-gray-400 dark:text-gray-500 text-2xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-50 group-hover:opacity-20 transition-opacity">movie</span>
-                     <div v-if="!video.isMissing" @click="playVideo(video)" class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                      <button class="bg-white/30 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-white">
+                     <div v-if="!video.isMissing" class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-5">
+                      <button @click="playVideo(video)" class="bg-white/30 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-white">
                         <span class="material-icons text-xl">play_arrow</span>
                       </button>
                     </div>
@@ -362,6 +362,19 @@ const setSort = (field, direction) => {
   currentSort.value = { field, direction };
   // Apply sorting to store data
   store.sortItems(field, direction);
+};
+
+// Helper functions for video player
+const formatDuration = (seconds) => {
+  if (!seconds) return '0:00';
+  const hrs = Math.floor(seconds / 3600);
+  const mins = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  
+  if (hrs > 0) {
+    return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
 };
 
 // Add click outside handling
