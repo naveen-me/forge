@@ -29,11 +29,37 @@
         </div>
       </div>
     </div>
-    <div ref="preview" class="flex-1 relative w-full aspect-16/9 bg-gray-200 rounded-xl overflow-hidden mb-6">
-      <div v-for="overlay in overlaysInPreview" :key="overlay.id" class="absolute bg-cover bg-center" :style="getInteractiveStyle(overlay)" v-html="overlay.type === 'text' ? overlay.source : ''"></div>
+    
+    <!-- Konva Canvas Preview -->
+    <div class="relative w-full aspect-16/9 bg-gray-200 rounded-xl overflow-hidden mb-6" ref="canvasContainer">
+      <v-stage :config="stageConfig" @mousedown="handleStageMouseDown" @touchstart="handleStageMouseDown">
+        <v-layer>
+          <template v-for="overlay in overlaysInPreview" :key="overlay.id">
+            <!-- Image Overlays -->
+            <v-image
+              v-if="overlay.type === 'image' && imageElements[overlay.id]"
+              :config="{ ...getKonvaConfig(overlay), image: imageElements[overlay.id] }"
+              @dragend="handleDragEnd"
+              @transformend="handleTransformEnd"
+              @click="handleShapeClick(overlay.id)"
+            />
+            <!-- Text Overlays (as SVG Image) -->
+            <v-image
+              v-if="overlay.type === 'text' && textAsImage[overlay.id]"
+              :config="{ ...getKonvaConfig(overlay), image: textAsImage[overlay.id] }"
+              @dragend="handleDragEnd"
+              @transformend="handleTransformEnd"
+              @click="handleShapeClick(overlay.id)"
+            />
+          </template>
+          <v-transformer ref="transformer" />
+        </v-layer>
+      </v-stage>
     </div>
+
     <div class="flex-1 flex flex-col">
       <form class="space-y-4 flex-1 overflow-y-auto pr-2">
+        <!-- Form content remains largely the same -->
         <div v-if="formData.type === 'image' || formData.type === 'video'">
           <label class="block text-sm font-medium text-gray-700">Source</label>
           <div class="mt-1 flex items-center">
@@ -126,8 +152,7 @@
 </template>
 
 <script setup>
-import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
-import interact from 'interact.js';
+import { ref, watch, computed, onMounted, onUnmounted, nextTick } from 'vue';
 import { useEditor, EditorContent } from '@tiptap/vue-3';
 import { StarterKit } from '@tiptap/starter-kit';
 import { TextStyle } from '@tiptap/extension-text-style';
@@ -150,24 +175,24 @@ const emit = defineEmits(['update', 'delete']);
 
 const formData = ref({});
 const editingName = ref(false);
-const preview = ref(null);
-const interactive = ref(null);
 const nameInput = ref(null);
 const isBrowsingFiles = ref(false);
 
+// Konva state
+const canvasContainer = ref(null);
+const stageConfig = ref({ width: 0, height: 0, scaleX: 1, scaleY: 1 });
+const transformer = ref(null);
+const selectedShapeId = ref(null);
+const imageElements = ref({});
+const textAsImage = ref({});
+
 const editor = useEditor({
-  extensions: [
-    StarterKit,
-    Underline,
-    FontFamily,
-    TextStyle,
-    Color,
-    Highlight.configure({ multicolor: true }),
-    FontSize,
-  ],
+  extensions: [ StarterKit, Underline, FontFamily, TextStyle, Color, Highlight.configure({ multicolor: true }), FontSize ],
   content: '',
   onUpdate: ({ editor }) => {
-    formData.value.source = editor.getHTML();
+    if (formData.value.type === 'text') {
+      formData.value.source = editor.getHTML();
+    }
   },
 });
 
@@ -179,55 +204,111 @@ const overlaysInPreview = computed(() => {
   return [props.selectedOverlay];
 });
 
-const getInteractiveStyle = (overlay) => {
-  if (!overlay || !preview.value) return {};
-  const previewRect = preview.value.getBoundingClientRect();
-  const scaleX = previewRect.width / OBS_CANVAS_WIDTH;
-  const scaleY = previewRect.height / OBS_CANVAS_HEIGHT;
-
-  if (overlay.type === 'text') {
-    const style = {
-      width: `${overlay.width * scaleX}px`,
-      height: `${overlay.height * scaleY}px`,
-      transform: `translate(${overlay.x * scaleX}px, ${overlay.y * scaleY}px)`,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      fontFamily: overlay.fontFamily || 'Roboto',
-      fontSize: `${(overlay.fontSize || 24) * scaleY}px`,
-      lineHeight: overlay.lineHeight || 1.2,
-      overflow: 'hidden',
-      padding: '4px',
+const updateStageSize = () => {
+  if (canvasContainer.value) {
+    const { width, height } = canvasContainer.value.getBoundingClientRect();
+    stageConfig.value = {
+      ...stageConfig.value,
+      width,
+      height,
+      scaleX: width / OBS_CANVAS_WIDTH,
+      scaleY: height / OBS_CANVAS_HEIGHT,
     };
-    if (overlay.wordWrap) {
-      style.wordWrap = 'break-word';
-      style.wordBreak = 'break-word';
-    }
-    // The v-html directive will handle the rich text content
-    return style;
   }
-
-  return {
-    width: `${overlay.width * scaleX}px`,
-    height: `${overlay.height * scaleY}px`,
-    transform: `translate(${overlay.x * scaleX}px, ${overlay.y * scaleY}px)`,
-    backgroundImage: `url(${overlay.source})`,
-  };
 };
 
-const scrollFilterEnabled = computed({
-  get: () => !!formData.value.filters?.scroll,
-  set: (enabled) => {
-    if (enabled) {
-      if (!formData.value.filters) {
-        formData.value.filters = {};
-      }
-      formData.value.filters.scroll = { speed_x: 0, speed_y: 0 };
-    } else {
-      delete formData.value.filters.scroll;
-    }
-  },
+const getKonvaConfig = (overlay) => ({
+  id: overlay.id,
+  x: overlay.x,
+  y: overlay.y,
+  width: overlay.width,
+  height: overlay.height,
+  draggable: selectedShapeId.value === overlay.id,
+  opacity: overlay.opacity,
 });
+
+const handleDragEnd = (e) => {
+  const node = e.target;
+  formData.value.x = Math.round(node.x());
+  formData.value.y = Math.round(node.y());
+};
+
+const handleTransformEnd = (e) => {
+  const node = e.target;
+  formData.value.x = Math.round(node.x());
+  formData.value.y = Math.round(node.y());
+  formData.value.width = Math.round(node.width() * node.scaleX());
+  formData.value.height = Math.round(node.height() * node.scaleY());
+  node.scaleX(1);
+  node.scaleY(1);
+};
+
+const handleShapeClick = (id) => {
+  selectedShapeId.value = id;
+  updateTransformer();
+};
+
+const handleStageMouseDown = (e) => {
+  if (e.target === e.target.getStage()) {
+    selectedShapeId.value = null;
+    updateTransformer();
+    return;
+  }
+  const clickedOnTransformer = e.target.getParent().className === 'Transformer';
+  if (clickedOnTransformer) {
+    return;
+  }
+  const id = e.target.id();
+  if (id) {
+    handleShapeClick(id);
+  }
+};
+
+const updateTransformer = () => {
+  const transformerNode = transformer.value.getNode();
+  const stage = transformerNode.getStage();
+  const selectedNode = stage.findOne('#' + selectedShapeId.value);
+
+  if (selectedNode) {
+    transformerNode.nodes([selectedNode]);
+  } else {
+    transformerNode.nodes([]);
+  }
+  transformerNode.getLayer().batchDraw();
+};
+
+const preloadImage = (overlay) => {
+  if (overlay.type === 'image' && overlay.source && !imageElements.value[overlay.id]) {
+    const img = new window.Image();
+    img.src = overlay.source;
+    img.onload = () => {
+      imageElements.value[overlay.id] = img;
+    };
+  }
+};
+
+const renderTextAsImage = (overlay) => {
+  if (overlay.type !== 'text' || !overlay.source) return;
+
+  const foreignObject = `
+    <foreignObject width="${overlay.width}" height="${overlay.height}">
+      <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: ${overlay.fontFamily}; font-size: ${overlay.fontSize}px; line-height: ${overlay.lineHeight}; color: black;">
+        ${overlay.source}
+      </div>
+    </foreignObject>
+  `;
+  
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${overlay.width}" height="${overlay.height}">${foreignObject}</svg>`;
+  const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+  const url = URL.createObjectURL(svgBlob);
+
+  const img = new window.Image();
+  img.src = url;
+  img.onload = () => {
+    textAsImage.value[overlay.id] = img;
+    URL.revokeObjectURL(url);
+  };
+};
 
 watch(() => props.selectedOverlay, (newOverlay) => {
   if (newOverlay) {
@@ -237,12 +318,30 @@ watch(() => props.selectedOverlay, (newOverlay) => {
         editor.value.commands.setContent(formData.value.source || '', false);
     }
 
+    // Clean up source if it's an image and contains HTML
+    if (formData.value.type === 'image' && formData.value.source && formData.value.source.includes('<')) {
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = formData.value.source;
+      formData.value.source = tempDiv.textContent || '';
+    }
+
     if (formData.value.type === 'text') {
       formData.value.fontFamily = formData.value.fontFamily || 'Roboto';
       formData.value.fontSize = formData.value.fontSize || 24;
       formData.value.lineHeight = formData.value.lineHeight || 1.2;
       formData.value.wordWrap = formData.value.wordWrap === undefined ? true : formData.value.wordWrap;
+      renderTextAsImage(formData.value);
+    } else if (formData.value.type === 'image') {
+      // Use nextTick to ensure reactivity when image loads
+      nextTick(() => {
+        preloadImage(formData.value);
+      });
     }
+    
+    nextTick(() => {
+      handleShapeClick(newOverlay.id);
+    });
+
   } else {
     formData.value = {};
     if (editor.value) {
@@ -250,6 +349,42 @@ watch(() => props.selectedOverlay, (newOverlay) => {
     }
   }
 }, { immediate: true, deep: true });
+
+watch(formData, (newFormData) => {
+  if (newFormData.type === 'text') {
+    renderTextAsImage(newFormData);
+  }
+}, { deep: true });
+
+onMounted(() => {
+  updateStageSize();
+  window.addEventListener('resize', updateStageSize);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', updateStageSize);
+  if (editor.value) {
+    editor.value.destroy();
+  }
+});
+
+// Other existing methods (enableNameEditing, handleNameBlur, openFileBrowser, scrollFilterEnabled) remain the same
+const enableNameEditing = () => {
+  editingName.value = true;
+  setTimeout(() => {
+    if (nameInput.value) {
+      nameInput.value.focus();
+      nameInput.value.select();
+    }
+  }, 0);
+};
+
+const handleNameBlur = () => {
+  editingName.value = false;
+  if (formData.value.name.trim()) {
+    emit('update', formData.value);
+  }
+};
 
 const openFileBrowser = async () => {
   isBrowsingFiles.value = true;
@@ -268,56 +403,17 @@ const openFileBrowser = async () => {
   }
 };
 
-const enableNameEditing = () => {
-  editingName.value = true;
-  setTimeout(() => {
-    if (nameInput.value) {
-      nameInput.value.focus();
-      nameInput.value.select();
+const scrollFilterEnabled = computed({
+  get: () => !!formData.value.filters?.scroll,
+  set: (enabled) => {
+    if (enabled) {
+      if (!formData.value.filters) {
+        formData.value.filters = {};
+      }
+      formData.value.filters.scroll = { speed_x: 0, speed_y: 0 };
+    } else {
+      delete formData.value.filters.scroll;
     }
-  }, 0);
-};
-
-const handleNameBlur = () => {
-  editingName.value = false;
-  if (formData.value.name.trim()) {
-    emit('update', formData.value);
-  }
-};
-
-onMounted(() => {
-  if (interactive.value) {
-    interact(interactive.value)
-      .draggable({
-        onmove: (event) => {
-          const previewRect = preview.value.getBoundingClientRect();
-          const scaleX = previewRect.width / OBS_CANVAS_WIDTH;
-          const scaleY = previewRect.height / OBS_CANVAS_HEIGHT;
-          formData.value.x += event.dx / scaleX;
-          formData.value.y += event.dy / scaleY;
-        },
-      })
-      .resizable({
-        edges: { left: true, right: true, bottom: true, top: true },
-        onmove: (event) => {
-          const previewRect = preview.value.getBoundingClientRect();
-          const scaleX = previewRect.width / OBS_CANVAS_WIDTH;
-          const scaleY = previewRect.height / OBS_CANVAS_HEIGHT;
-          formData.value.width = event.rect.width / scaleX;
-          formData.value.height = event.rect.height / scaleY;
-          formData.value.x += event.deltaRect.left / scaleX;
-          formData.value.y += event.deltaRect.top / scaleY;
-        },
-      });
-  }
-});
-
-onUnmounted(() => {
-  if (editor.value) {
-    editor.value.destroy();
-  }
-  if (interactive.value) {
-    interact(interactive.value).unset();
-  }
+  },
 });
 </script>
