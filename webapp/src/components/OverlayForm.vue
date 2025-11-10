@@ -46,40 +46,19 @@
         <div v-if="formData.type === 'text'">
           <label class="block text-sm font-medium text-gray-700">Text Content</label>
           <div class="mt-1">
-            <div v-if="isTextEditorFocused" class="border rounded p-2 bg-white">
-              <div ref="textEditor" contenteditable="true" 
-                   class="min-h-[120px] p-3 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                   @input="updateTextContent"
-                   @focus="isTextEditorFocused = true"
-                   @blur="isTextEditorFocused = false"
-                   :class="{'prose max-w-none': true}"
-                   v-html="editorContent">
-              </div>
-              <div class="flex flex-wrap items-center gap-1 mt-2 p-2 border rounded bg-gray-50">
-                <button type="button" @click="applyFormatting('bold')" class="px-2 py-1 text-sm border rounded hover:bg-gray-100" title="Bold">
-                  <span class="font-bold">B</span>
-                </button>
-                <button type="button" @click="applyFormatting('italic')" class="px-2 py-1 text-sm border rounded hover:bg-gray-100" title="Italic">
-                  <span class="italic">I</span>
-                </button>
-                <button type="button" @click="applyFormatting('underline')" class="px-2 py-1 text-sm border rounded hover:bg-gray-100" title="Underline">
-                  <span class="underline">U</span>
-                </button>
-                <div class="flex items-center border-r pr-2 border-gray-300">
-                  <label class="text-xs mr-1">Color:</label>
-                  <input type="color" @input="applyColor('foreColor', $event.target.value)" class="w-6 h-6 p-0.5 border rounded">
-                </div>
-                <div class="flex items-center">
-                  <label class="text-xs mr-1">BG:</label>
-                  <input type="color" @input="applyColor('backColor', $event.target.value)" class="w-6 h-6 p-0.5 border rounded">
-                </div>
-                <button type="button" @click="insertLink" class="ml-2 px-2 py-1 text-sm border rounded hover:bg-gray-100" title="Insert Link">
-                  <span class="material-symbols-outlined text-base">link</span>
-                </button>
-              </div>
+            <EditorToolbar v-if="editor" :editor="editor" />
+            <EditorContent :editor="editor" class="min-h-[120px] p-3 focus:outline-none border-x border-b border-gray-300 rounded-b-lg" />
+          </div>
+
+          <h4 class="text-md font-medium text-gray-800 mt-6 mb-2">Container Styling</h4>
+          <div class="grid grid-cols-2 md:grid-cols-3 gap-4 border-t pt-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700" for="lineHeight">Line Height</label>
+              <input class="mt-1 block w-full rounded-lg bg-gray-100 border-gray-200 shadow-sm focus:border-primary focus:ring-primary sm:text-sm text-gray-900" id="lineHeight" type="number" step="0.1" v-model="formData.lineHeight" />
             </div>
-            <div v-else @dblclick="isTextEditorFocused = true" class="min-h-[120px] p-3 border-2 border-dashed rounded bg-gray-50 cursor-pointer hover:border-blue-300"
-                 v-html="formData.source || '<div class=\'text-gray-400 italic\'>Double-click to edit text...</div>'">
+            <div class="flex items-center gap-2 pt-6">
+              <input type="checkbox" v-model="formData.wordWrap" class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary" />
+              <label class="text-sm font-medium text-gray-700">Word Wrap</label>
             </div>
           </div>
         </div>
@@ -149,7 +128,15 @@
 <script setup>
 import { ref, watch, computed, onMounted, onUnmounted } from 'vue';
 import interact from 'interact.js';
-import MediaLibrary from './MediaLibrary.vue';
+import { useEditor, EditorContent } from '@tiptap/vue-3';
+import { StarterKit } from '@tiptap/starter-kit';
+import { TextStyle } from '@tiptap/extension-text-style';
+import { FontFamily } from '@tiptap/extension-font-family';
+import { Underline } from '@tiptap/extension-underline';
+import { Color } from '@tiptap/extension-color';
+import { Highlight } from '@tiptap/extension-highlight';
+import { FontSize } from '../tiptap-extensions/FontSize.js';
+import EditorToolbar from './EditorToolbar.vue';
 
 const OBS_CANVAS_WIDTH = 1920;
 const OBS_CANVAS_HEIGHT = 1080;
@@ -166,36 +153,23 @@ const editingName = ref(false);
 const preview = ref(null);
 const interactive = ref(null);
 const nameInput = ref(null);
-const textEditor = ref(null);
-const isTextEditorFocused = ref(false);
-const editorContent = ref('');
 const isBrowsingFiles = ref(false);
 
-// Methods for text editor formatting
-const updateTextContent = () => {
-  if (textEditor.value) {
-    formData.value.source = textEditor.value.innerHTML;
-    editorContent.value = textEditor.value.innerHTML;
-  }
-};
-
-const applyFormatting = (command) => {
-  document.execCommand(command, false, null);
-  setTimeout(updateTextContent, 0); // Use timeout to ensure DOM updates
-};
-
-const applyColor = (command, value) => {
-  document.execCommand(command, false, value);
-  setTimeout(updateTextContent, 0);
-};
-
-const insertLink = () => {
-  const url = prompt('Enter the URL:');
-  if (url) {
-    document.execCommand('createLink', false, url);
-    setTimeout(updateTextContent, 0);
-  }
-};
+const editor = useEditor({
+  extensions: [
+    StarterKit,
+    Underline,
+    FontFamily,
+    TextStyle,
+    Color,
+    Highlight.configure({ multicolor: true }),
+    FontSize,
+  ],
+  content: '',
+  onUpdate: ({ editor }) => {
+    formData.value.source = editor.getHTML();
+  },
+});
 
 const overlaysInPreview = computed(() => {
   if (!props.selectedOverlay) return [];
@@ -212,21 +186,25 @@ const getInteractiveStyle = (overlay) => {
   const scaleY = previewRect.height / OBS_CANVAS_HEIGHT;
 
   if (overlay.type === 'text') {
-    return {
+    const style = {
       width: `${overlay.width * scaleX}px`,
       height: `${overlay.height * scaleY}px`,
       transform: `translate(${overlay.x * scaleX}px, ${overlay.y * scaleY}px)`,
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '4px',
-      color: 'white',
-      fontSize: '14px',
+      fontFamily: overlay.fontFamily || 'Roboto',
+      fontSize: `${(overlay.fontSize || 24) * scaleY}px`,
+      lineHeight: overlay.lineHeight || 1.2,
       overflow: 'hidden',
-      textAlign: 'center',
-      wordWrap: 'break-word',
-      wordBreak: 'break-word',
+      padding: '4px',
+    };
+    if (overlay.wordWrap) {
+      style.wordWrap = 'break-word';
+      style.wordBreak = 'break-word';
     }
+    // The v-html directive will handle the rich text content
+    return style;
   }
 
   return {
@@ -254,24 +232,33 @@ const scrollFilterEnabled = computed({
 watch(() => props.selectedOverlay, (newOverlay) => {
   if (newOverlay) {
     formData.value = JSON.parse(JSON.stringify(newOverlay));
-    editorContent.value = formData.value.source || '';
+    
+    if (editor.value && editor.value.getHTML() !== (formData.value.source || '')) {
+        editor.value.commands.setContent(formData.value.source || '', false);
+    }
+
+    if (formData.value.type === 'text') {
+      formData.value.fontFamily = formData.value.fontFamily || 'Roboto';
+      formData.value.fontSize = formData.value.fontSize || 24;
+      formData.value.lineHeight = formData.value.lineHeight || 1.2;
+      formData.value.wordWrap = formData.value.wordWrap === undefined ? true : formData.value.wordWrap;
+    }
   } else {
     formData.value = {};
-    editorContent.value = '';
+    if (editor.value) {
+        editor.value.commands.clearContent();
+    }
   }
 }, { immediate: true, deep: true });
 
 const openFileBrowser = async () => {
   isBrowsingFiles.value = true;
   try {
-    // Import media service
     const { mediaService } = await import('../services/api.js');
     const response = await mediaService.selectFiles();
     
     if (response.data.files && response.data.files.length > 0) {
-      // Use the first selected file
       formData.value.source = response.data.files[0];
-      // Update the overlay with the new source
       emit('update', formData.value);
     }
   } catch (error) {
@@ -283,11 +270,10 @@ const openFileBrowser = async () => {
 
 const enableNameEditing = () => {
   editingName.value = true;
-  // Focus the input field after enabling editing
   setTimeout(() => {
     if (nameInput.value) {
       nameInput.value.focus();
-      nameInput.value.select(); // Select all text for easier editing
+      nameInput.value.select();
     }
   }, 0);
 };
@@ -327,6 +313,9 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+  if (editor.value) {
+    editor.value.destroy();
+  }
   if (interactive.value) {
     interact(interactive.value).unset();
   }

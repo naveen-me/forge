@@ -6,7 +6,7 @@
       <div v-for="child in children" :key="child.id" :style="getOverlayStyle(child)">
         <img v-if="child.type === 'image'" :src="child.src" class="w-full h-full" />
         <video v-if="child.type === 'video'" :src="child.src" class="w-full h-full" autoplay loop muted></video>
-        <div v-if="child.type === 'text'" class="p-2">{{ child.text }}</div>
+        <div v-if="child.type === 'text'" v-html="child.source" class="w-full h-full"></div>
       </div>
     </div>
   </div>
@@ -27,16 +27,24 @@ const props = defineProps({
 });
 
 const getOverlayStyle = (overlay) => {
-  // This assumes overlays have position and size properties.
-  // e.g., x, y, width, height, z-index (order)
-  return {
+  const style = {
     position: 'absolute',
     left: `${overlay.x || 0}px`,
     top: `${overlay.y || 0}px`,
     width: `${overlay.width || 100}px`,
     height: `${overlay.height || 50}px`,
     zIndex: overlay.order || 0,
-    border: '1px dashed #999', // for visualization
   };
+
+  if (overlay.type === 'text') {
+    style.lineHeight = overlay.lineHeight || 1.2;
+    style.overflow = 'hidden';
+    if (overlay.wordWrap) {
+      style.wordWrap = 'break-word';
+      style.wordBreak = 'break-word';
+    }
+  }
+
+  return style;
 };
 </script>

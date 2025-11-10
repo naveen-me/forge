@@ -43,6 +43,26 @@ const Overlay = sequelize.define('Overlay', {
     type: DataTypes.FLOAT,
     defaultValue: 1,
   },
+  fontFamily: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  fontSize: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  lineHeight: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+  },
+  backgroundColor: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  wordWrap: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false,
+  },
   filters: {
     type: DataTypes.JSON,
     allowNull: true,

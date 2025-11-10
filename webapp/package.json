@@ -9,6 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tiptap/extension-color": "^3.10.5",
+    "@tiptap/extension-font-family": "^3.10.5",
+    "@tiptap/extension-highlight": "^3.10.5",
+    "@tiptap/extension-text-style": "^3.10.5",
+    "@tiptap/extension-underline": "^3.10.5",
+    "@tiptap/starter-kit": "^3.10.5",
+    "@tiptap/vue-3": "^3.10.5",
     "axios": "^1.7.2",
     "bootstrap": "^5.3.8",
     "boxicons": "^2.1.4",
