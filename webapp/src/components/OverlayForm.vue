@@ -265,9 +265,36 @@ const handleStageMouseDown = (e) => {
 };
 
 const updateTransformer = () => {
-  const transformerNode = transformer.value.getNode();
+  // Vue-Konva transformer reference - needs to be properly initialized
+  if (!transformer.value) {
+    console.warn('Transformer is not available');
+    return;
+  }
+
+  // The transformer ref in Vue-Konva should directly provide the transformer node
+  // but might need to be accessed differently depending on Vue-Konva version
+  let transformerNode;
+  
+  // Some Vue-Konva versions may have the node as the value directly
+  if (typeof transformer.value.getStage === 'function') {
+    transformerNode = transformer.value;
+  } 
+  // If transformer.value has getNode method (older versions or different implementation)
+  else if (typeof transformer.value.getNode === 'function') {
+    transformerNode = transformer.value.getNode();
+  } 
+  else {
+    console.warn('Transformer node is not properly initialized', transformer.value);
+    return;
+  }
+  
+  if (!transformerNode) {
+    console.warn('Could not get transformer node');
+    return;
+  }
+  
   const stage = transformerNode.getStage();
-  const selectedNode = stage.findOne('#' + selectedShapeId.value);
+  const selectedNode = stage ? stage.findOne('#' + selectedShapeId.value) : null;
 
   if (selectedNode) {
     transformerNode.nodes([selectedNode]);
@@ -279,10 +306,19 @@ const updateTransformer = () => {
 
 const preloadImage = (overlay) => {
   if (overlay.type === 'image' && overlay.source && !imageElements.value[overlay.id]) {
+    // Check if the source is a local file URL which browsers block for security
+    if (overlay.source.startsWith('file://')) {
+      console.warn('Cannot load local file URL for security reasons:', overlay.source);
+      return;
+    }
+    
     const img = new window.Image();
     img.src = overlay.source;
     img.onload = () => {
       imageElements.value[overlay.id] = img;
+    };
+    img.onerror = () => {
+      console.error('Failed to load image:', overlay.source);
     };
   }
 };
@@ -292,7 +328,7 @@ const renderTextAsImage = (overlay) => {
 
   const foreignObject = `
     <foreignObject width="${overlay.width}" height="${overlay.height}">
-      <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: ${overlay.fontFamily}; font-size: ${overlay.fontSize}px; line-height: ${overlay.lineHeight}; color: black;">
+      <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: ${overlay.fontFamily || 'Roboto'}; font-size: ${overlay.fontSize || 24}px; line-height: ${overlay.lineHeight || 1.2}; color: black;">
         ${overlay.source}
       </div>
     </foreignObject>
@@ -306,6 +342,10 @@ const renderTextAsImage = (overlay) => {
   img.src = url;
   img.onload = () => {
     textAsImage.value[overlay.id] = img;
+    URL.revokeObjectURL(url);
+  };
+  img.onerror = () => {
+    console.error('Failed to render text as image for overlay:', overlay.id);
     URL.revokeObjectURL(url);
   };
 };

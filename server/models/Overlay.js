@@ -3,8 +3,8 @@ const sequelize = require('../src/database');
 
 const Overlay = sequelize.define('Overlay', {
   id: {
-    type: DataTypes.INTEGER,
-    autoIncrement: true,
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
   },
   name: {
@@ -68,7 +68,7 @@ const Overlay = sequelize.define('Overlay', {
     allowNull: true,
   },
   parentId: {
-    type: DataTypes.INTEGER,
+    type: DataTypes.UUID,
     allowNull: true,
     references: {
       model: 'Overlays',
