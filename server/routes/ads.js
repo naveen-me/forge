@@ -1,11 +1,12 @@
-const express = require('express');
-const { Ad } = require('../models/Ad');
-const { checkFileExists } = require('../utils/fileUtils');
-const { addThumbnailJob } = require('../src/services/taskService');
-const { authenticateToken } = require('../src/middleware/auth.js');
+import express from 'express';
+import { Ad } from '../models/Ad.js';
+import { checkFileExists } from '../utils/fileUtils.js';
+import { addThumbnailJob } from '../src/services/taskService.js';
+import { authenticateToken } from '../src/middleware/auth.js';
+import dialog from 'node-file-dialog';
+import { Op } from 'sequelize';
+
 const router = express.Router();
-const dialog = require('node-file-dialog');
-const { Op } = require('sequelize');
 
 router.use(authenticateToken);
 
@@ -155,8 +156,14 @@ router.post('/group', async (req, res) => {
     }
   });
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// Define __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 router.delete('/:id', async (req, res) => {
   try {
@@ -187,4 +194,4 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

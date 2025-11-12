@@ -1,10 +1,11 @@
-const express = require('express');
-const { MediaItem } = require('../models/MediaItem');
-const { checkFileExists } = require('../utils/fileUtils');
-const { addThumbnailJob } = require('../src/services/taskService');
-const { authenticateToken } = require('../src/middleware/auth.js'); // Import auth middleware
+import express from 'express';
+import { MediaItem } from '../models/MediaItem.js';
+import { checkFileExists } from '../utils/fileUtils.js';
+import { addThumbnailJob } from '../src/services/taskService.js';
+import { authenticateToken } from '../src/middleware/auth.js'; // Import auth middleware
+import dialog from 'node-file-dialog';
+
 const router = express.Router();
-const dialog = require('node-file-dialog');
 
 // Apply authentication middleware to all media routes
 router.use(authenticateToken);
@@ -202,8 +203,14 @@ router.put('/:id/move', async (req, res) => {
 
 
 
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// Define __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Delete an item
 router.delete('/:id', async (req, res) => {
@@ -260,4 +267,4 @@ router.get('/search/:query', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

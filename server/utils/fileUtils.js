@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
 
 /**
  * Check if a file exists at the given path
@@ -48,7 +48,7 @@ function getFileExtension(filePath) {
  */
 function getMimeType(filePath) {
   const ext = getFileExtension(filePath);
-  
+
   const mimeTypes = {
     '.mp4': 'video/mp4',
     '.mov': 'video/quicktime',
@@ -69,13 +69,13 @@ function getMimeType(filePath) {
     '.bmp': 'image/bmp',
     '.webp': 'image/webp'
   };
-  
+
   return mimeTypes[ext] || 'application/octet-stream';
 }
 
-module.exports = {
+export { 
   checkFileExists,
   getFileSize,
   getFileExtension,
-  getMimeType
+  getMimeType 
 };

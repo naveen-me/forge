@@ -1,5 +1,5 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../src/database');
+import { DataTypes } from 'sequelize';
+import sequelize from '../src/database.js';
 
 const Overlay = sequelize.define('Overlay', {
   id: {
@@ -83,4 +83,4 @@ const Overlay = sequelize.define('Overlay', {
   timestamps: true,
 });
 
-module.exports = Overlay;
+export default Overlay;

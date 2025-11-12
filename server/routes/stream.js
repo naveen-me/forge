@@ -1,8 +1,15 @@
-const express = require('express');
-const fs = require('fs');
-const path = require('path');
-const { MediaItem } = require('../models/MediaItem');
-const { checkFileExists } = require('../utils/fileUtils');
+import express from 'express';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import { MediaItem } from '../models/MediaItem.js';
+import { checkFileExists } from '../utils/fileUtils.js';
+
+// Define __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
 const router = express.Router();
 
 // Stream video file
@@ -58,4 +65,4 @@ router.get('/video/:id', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

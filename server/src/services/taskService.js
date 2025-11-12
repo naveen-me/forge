@@ -1,12 +1,12 @@
-const WebSocket = require('ws');
-const { generateThumbnail } = require('../../worker');
+import { WebSocketServer } from 'ws';
+import { generateThumbnail } from '../../worker.js';
 
 let wss;
 const jobQueue = [];
 let isProcessing = false;
 
 function setupWebSocket(server) {
-  wss = new WebSocket.Server({ server });
+  wss = new WebSocketServer({ server });
 
   wss.on('connection', ws => {
     console.log('Client connected');
@@ -19,7 +19,7 @@ function setupWebSocket(server) {
 function broadcast(data) {
   if (!wss) return;
   wss.clients.forEach(client => {
-    if (client.readyState === WebSocket.OPEN) {
+    if (client.readyState === 1) { // 1 corresponds to WebSocket.OPEN
       client.send(JSON.stringify(data));
     }
   });
@@ -50,8 +50,8 @@ function addThumbnailJob(mediaId, modelName) {
   processQueue();
 }
 
-module.exports = {
+export { 
   setupWebSocket,
   addThumbnailJob,
-  broadcast,
+  broadcast 
 };

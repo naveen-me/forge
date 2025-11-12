@@ -1,5 +1,5 @@
-const { DataTypes } = require('sequelize');
-const sequelize = require('../src/database');
+import { DataTypes } from 'sequelize';
+import sequelize from '../src/database.js';
 
 // Define MediaItem model
 const MediaItem = sequelize.define('MediaItem', {
@@ -67,17 +67,18 @@ const MediaItem = sequelize.define('MediaItem', {
 
 // Create associations
 MediaItem.associate = (models) => {
-  MediaItem.hasMany(models.MediaItem, { 
-    as: 'children', 
+  MediaItem.hasMany(models.MediaItem, {
+    as: 'children',
     foreignKey: 'parentId',
     onDelete: 'CASCADE'
   });
-  
-  MediaItem.belongsTo(models.MediaItem, { 
-    as: 'parent', 
+
+  MediaItem.belongsTo(models.MediaItem, {
+    as: 'parent',
     foreignKey: 'parentId',
     onDelete: 'CASCADE'
   });
 };
 
-module.exports = { sequelize, MediaItem };
+export { MediaItem };
+export default MediaItem;

@@ -1,11 +1,18 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const sequelize = require('./src/database');
-const Overlay = require('./models/Overlay');
-const { Ad } = require('./models/Ad');
-const { MediaItem } = require('./models/MediaItem');
-require('dotenv').config();
+import express from 'express';
+import cors from 'cors';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import sequelize from './src/database.js';
+import Overlay from './models/Overlay.js';
+import { Ad } from './models/Ad.js';
+import { MediaItem } from './models/MediaItem.js';
+import dotenv from 'dotenv';
+dotenv.config();
+
+// Define __dirname for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001; // Changed back to 3001
@@ -18,11 +25,11 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Import routes (using dynamic imports for ES modules)
-const mediaRoutes = require('./routes/media');
-const streamRoutes = require('./routes/stream');
-const overlayRoutes = require('./routes/overlays');
-const adRoutes = require('./routes/ads');
+// Import routes using ES modules
+import mediaRoutes from './routes/media.js';
+import streamRoutes from './routes/stream.js';
+import overlayRoutes from './routes/overlays.js';
+import adRoutes from './routes/ads.js';
 
 // Import ES modules using dynamic imports
 const loadRoutes = async () => {
@@ -52,8 +59,8 @@ const initializeDatabase = async () => {
   }
 };
 
-const http = require('http');
-const { setupWebSocket } = require('./src/services/taskService');
+import http from 'http';
+import { setupWebSocket } from './src/services/taskService.js';
 
 // ... (rest of the file)
 
@@ -71,5 +78,3 @@ const startServer = async () => {
 };
 
 startServer().catch(console.error);
-
-module.exports = app;

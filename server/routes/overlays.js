@@ -1,6 +1,8 @@
-const express = require('express');
+import express from 'express';
+import Overlay from '../models/Overlay.js';
+import { Op } from 'sequelize';
+
 const router = express.Router();
-const Overlay = require('../models/Overlay');
 
 // Get all overlays
 router.get('/', async (req, res) => {
@@ -52,8 +54,6 @@ router.put('/:id', async (req, res) => {
     res.status(400).json({ error: error.message });
   }
 });
-
-const { Op } = require('sequelize');
 
 // Delete an overlay
 router.delete('/:id', async (req, res) => {
@@ -132,4 +132,4 @@ router.post('/order', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
