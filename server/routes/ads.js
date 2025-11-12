@@ -29,7 +29,16 @@ router.get('/select-files', async (req, res) => {
 
 router.get('/', async (req, res) => {
     try {
+      const { groupId } = req.query;
+      const where = {};
+      if (groupId) {
+        where.parentId = groupId;
+      } else {
+        // only get root items, not all items
+        where.parentId = null;
+      }
       const ads = await Ad.findAll({
+        where,
         order: [['order', 'ASC']],
       });
       res.json(ads);
@@ -122,33 +131,16 @@ router.put('/:id/rename', async (req, res) => {
 });
 
 router.post('/group', async (req, res) => {
-    const { name, adIds } = req.body;
-    if (!adIds || !Array.isArray(adIds)) {
-      return res.status(400).json({ error: 'adIds must be an array.' });
-    }
-
+    const { name } = req.body;
     try {
       const newGroup = await Ad.create({
         name: name || 'New Group',
         type: 'group',
       });
-
-      if (adIds.length > 0) {
-        const [updateCount] = await Ad.update(
-          { parentId: newGroup.id },
-          { where: { id: { [Op.in]: adIds } } }
-        );
-
-        res.status(200).json({
-          message: `Successfully created group and moved ${updateCount} ads.`,
-          group: newGroup,
-        });
-      } else {
-        res.status(200).json({
-          message: `Successfully created group.`,
-          group: newGroup,
-        });
-      }
+      res.status(200).json({
+        message: `Successfully created group.`,
+        group: newGroup,
+      });
     } catch (error) {
       res.status(500).json({ error: error.message });
     }

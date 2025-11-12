@@ -15,6 +15,9 @@ app.use(cors());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
+// Serve static files from the 'public' directory
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Import routes (using dynamic imports for ES modules)
 const mediaRoutes = require('./routes/media');
 const streamRoutes = require('./routes/stream');

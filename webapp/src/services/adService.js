@@ -1,37 +1,38 @@
-import axios from 'axios';
+import { api } from './api';
 
-const API_URL = '/api/ads';
+const API_URL = '/ads';
 
-const getAds = () => {
-  return axios.get(API_URL);
+const getAds = (groupId) => {
+  const url = groupId ? `${API_URL}?groupId=${groupId}` : API_URL;
+  return api.get(url);
 };
 
 const selectFiles = () => {
-  return axios.get(`${API_URL}/select-files`);
+  return api.get(`${API_URL}/select-files`);
 };
 
 const addFiles = (files, parentId) => {
-  return axios.post(`${API_URL}/files`, { files, parentId });
+  return api.post(`${API_URL}/files`, { files, parentId });
 };
 
 const generateThumbnail = (id) => {
-    return axios.post(`${API_URL}/${id}/thumbnail`);
+    return api.post(`${API_URL}/${id}/thumbnail`);
 };
 
 const renameAd = (id, name) => {
-  return axios.put(`${API_URL}/${id}/rename`, { name });
+  return api.put(`${API_URL}/${id}/rename`, { name });
 };
 
-const createGroup = (name, adIds) => {
-  return axios.post(`${API_URL}/group`, { name, adIds });
+const createGroup = (name) => {
+  return api.post(`${API_URL}/group`, { name });
 };
 
 const updateOrder = (orderedIds, parentId) => {
-  return axios.post(`${API_URL}/order`, { orderedIds, parentId });
+  return api.post(`${API_URL}/order`, { orderedIds, parentId });
 };
 
 const deleteAd = (id) => {
-  return axios.delete(`${API_URL}/${id}`);
+  return api.delete(`${API_URL}/${id}`);
 };
 
 export default {
