@@ -1,37 +1,36 @@
 const ffmpeg = require('fluent-ffmpeg');
 const { MediaItem } = require('../../models/MediaItem.js');
+const { Ad } = require('../../models/Ad.js');
 const fs = require('fs');
 
-const processMediaItem = async (mediaItemId) => {
+const processMediaItem = async (mediaItemId, type = 'MediaItem') => {
+    const model = type === 'Ad' ? Ad : MediaItem;
     try {
-        // Find the media item using Sequelize
-        const item = await MediaItem.findByPk(mediaItemId);
+        const item = await model.findByPk(mediaItemId);
 
         if (!item || !item.filePath) {
-            console.error(`Media item ${mediaItemId} not found or filePath is missing.`);
+            console.error(`${type} ${mediaItemId} not found or filePath is missing.`);
             return;
         }
 
         const filePath = item.filePath;
 
         if (!fs.existsSync(filePath)) {
-            await MediaItem.update(
+            await model.update(
                 { status: 'missing' },
                 { where: { id: mediaItemId } }
             );
-            console.warn(`Source file for media item ${mediaItemId} not found on disk: ${filePath}`);
+            console.warn(`Source file for ${type} ${mediaItemId} not found on disk: ${filePath}`);
             return;
         }
 
-                        // Extract metadata using FFmpeg - make sure to handle potential FFmpeg issues
         try {
-            // Verify the file is accessible before processing
             if (!fs.existsSync(filePath)) {
-                await MediaItem.update(
+                await model.update(
                     { status: 'missing' },
                     { where: { id: mediaItemId } }
                 ).catch(updateError => {
-                    console.error(`Failed to update missing status for media item ${mediaItemId}:`, updateError);
+                    console.error(`Failed to update missing status for ${type} ${mediaItemId}:`, updateError);
                 });
                 return;
             }
@@ -39,12 +38,12 @@ const processMediaItem = async (mediaItemId) => {
             ffmpeg.ffprobe(filePath, async (err, metadata) => {
                 try {
                     if (err) {
-                        console.error(`Error probing media item ${mediaItemId}:`, err);
-                        await MediaItem.update(
+                        console.error(`Error probing ${type} ${mediaItemId}:`, err);
+                        await model.update(
                             { status: 'error' },
                             { where: { id: mediaItemId } }
                         ).catch(updateError => {
-                            console.error(`Failed to update error status for media item ${mediaItemId}:`, updateError);
+                            console.error(`Failed to update error status for ${type} ${mediaItemId}:`, updateError);
                         });
                         return;
                     }
@@ -52,14 +51,12 @@ const processMediaItem = async (mediaItemId) => {
                     const videoStream = metadata.streams.find(s => s.codec_type === 'video');
                     const format = metadata.format;
 
-                    // Prepare metadata
                     const size = format.size ? parseInt(format.size) : null;
                     const duration = format.duration ? parseFloat(format.duration) : null;
                     const formatName = format.format_name || null;
                     const dimensions = videoStream ? `${videoStream.width}x${videoStream.height}` : null;
 
-                    // Update the MediaItem with metadata - using Sequelize model fields
-                    await MediaItem.update(
+                    await model.update(
                         {
                             size: size,
                             duration: duration,
@@ -69,43 +66,42 @@ const processMediaItem = async (mediaItemId) => {
                         },
                         { where: { id: mediaItemId } }
                     ).catch(updateError => {
-                        console.error(`Failed to update metadata for media item ${mediaItemId}:`, updateError);
+                        console.error(`Failed to update metadata for ${type} ${mediaItemId}:`, updateError);
                     });
 
-                    console.log(`Metadata extracted and updated for media item ${mediaItemId}.`);
+                    console.log(`Metadata extracted and updated for ${type} ${mediaItemId}.`);
                 } catch (callbackError) {
-                    console.error(`Error in FFmpeg callback for media item ${mediaItemId}:`, callbackError);
-                    await MediaItem.update(
+                    console.error(`Error in FFmpeg callback for ${type} ${mediaItemId}:`, callbackError);
+                    await model.update(
                         { status: 'error' },
                         { where: { id: mediaItemId } }
                     ).catch(updateError => {
-                        console.error(`Failed to update error status for media item ${mediaItemId}:`, updateError);
+                        console.error(`Failed to update error status for ${type} ${mediaItemId}:`, updateError);
                     });
                 }
             });
         } catch (ffmpegError) {
-            console.error(`FFmpeg error for media item ${mediaItemId}:`, ffmpegError);
-            // Still update to available status but without metadata, so it doesn't stay in processing state
-            await MediaItem.update(
+            console.error(`FFmpeg error for ${type} ${mediaItemId}:`, ffmpegError);
+            await model.update(
                 { 
                     status: 'available',
-                    size: fs.statSync(filePath).size // At least set the file size
+                    size: fs.statSync(filePath).size
                 },
                 { where: { id: mediaItemId } }
             ).catch(updateError => {
-                console.error(`Failed to update fallback status for media item ${mediaItemId}:`, updateError);
+                console.error(`Failed to update fallback status for ${type} ${mediaItemId}:`, updateError);
             });
         }
 
     } catch (error) {
-        console.error(`Failed to process media item ${mediaItemId}:`, error);
+        console.error(`Failed to process ${type} ${mediaItemId}:`, error);
         try {
-            await MediaItem.update(
+            await model.update(
                 { status: 'error' },
                 { where: { id: mediaItemId } }
             );
         } catch (updateError) {
-            console.error(`Failed to update error status for media item ${mediaItemId}:`, updateError);
+            console.error(`Failed to update error status for ${type} ${mediaItemId}:`, updateError);
         }
     }
 };
