@@ -1,0 +1,206 @@
+const express = require('express');
+const { Ad } = require('../models/Ad');
+const { checkFileExists } = require('../utils/fileUtils');
+const { processMediaItem } = require('../src/services/mediaProcessorService.js');
+const { authenticateToken } = require('../src/middleware/auth.js');
+const router = express.Router();
+const dialog = require('node-file-dialog');
+const { Op } = require('sequelize');
+const { spawn } = require('child_process');
+
+router.use(authenticateToken);
+
+router.get('/select-files', async (req, res) => {
+  try {
+    let files = await dialog({ type: 'open-files' });
+    if (Array.isArray(files)) {
+      files = files.map(file => {
+        if (typeof file === 'string') {
+          return file.trim();
+        }
+        return file;
+      });
+    }
+    res.json({ files });
+  } catch (e) {
+    res.json({ files: [] });
+  }
+});
+
+router.get('/', async (req, res) => {
+    try {
+      const ads = await Ad.findAll({
+        order: [['order', 'ASC']],
+      });
+      res.json(ads);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+router.post('/files', async (req, res) => {
+  try {
+    const { files, parentId } = req.body;
+
+    if (!files || !Array.isArray(files) || files.length === 0) {
+      return res.status(400).json({ error: 'Files array is required' });
+    }
+
+    const createdFiles = [];
+
+    for (const file of files) {
+      const { name, path: filePath, size, mimeType } = file;
+      const fileName = name || filePath.split(/[\\/]/).pop();
+
+      const newFile = await Ad.create({
+        name: fileName,
+        type: 'file',
+        filePath,
+        size: size || null,
+        mimeType: mimeType || null,
+        duration: null,
+        dimensions: null,
+        parentId: parentId || null,
+      });
+
+      createdFiles.push(newFile);
+
+      processMediaItem(newFile.id, 'Ad').catch(error => {
+        console.error(`Error processing ad item ${newFile.id}:`, error);
+      });
+    }
+
+    res.status(201).json(createdFiles);
+  } catch (error) {
+    console.error('Error adding files:', error);
+    res.status(500).json({ error: 'Failed to add files' });
+  }
+});
+
+router.post('/:id/thumbnail', async (req, res) => {
+    try {
+      const { id } = req.params;
+      const item = await Ad.findByPk(id);
+      if (!item || item.type !== 'file') {
+        return res.status(404).json({ error: 'File not found' });
+      }
+
+      // Spawn worker to generate thumbnail in the background
+      const worker = spawn('node', ['worker.js', '--generate-thumbnail', 'Ad', item.id], {
+        detached: true,
+        stdio: 'ignore'
+      });
+      worker.unref();
+
+      res.json({ message: 'Thumbnail generation started' });
+    } catch (error) {
+      console.error('Error triggering thumbnail generation:', error);
+      res.status(500).json({ error: 'Failed to trigger thumbnail generation' });
+    }
+  });
+
+router.put('/:id/rename', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ error: 'Name is required' });
+    }
+
+    const item = await Ad.findByPk(id);
+    if (!item) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    await item.update({ name });
+    res.json(item);
+  } catch (error) {
+    console.error('Error renaming item:', error);
+    res.status(500).json({ error: 'Failed to rename item' });
+  }
+});
+
+router.post('/group', async (req, res) => {
+    const { name, adIds } = req.body;
+    if (!adIds || !Array.isArray(adIds)) {
+      return res.status(400).json({ error: 'adIds must be an array.' });
+    }
+
+    try {
+      const newGroup = await Ad.create({
+        name: name || 'New Group',
+        type: 'group',
+      });
+
+      if (adIds.length > 0) {
+        const [updateCount] = await Ad.update(
+          { parentId: newGroup.id },
+          { where: { id: { [Op.in]: adIds } } }
+        );
+
+        res.status(200).json({
+          message: `Successfully created group and moved ${updateCount} ads.`,
+          group: newGroup,
+        });
+      } else {
+        res.status(200).json({
+          message: `Successfully created group.`,
+          group: newGroup,
+        });
+      }
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  router.post('/order', async (req, res) => {
+    const { orderedIds, parentId } = req.body;
+
+    if (!orderedIds || !Array.isArray(orderedIds)) {
+      return res.status(400).json({ error: 'orderedIds must be an array.' });
+    }
+
+    const t = await Ad.sequelize.transaction();
+
+    try {
+      for (let i = 0; i < orderedIds.length; i++) {
+        const adId = orderedIds[i];
+        await Ad.update(
+          { order: i },
+          {
+            where: {
+              id: adId,
+              parentId: parentId,
+            },
+            transaction: t,
+          }
+        );
+      }
+
+      await t.commit();
+      res.status(200).json({ message: 'Order updated successfully.' });
+    } catch (error) {
+      await t.rollback();
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+router.delete('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const item = await Ad.findByPk(id);
+    if (!item) {
+      return res.status(404).json({ error: 'Item not found' });
+    }
+
+    await item.destroy();
+    res.json({ message: 'Item deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting item:', error);
+    res.status(500).json({ error: 'Failed to delete item' });
+  }
+});
+
+module.exports = router;

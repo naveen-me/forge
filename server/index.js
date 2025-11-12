@@ -3,6 +3,8 @@ const cors = require('cors');
 const path = require('path');
 const sequelize = require('./src/database');
 const Overlay = require('./models/Overlay');
+const { Ad } = require('./models/Ad');
+const { MediaItem } = require('./models/MediaItem');
 require('dotenv').config();
 
 const app = express();
@@ -17,6 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 const mediaRoutes = require('./routes/media');
 const streamRoutes = require('./routes/stream');
 const overlayRoutes = require('./routes/overlays');
+const adRoutes = require('./routes/ads');
 
 // Import ES modules using dynamic imports
 const loadRoutes = async () => {
@@ -27,6 +30,7 @@ const loadRoutes = async () => {
   app.use('/api/media', mediaRoutes);
   app.use('/api/stream', streamRoutes);
   app.use('/api/overlays', overlayRoutes);
+  app.use('/api/ads', adRoutes);
   app.use('/auth', authRoutes);  // Auth endpoints like /auth/login, /auth/register
   app.use('/api', apiRoutes);    // Main API endpoints with auth middleware
 };
@@ -34,6 +38,9 @@ const loadRoutes = async () => {
 // Initialize database
 const initializeDatabase = async () => {
   try {
+    const models = { Ad, MediaItem };
+    Ad.associate(models);
+    MediaItem.associate(models);
     await sequelize.sync({ alter: true }); // Alter tables to match model definitions
     console.log('Database connected and synchronized');
   } catch (error) {
