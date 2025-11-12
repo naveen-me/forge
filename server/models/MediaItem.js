@@ -36,6 +36,14 @@ const MediaItem = sequelize.define('MediaItem', {
     type: DataTypes.STRING, // Format: "widthxheight"
     allowNull: true
   },
+  status: {
+    type: DataTypes.STRING,
+    defaultValue: 'processing'
+  },
+  thumbnailPath: {
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   parentId: {
     type: DataTypes.INTEGER,
     allowNull: true,

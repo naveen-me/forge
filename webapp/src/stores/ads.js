@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import adService from '../services/adService';
+import { initWebSocket } from '../services/websocket';
 
 export const useAdStore = defineStore('ads', {
   state: () => ({
@@ -16,6 +17,10 @@ export const useAdStore = defineStore('ads', {
   },
 
   actions: {
+    init() {
+      initWebSocket();
+    },
+
     async fetchGroupContents(groupId = null) {
       try {
         const response = await adService.getAds(groupId);
@@ -128,6 +133,13 @@ export const useAdStore = defineStore('ads', {
         }
         return 0;
       });
+    },
+
+    updateItem(item) {
+      const index = this.items.findIndex(i => i.id === item.id);
+      if (index !== -1) {
+        this.items[index] = item;
+      }
     }
   },
 });

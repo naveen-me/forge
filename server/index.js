@@ -52,12 +52,20 @@ const initializeDatabase = async () => {
   }
 };
 
+const http = require('http');
+const { setupWebSocket } = require('./src/services/taskService');
+
+// ... (rest of the file)
+
 // Start server
 const startServer = async () => {
   await loadRoutes();
   await initializeDatabase();
 
-  app.listen(PORT, () => {
+  const server = http.createServer(app);
+  setupWebSocket(server);
+
+  server.listen(PORT, () => {
     console.log(`Media Library Server running on port ${PORT}`);
   });
 };

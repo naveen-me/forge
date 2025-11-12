@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { mediaService } from '../services/api';
+import { initWebSocket } from '../services/websocket';
 
 export const useMediaStore = defineStore('media', {
   state: () => ({
@@ -16,6 +17,10 @@ export const useMediaStore = defineStore('media', {
   },
 
   actions: {
+    init() {
+      initWebSocket();
+    },
+
     async fetchFolderContents(folderId = null) {
       try {
         const response = await mediaService.getFolderContents(folderId);
@@ -93,7 +98,8 @@ export const useMediaStore = defineStore('media', {
         const index = this.selectedItems.indexOf(itemId);
         if (index > -1) {
             this.selectedItems.splice(index, 1);
-        } else {
+        }
+        else {
             this.selectedItems.push(itemId);
         }
     },
@@ -104,6 +110,33 @@ export const useMediaStore = defineStore('media', {
 
     selectAll(itemIds) {
         this.selectedItems = [...itemIds];
+    },
+
+    sortItems(field, direction) {
+      this.items.sort((a, b) => {
+        let valA = a[field];
+        let valB = b[field];
+
+        if (field === 'name') {
+          valA = valA.toLowerCase();
+          valB = valB.toLowerCase();
+        }
+
+        if (valA < valB) {
+          return direction === 'asc' ? -1 : 1;
+        }
+        if (valA > valB) {
+          return direction === 'asc' ? 1 : -1;
+        }
+        return 0;
+      });
+    },
+
+    updateItem(item) {
+      const index = this.items.findIndex(i => i.id === item.id);
+      if (index !== -1) {
+        this.items[index] = item;
+      }
     }
   },
 });

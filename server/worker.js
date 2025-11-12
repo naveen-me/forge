@@ -25,11 +25,12 @@ async function generateThumbnail(mediaId, modelName = 'MediaItem') {
     return new Promise((resolve, reject) => {
         ffmpeg(item.filePath)
             .on('end', async () => {
-                await item.update({ thumbnailPath: publicUrl });
-                resolve(publicUrl);
+                await item.update({ thumbnailPath: publicUrl, status: 'available' });
+                resolve(item);
             })
             .on('error', (err) => {
                 console.error('Error generating thumbnail:', err);
+                item.update({ status: 'error' });
                 reject(err);
             })
             .screenshots({

@@ -142,7 +142,7 @@
         <div v-for="ad in store.ads" :key="ad.id" :class="{'bg-blue-50 dark:bg-blue-900/20': isSelected(ad.id), 'opacity-60': ad.isMissing}" class="relative group bg-card-light dark:bg-card-dark rounded-lg shadow-around overflow-hidden border-2 border-transparent">
           <input type="checkbox" :checked="isSelected(ad.id)" @click.stop="toggleSelection(ad.id)" class="form-checkbox h-4 w-4 rounded-full text-primary bg-white/50 border-gray-400/70 focus:ring-0 focus:ring-offset-0 absolute top-2.5 left-2.5 z-10" />
           <div class="aspect-video bg-gray-200 dark:bg-gray-700 flex items-center justify-center relative">
-            <img v-if="ad.thumbnailPath" :src="ad.thumbnailPath" class="w-full h-full object-cover" />
+            <img v-if="ad.thumbnailPath" :src="`http://localhost:3001${ad.thumbnailPath}`" class="w-full h-full object-cover" />
             <span v-else class="material-symbols-outlined text-gray-400 dark:text-gray-500 text-4xl opacity-50 group-hover:opacity-20 transition-opacity">movie</span>
             <div v-if="ad.isMissing" class="absolute inset-0 bg-black/50 flex items-center justify-center text-white">
               <span class="material-symbols-outlined text-lg">error_outline</span>
@@ -175,7 +175,7 @@
               <td class="p-3 font-medium text-text-light dark:text-text-dark">
                 <div class="flex items-center gap-3">
                   <div class="relative group w-16 h-10 rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
-                     <img v-if="ad.thumbnailPath" :src="ad.thumbnailPath" class="w-full h-full object-cover" />
+                     <img v-if="ad.thumbnailPath" :src="`http://localhost:3001${ad.thumbnailPath}`" class="w-full h-full object-cover" />
                      <span v-else class="material-symbols-outlined text-gray-400 dark:text-gray-500 text-2xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-50 group-hover:opacity-20 transition-opacity">movie</span>
                      <div v-if="ad.isMissing" class="absolute inset-0 bg-black/50 flex items-center justify-center text-white">
                         <span class="material-symbols-outlined text-lg">error_outline</span>
@@ -230,6 +230,7 @@ const currentSort = ref({ field: 'modified', direction: 'desc' });
 const sortDropdownRef = ref(null);
 
 onMounted(() => {
+  store.init();
   store.fetchGroupContents();
   store.fetchPath();
 });

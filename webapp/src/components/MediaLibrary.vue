@@ -268,6 +268,7 @@ const currentSort = ref({ field: 'modified', direction: 'desc' });
 const sortDropdownRef = ref(null);
 
 onMounted(() => {
+  store.init();
   store.fetchFolderContents();
   store.fetchPath();
 });

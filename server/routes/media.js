@@ -1,7 +1,7 @@
 const express = require('express');
 const { MediaItem } = require('../models/MediaItem');
 const { checkFileExists } = require('../utils/fileUtils');
-const { processMediaItem } = require('../src/services/mediaProcessorService.js');
+const { addThumbnailJob } = require('../src/services/taskService');
 const { authenticateToken } = require('../src/middleware/auth.js'); // Import auth middleware
 const router = express.Router();
 const dialog = require('node-file-dialog');
@@ -115,7 +115,7 @@ router.get('/folder/:id/path', async (req, res) => {
   }
 });
 
-const { spawn } = require('child_process');
+
 
 // Add files (store file paths)
 router.post('/files', async (req, res) => {
@@ -148,10 +148,7 @@ router.post('/files', async (req, res) => {
 
       createdFiles.push(newFile);
 
-      // Process the file to extract metadata in the background
-      processMediaItem(newFile.id).catch(error => {
-        console.error(`Error processing media item ${newFile.id}:`, error);
-      });
+      addThumbnailJob(newFile.id, 'MediaItem');
     }
 
     res.status(201).json(createdFiles);
@@ -203,28 +200,10 @@ router.put('/:id/move', async (req, res) => {
   }
 });
 
-// Trigger thumbnail generation
-router.post('/:id/thumbnail', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const item = await MediaItem.findByPk(id);
-    if (!item || item.type !== 'file') {
-      return res.status(404).json({ error: 'File not found' });
-    }
 
-    // Spawn worker to generate thumbnail in the background
-    const worker = spawn('node', ['worker.js', '--generate-thumbnail', item.id], {
-      detached: true,
-      stdio: 'ignore'
-    });
-    worker.unref();
 
-    res.json({ message: 'Thumbnail generation started' });
-  } catch (error) {
-    console.error('Error triggering thumbnail generation:', error);
-    res.status(500).json({ error: 'Failed to trigger thumbnail generation' });
-  }
-});
+const fs = require('fs');
+const path = require('path');
 
 // Delete an item
 router.delete('/:id', async (req, res) => {
@@ -234,6 +213,18 @@ router.delete('/:id', async (req, res) => {
     const item = await MediaItem.findByPk(id);
     if (!item) {
       return res.status(404).json({ error: 'Item not found' });
+    }
+
+    // If the item has a thumbnail, delete it from the filesystem
+    if (item.thumbnailPath) {
+      const thumbnailPath = path.join(__dirname, '..', 'public', item.thumbnailPath);
+      if (fs.existsSync(thumbnailPath)) {
+        fs.unlink(thumbnailPath, (err) => {
+          if (err) {
+            console.error('Error deleting thumbnail:', err);
+          }
+        });
+      }
     }
 
     await item.destroy();
