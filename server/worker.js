@@ -54,11 +54,14 @@ async function generateThumbnail(mediaId, modelName = 'MediaItem') {
                         dimensions,
                         mimeType: formatName,
                     });
-                    resolve(item);
+                    // Refresh the item to get updated values
+                    const updatedItem = await Model.findByPk(mediaId);
+                    resolve(updatedItem);
                 })
-                .on('error', (err) => {
+                .on('error', async (err) => {
                     console.error('Error generating thumbnail:', err);
-                    item.update({ status: 'error' });
+                    await item.update({ status: 'error' });
+                    const updatedItem = await Model.findByPk(mediaId);
                     reject(err);
                 })
                 .screenshots({

@@ -2,29 +2,33 @@ import ffmpeg from 'fluent-ffmpeg';
 import fs from 'fs';
 import path from 'path';
 import { MediaItem } from '../../models/MediaItem.js';
+import { Ad } from '../../models/Ad.js';
 
-// Function to process a media item - extract metadata and generate thumbnail
-export const processMediaItem = async (itemId) => {
+// Function to process a media item or ad - extract metadata and generate thumbnail
+export const processMediaItem = async (itemId, modelName = 'MediaItem') => {
   try {
-    console.log(`Processing media item with ID: ${itemId}`);
+    console.log(`Processing ${modelName} with ID: ${itemId}`);
+
+    // Determine which model to use based on modelName
+    const Model = modelName === 'Ad' ? Ad : MediaItem;
     
-    // Find the media item in the database
-    const mediaItem = await MediaItem.findByPk(itemId);
-    if (!mediaItem) {
-      console.error(`Media item with ID ${itemId} not found`);
+    // Find the item in the database
+    const item = await Model.findByPk(itemId);
+    if (!item) {
+      console.error(`${modelName} with ID ${itemId} not found`);
       return;
     }
 
-    if (mediaItem.type === 'folder') {
-      // Folders don't need processing
-      await mediaItem.update({ status: 'available' });
+    if (item.type === 'folder' || item.type === 'group') {
+      // Folders and groups don't need processing
+      await item.update({ status: 'available' });
       return;
     }
 
-    const filePath = mediaItem.filePath;
+    const filePath = item.filePath;
     if (!filePath || !fs.existsSync(filePath)) {
       console.error(`File path does not exist: ${filePath}`);
-      await mediaItem.update({ status: 'missing' });
+      await item.update({ status: 'missing' });
       return;
     }
 
@@ -34,24 +38,24 @@ export const processMediaItem = async (itemId) => {
 
     // Determine file type and process accordingly
     const mimeType = getMimeType(filePath);
-    
+
     if (mimeType.startsWith('image/')) {
-      await processImage(mediaItem, filePath, fileSize);
+      await processImage(item, filePath, fileSize, modelName);
     } else if (mimeType.startsWith('video/')) {
-      await processVideo(mediaItem, filePath, fileSize);
+      await processVideo(item, filePath, fileSize, modelName);
     } else {
-      await processOtherFile(mediaItem, filePath, fileSize, mimeType);
+      await processOtherFile(item, filePath, fileSize, mimeType, modelName);
     }
 
-    console.log(`Successfully processed media item with ID: ${itemId}`);
+    console.log(`Successfully processed ${modelName} with ID: ${itemId}`);
   } catch (error) {
-    console.error(`Error processing media item with ID ${itemId}:`, error);
-    
+    console.error(`Error processing ${modelName} with ID ${itemId}:`, error);
+
     try {
       // Update status to error in the database
-      await MediaItem.update({ status: 'error' }, { where: { id: itemId } });
+      await Model.update({ status: 'error' }, { where: { id: itemId } });
     } catch (updateError) {
-      console.error(`Error updating media item status to error:`, updateError);
+      console.error(`Error updating ${modelName} status to error:`, updateError);
     }
   }
 };
@@ -88,13 +92,13 @@ const getMimeType = (filePath) => {
 };
 
 // Process image files
-const processImage = async (mediaItem, filePath, fileSize) => {
+const processImage = async (item, filePath, fileSize, modelName) => {
   try {
     // Get image dimensions
     const size = await getImageDimensions(filePath);
-    
-    // Update the media item in the database
-    await mediaItem.update({
+
+    // Update the item in the database
+    await item.update({
       size: fileSize,
       dimensions: size ? `${size.width}x${size.height}` : null,
       mimeType: getMimeType(filePath),
@@ -102,21 +106,22 @@ const processImage = async (mediaItem, filePath, fileSize) => {
     });
   } catch (error) {
     console.error(`Error processing image:`, error);
-    await mediaItem.update({ status: 'error' });
+    const Model = modelName === 'Ad' ? Ad : MediaItem;
+    await Model.update({ status: 'error' }, { where: { id: item.id } });
   }
 };
 
 // Process video files
-const processVideo = async (mediaItem, filePath, fileSize) => {
+const processVideo = async (item, filePath, fileSize, modelName) => {
   try {
     // Get video metadata using ffmpeg
     const metadata = await getVideoMetadata(filePath);
-    
+
     // Create thumbnail
-    const thumbnailPath = await createThumbnail(mediaItem.id, filePath);
-    
-    // Update the media item in the database
-    await mediaItem.update({
+    const thumbnailPath = await createThumbnail(item.id, filePath, modelName);
+
+    // Update the item in the database
+    await item.update({
       size: fileSize,
       duration: metadata.duration,
       dimensions: metadata.dimensions || null,
@@ -126,22 +131,24 @@ const processVideo = async (mediaItem, filePath, fileSize) => {
     });
   } catch (error) {
     console.error(`Error processing video:`, error);
-    await mediaItem.update({ status: 'error' });
+    const Model = modelName === 'Ad' ? Ad : MediaItem;
+    await Model.update({ status: 'error' }, { where: { id: item.id } });
   }
 };
 
 // Process other types of files
-const processOtherFile = async (mediaItem, filePath, fileSize, mimeType) => {
+const processOtherFile = async (item, filePath, fileSize, mimeType, modelName) => {
   try {
     // For other files, just update the size and MIME type
-    await mediaItem.update({
+    await item.update({
       size: fileSize,
       mimeType: mimeType,
       status: 'available'
     });
   } catch (error) {
     console.error(`Error processing other file:`, error);
-    await mediaItem.update({ status: 'error' });
+    const Model = modelName === 'Ad' ? Ad : MediaItem;
+    await Model.update({ status: 'error' }, { where: { id: item.id } });
   }
 };
 
@@ -165,19 +172,19 @@ const getVideoMetadata = (filePath) => {
         return;
       }
 
-      const videoStream = metadata.streams.find(stream => 
+      const videoStream = metadata.streams.find(stream =>
         stream.codec_type === 'video'
       );
 
       if (videoStream) {
         const duration = metadata.format.duration || 0;
-        const dimensions = videoStream.width && videoStream.height 
+        const dimensions = videoStream.width && videoStream.height
           ? `${videoStream.width}x${videoStream.height}`
           : null;
-        
-        resolve({ 
-          duration: parseFloat(duration), 
-          dimensions 
+
+        resolve({
+          duration: parseFloat(duration),
+          dimensions
         });
       } else {
         resolve({ duration: 0, dimensions: null });
@@ -187,7 +194,7 @@ const getVideoMetadata = (filePath) => {
 };
 
 // Create thumbnail for video files
-const createThumbnail = (itemId, filePath) => {
+const createThumbnail = (itemId, filePath, modelName = 'MediaItem') => {
   return new Promise((resolve, reject) => {
     // Create a thumbnail directory if it doesn't exist
     const thumbnailDir = path.join(process.cwd(), 'thumbnails');
@@ -195,8 +202,8 @@ const createThumbnail = (itemId, filePath) => {
       fs.mkdirSync(thumbnailDir, { recursive: true });
     }
 
-    // Define thumbnail path
-    const thumbnailPath = path.join(thumbnailDir, `thumbnail_${itemId}.jpg`);
+    // Define thumbnail path - use the model name in the thumbnail filename
+    const thumbnailPath = path.join(thumbnailDir, `${modelName.toLowerCase()}_${itemId}.jpg`);
 
     // Generate thumbnail from video
     ffmpeg(filePath)
@@ -209,7 +216,7 @@ const createThumbnail = (itemId, filePath) => {
       })
       .screenshots({
         timestamps: ['50%'], // Take screenshot at 50% of video duration
-        filename: `thumbnail_${itemId}.jpg`,
+        filename: `${modelName.toLowerCase()}_${itemId}.jpg`,
         folder: thumbnailDir,
         size: '320x240'
       });

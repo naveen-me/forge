@@ -51,8 +51,14 @@ const initializeDatabase = async () => {
     const models = { Ad, MediaItem };
     Ad.associate(models);
     MediaItem.associate(models);
-    await sequelize.sync({ alter: true }); // Alter tables to match model definitions
-    console.log('Database connected and synchronized');
+    
+    // Try to sync the database, but don't crash if it fails
+    try {
+      await sequelize.sync({ alter: true }); // Alter tables to match model definitions
+      console.log('Database connected and synchronized');
+    } catch (syncError) {
+      console.warn('Database sync failed, continuing with existing schema:', syncError.message);
+    }
   } catch (error) {
     console.error('Error initializing database:', error);
     process.exit(1);
