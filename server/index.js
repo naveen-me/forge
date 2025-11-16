@@ -7,6 +7,8 @@ import sequelize from './src/database.js';
 import Overlay from './models/Overlay.js';
 import { Ad } from './models/Ad.js';
 import { MediaItem } from './models/MediaItem.js';
+import Link from './models/Link.js';
+import Schedule from './models/Schedule.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -30,6 +32,8 @@ import mediaRoutes from './routes/media.js';
 import streamRoutes from './routes/stream.js';
 import overlayRoutes from './routes/overlays.js';
 import adRoutes from './routes/ads.js';
+import linkRoutes from './routes/links.js';
+import scheduleRoutes from './routes/schedule.js';
 
 // Import ES modules using dynamic imports
 const loadRoutes = async () => {
@@ -41,6 +45,8 @@ const loadRoutes = async () => {
   app.use('/api/stream', streamRoutes);
   app.use('/api/overlays', overlayRoutes);
   app.use('/api/ads', adRoutes);
+  app.use('/api/links', linkRoutes);
+  app.use('/api/schedule', scheduleRoutes);
   app.use('/auth', authRoutes);  // Auth endpoints like /auth/login, /auth/register
   app.use('/api', apiRoutes);    // Main API endpoints with auth middleware
 };

@@ -8,8 +8,8 @@ import UPIXManagement from '../components/UPIXManagement.vue';
 import MediaLibrary from '../components/MediaLibrary.vue';
 import Overlays from '../views/Overlays.vue';
 import Ads from '../components/Ads.vue';
-import Live from '../components/Live.vue';
-import Scheduler from '../components/Scheduler.vue';
+import Links from '../components/Live.vue';
+import Scheduler from '../views/Scheduler.vue';
 import UserProfile from '../components/UserProfile.vue';
 import Settings from '../views/Settings.vue';
 import { useAuthStore } from '../store';
@@ -69,9 +69,9 @@ const routes = [
         meta: { requiresAuth: true },
     },
     {
-        path: '/live',
-        name: 'Live',
-        component: Live,
+        path: '/links',
+        name: 'Links',
+        component: Links,
         meta: { requiresAuth: true },
     },
     {
