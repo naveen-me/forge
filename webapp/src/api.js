@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { useAuthStore } from './store/index';
 
 const apiClient = axios.create({
   baseURL: 'http://localhost:3001/api',
@@ -6,6 +7,35 @@ const apiClient = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Request interceptor to add auth token
+apiClient.interceptors.request.use(
+  async (config) => {
+    const authStore = useAuthStore();
+    if (authStore.token) {
+      config.headers.Authorization = `Bearer ${authStore.token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor to handle auth errors
+apiClient.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      const authStore = useAuthStore();
+      authStore.logout();
+      window.location.href = '/login'; // Force redirect to login
+    }
+    return Promise.reject(error);
+  }
+);
 
 export default {
   getMedia() {

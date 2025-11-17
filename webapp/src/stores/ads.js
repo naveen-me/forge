@@ -11,20 +11,24 @@ export const useAdStore = defineStore('ads', {
   }),
 
   getters: {
-    groups: (state) => state.items.filter(item => item.type === 'group'),
-    ads: (state) => state.items.filter(item => item.type !== 'group'),
-    allItems: (state) => state.items,
+    groups: (state) => Array.isArray(state.items) ? state.items.filter(item => item.type === 'group') : [],
+    ads: (state) => Array.isArray(state.items) ? state.items.filter(item => item.type !== 'group') : [],
+    allItems: (state) => state.items || [],
   },
 
   actions: {
     init() {
+      // Initialize WebSocket connection - no need to call this multiple times
+      // since we have a singleton connection in websocket.js
       initWebSocket();
     },
 
     async fetchGroupContents(groupId = null) {
       try {
         const response = await adService.getAds(groupId);
-        this.items = response.data;
+        // Handle API response structure - response.data contains the actual response object
+        // response.data.data contains the actual array of items
+        this.items = response.data.success ? response.data.data : response.data;
         this.currentGroupId = groupId;
       } catch (error) {
         console.error('Error fetching group contents:', error);
@@ -70,7 +74,7 @@ export const useAdStore = defineStore('ads', {
         try {
             // search is not implemented in adService yet
             // const response = await adService.searchItems(query);
-            // this.items = response.data;
+            // this.items = response.data.success ? response.data.data : response.data;
             console.log('Search not implemented yet');
         } catch (error) {
             console.error('Error searching items:', error);

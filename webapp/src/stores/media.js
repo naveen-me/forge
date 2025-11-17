@@ -11,20 +11,24 @@ export const useMediaStore = defineStore('media', {
   }),
 
   getters: {
-    folders: (state) => state.items.filter(item => item.type === 'folder'),
-    videos: (state) => state.items.filter(item => item.type === 'file'),
-    allItems: (state) => state.items,
+    folders: (state) => Array.isArray(state.items) ? state.items.filter(item => item.type === 'folder') : [],
+    videos: (state) => Array.isArray(state.items) ? state.items.filter(item => item.type === 'file') : [],
+    allItems: (state) => state.items || [],
   },
 
   actions: {
     init() {
+      // Initialize WebSocket connection - no need to call this multiple times
+      // since we have a singleton connection in websocket.js
       initWebSocket();
     },
 
     async fetchFolderContents(folderId = null) {
       try {
         const response = await mediaService.getFolderContents(folderId);
-        this.items = response.data;
+        // Handle API response structure - response.data contains the actual response object
+        // response.data.data contains the actual array of items
+        this.items = response.data.success ? response.data.data : response.data;
         this.currentFolderId = folderId;
         // We will need a separate action to fetch the breadcrumb path
       } catch (error) {
@@ -71,7 +75,7 @@ export const useMediaStore = defineStore('media', {
         }
         try {
             const response = await mediaService.searchItems(query);
-            this.items = response.data;
+            this.items = response.data.success ? response.data.data : response.data;
         } catch (error) {
             console.error('Error searching items:', error);
         }
@@ -80,7 +84,7 @@ export const useMediaStore = defineStore('media', {
     async fetchPath(folderId = null) {
         try {
             const response = await mediaService.getFolderPath(folderId);
-            this.currentPath = response.data;
+            this.currentPath = response.data.success ? response.data.data : response.data;
         } catch (error) {
             console.error('Error fetching folder path:', error);
             this.currentPath = [];

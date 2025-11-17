@@ -104,7 +104,7 @@ import { ref, onMounted, computed } from 'vue';
 import draggable from 'vuedraggable';
 import OverlayForm from '../components/OverlayForm.vue';
 import GroupPreview from '../components/GroupPreview.vue';
-import axios from 'axios';
+import { api } from '../services/api'; // Use consistent API service
 
 const overlays = ref([]);
 const selectedOverlay = ref(null);
@@ -116,7 +116,7 @@ const expandedGroups = ref([]);
 
 const fetchOverlays = async () => {
   try {
-    const response = await axios.get('http://localhost:3001/api/overlays');
+    const response = await api.get('/overlays');
     overlays.value = response.data;
   } catch (error) {
     console.error('Error fetching overlays:', error);
@@ -125,7 +125,7 @@ const fetchOverlays = async () => {
 
 const createOverlay = async (type) => {
   try {
-    const response = await axios.post('http://localhost:3001/api/overlays', { name: 'New Overlay', type });
+    const response = await api.post('/overlays', { name: 'New Overlay', type });
     overlays.value.push(response.data);
     selectedOverlay.value = response.data;
     selectedGroup.value = null;
@@ -137,7 +137,7 @@ const createOverlay = async (type) => {
 const createGroupFromSelection = async () => {
   if (selectedOverlays.value.length === 0) return;
   try {
-    await axios.post('http://localhost:3001/api/overlays/group', {
+    await api.post('/overlays/group', {
       overlayIds: selectedOverlays.value,
     });
     selectedOverlays.value = [];
@@ -149,7 +149,7 @@ const createGroupFromSelection = async () => {
 
 const updateOverlay = async (updatedOverlay) => {
   try {
-    const response = await axios.put(`http://localhost:3001/api/overlays/${updatedOverlay.id}`, updatedOverlay);
+    const response = await api.put(`/overlays/${updatedOverlay.id}`, updatedOverlay);
     const index = overlays.value.findIndex(o => o.id === updatedOverlay.id);
     if (index !== -1) {
       overlays.value[index] = response.data;
@@ -165,7 +165,7 @@ const updateOverlay = async (updatedOverlay) => {
 
 const deleteOverlay = async (overlayId) => {
   try {
-    await axios.delete(`http://localhost:3001/api/overlays/${overlayId}`);
+    await api.delete(`/overlays/${overlayId}`);
     overlays.value = overlays.value.filter(o => o.id !== overlayId);
     if (selectedOverlay.value?.id === overlayId) {
       selectedOverlay.value = null;
@@ -225,7 +225,7 @@ const onChildDragEnd = (event, parentId) => {
 
 const updateOverlayOrder = async (orderedIds, parentId) => {
   try {
-    await axios.post('http://localhost:3001/api/overlays/order', { orderedIds, parentId });
+    await api.post('/overlays/order', { orderedIds, parentId });
   } catch (error) {
     console.error('Error updating overlay order:', error);
   }

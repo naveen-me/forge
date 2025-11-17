@@ -1,9 +1,4 @@
 import axios from 'axios';
-// The store import is intentionally commented out here.
-// Pinia stores should not be used directly in service files like this
-// because it creates a circular dependency issue during app initialization.
-// Instead, the interceptor should get the store instance when the request is made.
-import { useAuthStore } from '../store'; 
 
 // API instance for regular endpoints (under /api)
 const api = axios.create({
@@ -24,6 +19,8 @@ const authApi = axios.create({
 // Request interceptor to add auth token to regular API calls
 api.interceptors.request.use(
     async (config) => {
+        // Dynamically import the store to avoid circular dependency
+        const { useAuthStore } = await import('../store/index');
         const authStore = useAuthStore();
         if (authStore.token) {
             config.headers.Authorization = `Bearer ${authStore.token}`;
@@ -42,7 +39,8 @@ api.interceptors.response.use(
     },
     async (error) => {
         if (error.response?.status === 401 || error.response?.status === 403) {
-            // Dynamically import the store
+            // Dynamically import the store to avoid circular dependency
+            const { useAuthStore } = await import('../store/index');
             const authStore = useAuthStore();
             authStore.logout();
             window.location.href = '/login'; // Force redirect to login
@@ -63,6 +61,8 @@ const mediaApi = axios.create({
 // Add the same auth interceptor for media API calls
 mediaApi.interceptors.request.use(
   async (config) => {
+    // Dynamically import the store to avoid circular dependency
+    const { useAuthStore } = await import('../store/index');
     const authStore = useAuthStore();
     if (authStore.token) {
       config.headers.Authorization = `Bearer ${authStore.token}`;
@@ -81,7 +81,8 @@ mediaApi.interceptors.response.use(
   },
   async (error) => {
     if (error.response?.status === 401 || error.response?.status === 403) {
-      // Dynamically import the store
+      // Dynamically import the store to avoid circular dependency
+      const { useAuthStore } = await import('../store/index');
       const authStore = useAuthStore();
       authStore.logout();
       window.location.href = '/login'; // Force redirect to login
@@ -136,6 +137,7 @@ const mediaService = {
 };
 
 
+// Auth API does not need authentication interceptors
 authApi.interceptors.response.use(
     (response) => {
         return response;
