@@ -10,7 +10,14 @@
       <div class="flex-1 flex flex-col">
         <h2 class="text-lg font-semibold text-text-light dark:text-text-dark mb-3">Timeline</h2>
         <div class="flex-1 overflow-y-auto bg-card-light dark:bg-card-dark rounded-lg shadow-sm p-4">
-          <draggable v-model="schedule" group="schedule" @end="onDragEnd" item-key="id" class="space-y-2">
+          <draggable
+            v-model="schedule"
+            group="schedule"
+            @end="onDragEnd"
+            item-key="id"
+            class="space-y-2"
+            @add="onAddToSchedule"
+          >
             <template #item="{ element }">
               <div class="schedule-item p-3 rounded-lg bg-gray-100 dark:bg-gray-700" :class="{ 'now-playing': isNowPlaying(element) }">
                 <p class="font-semibold text-text-light dark:text-text-dark">{{ element.item_type }} - {{ element.item_id }}</p>
@@ -42,7 +49,12 @@
             <button v-if="activeTab === 'links'" @click="showLinkModal = true" class="px-3 py-1 rounded-md bg-primary text-white text-sm">Add Link</button>
           </div>
           <div class="content-list flex-1 overflow-y-auto">
-            <draggable v-model="content" :group="{ name: 'schedule', pull: 'clone', put: false }" item-key="id" class="space-y-2">
+            <draggable
+              :list="filteredContent"
+              :group="{ name: 'schedule', pull: 'clone', put: false }"
+              item-key="id"
+              class="space-y-2"
+            >
               <template #item="{ element }">
                 <div class="content-item p-3 rounded-lg bg-gray-100 dark:bg-gray-700 cursor-move">
                   <p class="font-semibold text-text-light dark:text-text-dark">{{ element.title || element.name }}</p>
@@ -75,7 +87,7 @@
 
 <script>
 import draggable from 'vuedraggable';
-import api from '../api';
+import { api } from '../services/api'; // Use correct API service with auth
 
 export default {
   name: 'Scheduler',
@@ -101,36 +113,123 @@ export default {
     };
   },
   computed: {
-    // ...
+    // Filter content based on search
+    filteredContent() {
+      if (!this.searchQuery) {
+        return this.content;
+      }
+      return this.content.filter(item =>
+        (item.name && item.name.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
+        (item.title && item.title.toLowerCase().includes(this.searchQuery.toLowerCase()))
+      );
+    }
   },
   methods: {
     async fetchSchedule() {
-      const response = await api.getSchedule(1, new Date()); // Assuming channel_id 1
-      this.schedule = response.data;
+      try {
+        const today = new Date().toISOString().split('T')[0]; // Format as YYYY-MM-DD
+        const response = await api.get(`/schedule/1/${today}`); // Use correct endpoint with channel_id and date
+        // Handle the response properly - expecting { success: true, data: [...] } or just the array
+        this.schedule = response.data.success ? response.data.data : response.data;
+      } catch (error) {
+        console.error('Error fetching schedule:', error);
+        // Initialize with an empty array if there's an error
+        this.schedule = [];
+      }
+    },
+    async fetchMedia() {
+      try {
+        const response = await api.get('/media');
+        this.media = response.data.success ? response.data.data : response.data;
+        if (this.activeTab === 'media') {
+          this.content = this.media;
+        }
+      } catch (error) {
+        console.error('Error fetching media:', error);
+      }
+    },
+    async fetchAds() {
+      try {
+        const response = await api.get('/ads');
+        this.ads = response.data.success ? response.data.data : response.data;
+        if (this.activeTab === 'ads') {
+          this.content = this.ads;
+        }
+      } catch (error) {
+        console.error('Error fetching ads:', error);
+      }
+    },
+    async fetchLinks() {
+      try {
+        const response = await api.get('/links');
+        this.links = response.data.success ? response.data.data : response.data;
+        if (this.activeTab === 'links') {
+          this.content = this.links;
+        }
+      } catch (error) {
+        console.error('Error fetching links:', error);
+      }
     },
     async onDragEnd(event) {
-      const { newIndex } = event;
-      const movedItem = this.schedule[newIndex];
-      await api.updateScheduleItem(1, movedItem.id, { order: newIndex });
-      this.fetchSchedule();
+      const { newIndex, oldIndex } = event;
+      // This is for reordering existing items in the schedule
+      if (newIndex !== oldIndex) {
+        const movedItem = this.schedule[oldIndex];
+        // Update the order via API
+        await this.updateScheduleOrder();
+      }
     },
     async onDrop(event) {
-      const { newIndex } = event;
-      const droppedItem = this.content[event.oldIndex];
+      // This is handled by vuedraggable's group settings - items will be added via the start event
+      // For adding new items to the schedule from content library
+    },
+    // Handle when an item is moved from content to schedule
+    async onAddToSchedule(event) {
+      // Get the item that was added from the content list
+      const itemIndex = event.item.__draggable_context.index;
+      const addedItem = this.content[itemIndex];
 
+      // Add to schedule
       const newItem = {
-        item_id: droppedItem.id,
-        item_type: this.activeTab.slice(0, -1),
-        duration: droppedItem.duration,
-        order: newIndex,
+        item_id: addedItem.id,
+        item_type: this.activeTab, // Use the current tab name (media, ads, links)
+        duration: addedItem.duration || 300, // Default duration if not provided
+        order: this.schedule.length, // Add at the end
       };
 
-      await api.addScheduleItem(1, newItem);
-      this.fetchSchedule();
+      try {
+        // Add to schedule via API
+        const response = await api.post('/schedule/1', newItem); // Use correct endpoint with channel_id
+        // Refresh the schedule
+        this.fetchSchedule();
+      } catch (error) {
+        console.error('Error adding item to schedule:', error);
+      }
+    },
+    async updateScheduleOrder() {
+      // Update the order of items in the schedule
+      const orderedIds = this.schedule.map((item, index) => ({
+        id: item.id,
+        order: index
+      }));
+
+      try {
+        // Call API to update order - scheduler service may need different approach
+        // For each item in the schedule, we need to update its order
+        for (let i = 0; i < this.schedule.length; i++) {
+          const scheduleItem = this.schedule[i];
+          await api.put(`/schedule/1/${scheduleItem.id}`, { order: i });
+        }
+        // Refresh schedule after updating
+        this.fetchSchedule();
+      } catch (error) {
+        console.error('Error updating schedule order:', error);
+      }
     },
     formatTime(dateString) {
+      if (!dateString) return '';
       const date = new Date(dateString);
-      return date.toLocaleTimeString();
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     },
     isNowPlaying(item) {
       const now = this.currentTime.getTime();
@@ -145,14 +244,19 @@ export default {
       const end = new Date(item.end_time).getTime();
       const duration = end - start;
       const elapsed = now - start;
-      return (elapsed / duration) * 100;
+      return Math.min(100, (elapsed / duration) * 100);
     },
     editItem(item) {
-      // Placeholder for edit logic
+      // Placeholder for edit logic - could open a modal
+      console.log('Edit item:', item);
     },
     async deleteItem(id) {
-      await api.deleteScheduleItem(1, id); // Assuming channel_id 1
-      this.fetchSchedule();
+      try {
+        await api.delete(`/schedule/1/${id}`); // Use correct endpoint with channel_id
+        this.fetchSchedule();
+      } catch (error) {
+        console.error('Error deleting schedule item:', error);
+      }
     },
     editLink(link) {
       this.editingLink = link;
@@ -165,28 +269,40 @@ export default {
       this.linkForm = { name: '', url: '' };
     },
     async saveLink() {
-      if (this.editingLink) {
-        await api.updateLink(this.editingLink.id, this.linkForm);
-      } else {
-        await api.createLink(this.linkForm);
+      try {
+        if (this.editingLink) {
+          await api.put(`/links/${this.editingLink.id}`, this.linkForm);
+        } else {
+          await api.post('/links', this.linkForm);
+        }
+        this.fetchLinks();
+        this.closeLinkModal();
+      } catch (error) {
+        console.error('Error saving link:', error);
       }
-      this.fetchLinks();
-      this.closeLinkModal();
     },
     async deleteLink(id) {
-      await api.deleteLink(id);
-      this.fetchLinks();
+      try {
+        await api.delete(`/links/${id}`);
+        this.fetchLinks();
+      } catch (error) {
+        console.error('Error deleting link:', error);
+      }
     },
     async fetchContent() {
-      let response;
-      if (this.activeTab === 'media') {
-        response = await api.getMedia();
-      } else if (this.activeTab === 'ads') {
-        response = await api.getAds();
-      } else if (this.activeTab === 'links') {
-        response = await api.getLinks();
+      switch (this.activeTab) {
+        case 'media':
+          await this.fetchMedia();
+          break;
+        case 'ads':
+          await this.fetchAds();
+          break;
+        case 'links':
+          await this.fetchLinks();
+          break;
+        default:
+          this.content = [];
       }
-      this.content = response.data;
     },
   },
   watch: {
@@ -196,9 +312,18 @@ export default {
         this.fetchContent();
       },
     },
+    searchQuery() {
+      // The computed property handles filtering automatically
+    }
   },
   mounted() {
+    // Fetch all data on mount
     this.fetchSchedule();
+    this.fetchMedia();
+    this.fetchAds();
+    this.fetchLinks();
+
+    // Update current time every second
     setInterval(() => {
       this.currentTime = new Date();
     }, 1000);
