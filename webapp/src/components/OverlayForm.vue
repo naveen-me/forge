@@ -139,7 +139,7 @@
         </div>
       </form>
       <div class="flex justify-between items-center pt-6">
-        <button @click="$emit('update', formData)" class="flex h-10 items-center justify-center rounded-lg bg-primary px-6 text-sm font-medium text-white transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">Save</button>
+        <button @click="handleSave" class="flex h-10 items-center justify-center rounded-lg bg-primary px-6 text-sm font-medium text-white transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">Save</button>
         <button @click="$emit('delete', selectedOverlay.id)" class="h-10 w-10 flex items-center justify-center rounded-lg text-red-500 hover:bg-red-100 hover:text-red-700 transition-colors">
           <span class="material-symbols-outlined text-2xl">delete</span>
         </button>
@@ -187,12 +187,27 @@ const imageElements = ref({});
 const textAsImage = ref({});
 
 const editor = useEditor({
-  extensions: [ StarterKit, Underline, FontFamily, TextStyle, Color, Highlight.configure({ multicolor: true }), FontSize ],
+  extensions: [
+    StarterKit,
+    Underline,
+    FontFamily,
+    TextStyle,
+    Color,
+    Highlight.configure({ multicolor: true }),
+    FontSize
+  ],
   content: '',
   onUpdate: ({ editor }) => {
     if (formData.value.type === 'text') {
       formData.value.source = editor.getHTML();
+      // Optionally trigger a save when content changes
+      // emit('update', formData.value); // Uncomment if you want auto-save
     }
+  },
+  editorProps: {
+    attributes: {
+      class: 'prose prose-sm sm:prose lg:prose-lg xl:prose-2xl focus:outline-none min-h-full w-full p-3 border border-gray-300 rounded-lg bg-white h-[200px] overflow-y-auto',
+    },
   },
 });
 
@@ -431,9 +446,17 @@ const openFileBrowser = async () => {
   try {
     const { mediaService } = await import('../services/api.js');
     const response = await mediaService.selectFiles();
-    
+
     if (response.data.files && response.data.files.length > 0) {
-      formData.value.source = response.data.files[0];
+      // Handle the file path properly - extract path from the object or use the first element if it's a string
+      const file = response.data.files[0];
+      if (typeof file === 'object' && file.path) {
+        formData.value.source = file.path; // Use the path property
+      } else if (typeof file === 'string') {
+        formData.value.source = file; // Use the string directly
+      } else {
+        formData.value.source = JSON.stringify(file); // Fallback
+      }
       emit('update', formData.value);
     }
   } catch (error) {
@@ -456,4 +479,14 @@ const scrollFilterEnabled = computed({
     }
   },
 });
+
+// Handle save action, ensuring editor content is captured
+const handleSave = () => {
+  // For text overlays, ensure the editor content is captured in formData
+  if (formData.value.type === 'text' && editor.value) {
+    formData.value.source = editor.value.getHTML();
+  }
+  // Emit the update event with the current form data
+  emit('update', formData.value);
+};
 </script>
