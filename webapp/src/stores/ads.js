@@ -140,9 +140,20 @@ export const useAdStore = defineStore('ads', {
     },
 
     updateItem(item) {
-      const index = this.items.findIndex(i => i.id === item.id);
+      // The item might be the full item object from WebSocket or a response wrapped in data
+      const actualItem = item.data ? item.data : item;
+      const index = this.items.findIndex(i => i.id === actualItem.id);
       if (index !== -1) {
-        this.items[index] = item;
+        // Create a new array to ensure reactivity in Vue
+        const newItems = [...this.items];
+        newItems[index] = { ...newItems[index], ...actualItem };
+        this.items = newItems;
+      } else {
+        // If item is not in current view but matches current group context, we might need to add it
+        // Only add if it belongs to the current group
+        if (actualItem.parentId === this.currentGroupId) {
+          this.items = [...this.items, actualItem];
+        }
       }
     }
   },

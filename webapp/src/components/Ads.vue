@@ -340,13 +340,6 @@ const handleClickOutside = (event) => {
   }
 };
 
-// Add event listener when mounted and remove when component is unmounted
-onMounted(() => {
-  store.fetchGroupContents();
-  store.fetchPath();
-  document.addEventListener('click', handleClickOutside);
-});
-
 // Clean up event listener when component is unmounted
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside);

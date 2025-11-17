@@ -70,12 +70,9 @@ const initializeDatabase = async () => {
     
     // Try to sync the database, but don't crash if it fails
     try {
-      // Using { force: true } will drop and recreate tables. This is useful in development
-      // but will cause data loss. Use { alter: true } in production.
-      await sequelize.query('PRAGMA foreign_keys = OFF;', null, { raw: true });
-      await sequelize.sync({ force: true }); // Force sync to recreate tables
-      await sequelize.query('PRAGMA foreign_keys = ON;', null, { raw: true });
-      console.log('Database connected and synchronized (forced)');
+      // Using { alter: true } will only update tables if needed, preserving existing data
+      await sequelize.sync({ alter: true }); // Alter tables to match models without losing data
+      console.log('Database connected and synchronized (altered)');
     } catch (syncError) {
       console.warn('Database sync failed, continuing with existing schema:', syncError.message);
     }

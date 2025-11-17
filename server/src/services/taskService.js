@@ -34,6 +34,9 @@ async function processQueue() {
   const { mediaId, modelName } = jobQueue.shift();
 
   try {
+    // Notify that processing has started
+    broadcast({ type: 'thumbnail-processing', mediaId, modelName });
+
     const updatedItem = await generateThumbnail(mediaId, modelName);
     broadcast({ type: 'thumbnail-generated', item: updatedItem });
   } catch (error) {

@@ -29,10 +29,13 @@ async function generateThumbnail(mediaId, modelName = 'MediaItem') {
     const publicUrl = `/thumbnails/${thumbnailFilename}`;
 
     return new Promise((resolve, reject) => {
+        // First, let's update the status to processing so UI can show progress
+        item.update({ status: 'processing' }).catch(console.error);
+
         ffmpeg.ffprobe(item.filePath, (err, metadata) => {
             if (err) {
                 console.error('Error probing media:', err);
-                item.update({ status: 'error' });
+                item.update({ status: 'error' }).catch(console.error);
                 return reject(err);
             }
 
@@ -44,40 +47,56 @@ async function generateThumbnail(mediaId, modelName = 'MediaItem') {
             const formatName = format.format_name || null;
             const dimensions = videoStream ? `${videoStream.width}x${videoStream.height}` : null;
 
+            // Use faster thumbnail generation options
             ffmpeg(item.filePath)
                 .on('end', async () => {
-                    await item.update({
-                        thumbnailPath: publicUrl,
-                        status: 'available',
-                        size,
-                        duration,
-                        dimensions,
-                        mimeType: formatName,
-                    });
-                    // Refresh the item to get updated values
-                    const updatedItem = await Model.findByPk(mediaId);
-                    resolve(updatedItem);
+                    try {
+                        await item.update({
+                            thumbnailPath: publicUrl,
+                            status: 'available',
+                            size,
+                            duration,
+                            dimensions,
+                            mimeType: formatName,
+                        });
+                        // Refresh the item to get updated values
+                        const updatedItem = await Model.findByPk(mediaId);
+                        resolve(updatedItem);
+                    } catch (updateErr) {
+                        console.error('Error updating item after thumbnail generation:', updateErr);
+                        reject(updateErr);
+                    }
                 })
                 .on('error', async (err) => {
                     console.error('Error generating thumbnail:', err);
-                    await item.update({ status: 'error' });
-                    const updatedItem = await Model.findByPk(mediaId);
-                    reject(err);
+                    try {
+                        await item.update({ status: 'error' });
+                        const updatedItem = await Model.findByPk(mediaId);
+                        reject(err);
+                    } catch (updateErr) {
+                        console.error('Error updating item status after thumbnail error:', updateErr);
+                        reject(err);
+                    }
                 })
                 .screenshots({
                     count: 1,
-                    timemarks: ['50%'],
+                    // Use the first second instead of 50% to speed up extraction
+                    timemarks: ['10%'],
+                    // Use a smaller size for faster processing
+                    size: '320x180',
+                    // Use faster extraction options
                     filename: thumbnailFilename,
                     folder: thumbnailDir,
-                    size: '320x180'
+                    // Add some encoding options for faster processing
+                    fastSeek: true,
                 });
         });
     });
 }
 
 // Check if the script is running directly (not imported)
-import.meta.url === `file://${process.argv[1]}` ? 
-    runIfMain() : 
+import.meta.url === `file://${process.argv[1]}` ?
+    runIfMain() :
     null;
 
 async function runIfMain() {

@@ -30,6 +30,9 @@ function connect() {
           const mediaStore = useMediaStore();
           mediaStore.updateItem(message.item);
         }
+      } else if (message.type === 'thumbnail-processing') {
+        // Optional: Update status to processing to provide user feedback
+        // This could be implemented to show a "processing" indicator in the UI
       } else if (message.type === 'thumbnail-error') {
         console.error(`Thumbnail generation failed for ${message.modelName} ${message.mediaId}:`, message.error);
       }
