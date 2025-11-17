@@ -212,7 +212,8 @@ const createThumbnail = (itemId, filePath, modelName = 'MediaItem') => {
         resolve(null); // Resolve with null if thumbnail creation fails
       })
       .on('end', () => {
-        resolve(thumbnailPath);
+        // Return web-accessible path instead of full file system path
+        resolve(`/thumbnails/${modelName.toLowerCase()}_${itemId}.jpg`);
       })
       .screenshots({
         timestamps: ['50%'], // Take screenshot at 50% of video duration

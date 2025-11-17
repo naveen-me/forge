@@ -71,6 +71,7 @@ export const addFiles = async (req, res) => {
         const insertedFiles = [];
         for (const file of files) {
             // Create the media item record
+            console.log(`Adding file: ${file.name} at path: ${file.path}`);
             const newFile = await MediaItem.create({
                 name: file.name,
                 type: 'file',

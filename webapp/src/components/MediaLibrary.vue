@@ -146,7 +146,7 @@
         <div v-for="video in store.videos" :key="video.id" :class="{'bg-blue-50 dark:bg-blue-900/20': isSelected(video.id), 'opacity-60': video.isMissing}" class="relative group bg-card-light dark:bg-card-dark rounded-lg shadow-around overflow-hidden border-2 border-transparent">
           <input type="checkbox" :checked="isSelected(video.id)" @click.stop="toggleSelection(video.id)" class="form-checkbox h-4 w-4 rounded-full text-primary bg-white/50 border-gray-400/70 focus:ring-0 focus:ring-offset-0 absolute top-2.5 left-2.5 z-10" />
           <div class="aspect-video bg-gray-200 dark:bg-gray-700 flex items-center justify-center relative">
-            <img v-if="video.thumbnailPath" :src="`http://localhost:3001${video.thumbnailPath}`" class="w-full h-full object-cover" />
+            <img v-if="video.thumbnailPath" :src="getThumbnailUrl(video.thumbnailPath)" class="w-full h-full object-cover" />
             <span v-else class="material-symbols-outlined text-gray-400 dark:text-gray-500 text-4xl opacity-50 group-hover:opacity-20 transition-opacity">movie</span>
             <div v-if="!video.isMissing" @click="playVideo(video)" class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
               <button class="bg-white/30 backdrop-blur-sm rounded-full p-2 text-white w-12 h-12 flex items-center justify-center">
@@ -184,7 +184,7 @@
               <td class="p-3 font-medium text-text-light dark:text-text-dark">
                 <div class="flex items-center gap-3">
                   <div class="relative group w-16 h-10 rounded-md overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
-                     <img v-if="video.thumbnailPath" :src="`http://localhost:3001${video.thumbnailPath}`" class="w-full h-full object-cover" />
+                     <img v-if="video.thumbnailPath" :src="getThumbnailUrl(video.thumbnailPath)" class="w-full h-full object-cover" />
                      <span v-else class="material-symbols-outlined text-gray-400 dark:text-gray-500 text-2xl absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-50 group-hover:opacity-20 transition-opacity">movie</span>
                      <div v-if="!video.isMissing" class="absolute inset-0 bg-black/20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer z-5">
                       <button @click="playVideo(video)" class="bg-white/30 backdrop-blur-sm rounded-full w-8 h-8 flex items-center justify-center text-white">
@@ -311,7 +311,10 @@ const handleAddFiles = async () => {
         const response = await api.selectFiles();
         const filePaths = response.data.files;
         if (filePaths && filePaths.length > 0) {
-            const filesToAdd = filePaths.map(path => ({ path }));
+            const filesToAdd = filePaths.map(filePathObj => ({
+                path: filePathObj.path, // Extract the path from the object
+                name: filePathObj.path.split(/[\\/]/).pop() // Extract filename
+            }));
             await store.addFiles(filesToAdd, store.currentFolderId);
         }
     } catch (error) {
@@ -376,6 +379,24 @@ const formatDuration = (seconds) => {
     return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   }
   return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+// Function to format thumbnail URLs properly to handle both old absolute paths and new relative paths
+const getThumbnailUrl = (thumbnailPath) => {
+  if (!thumbnailPath) return '';
+
+  // If it's already a web-accessible path (starts with /), use it directly
+  if (thumbnailPath.startsWith('/')) {
+    return `http://localhost:3001${thumbnailPath}`;
+  }
+
+  // If it's an absolute file path, extract just the filename part and create web path
+  const fileName = thumbnailPath.split(/[\\/]/).pop();
+  if (fileName) {
+    return `http://localhost:3001/thumbnails/${fileName}`;
+  }
+
+  return ''; // fallback
 };
 
 // Add click outside handling

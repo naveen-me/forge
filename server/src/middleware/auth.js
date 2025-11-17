@@ -1,9 +1,24 @@
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
 import db from '../db/database.js'; // Keep for fallback scenarios where critical
 import { callPhpApi } from '../services/phpApiService.js';
 
 dotenv.config();
+
+// In-memory cache for token validation results
+const tokenCache = new Map();
+
+// Function to get the cache key based on token
+const getTokenCacheKey = (token) => {
+    return crypto.createHash('sha256').update(token).digest('hex');
+};
+
+// Function to check if cache is still valid (expire after 12 hours)
+const isCacheValid = (timestamp) => {
+    const twelveHours = 12 * 60 * 60 * 1000; // 12 hours in milliseconds
+    return (Date.now() - timestamp) < twelveHours;
+};
 
 export const authenticateToken = async (req, res, next) => {
     // Check for authorization header in multiple possible formats
@@ -12,12 +27,7 @@ export const authenticateToken = async (req, res, next) => {
                       req.get('Authorization') || 
                       req.get('authorization');
     
-    console.log(`Auth check for ${req.method} ${req.path}, auth header:`, authHeader);
-    console.log('All headers:', req.headers);
-    
     if (!authHeader) {
-        console.log(`No authorization header found for ${req.method} ${req.path}`);
-        console.log('Raw headers keys:', Object.keys(req.headers));
         return res.status(401).json({ error: 'Unauthorized - No token provided' });
     }
     
@@ -26,17 +36,26 @@ export const authenticateToken = async (req, res, next) => {
     const token = tokenMatch ? tokenMatch[1] : null;
 
     if (!token) {
-        console.log(`No valid Bearer token found in header: ${authHeader}`);
         return res.status(401).json({ error: 'Unauthorized - Invalid token format' });
     }
 
     try {
-        // First verify the JWT token
+        // First verify the JWT token locally (this is fast)
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_key');
         
-        console.log(`Token verified for user:`, decoded);
-        
-        // Verify user with PHP server as the primary source of truth
+        // Get cache key for this token
+        const cacheKey = getTokenCacheKey(token);
+
+        // Check if we have a valid cached result for this token
+        const cachedResult = tokenCache.get(cacheKey);
+        if (cachedResult && isCacheValid(cachedResult.timestamp)) {
+            // Use cached result - token is valid
+            req.user = cachedResult.user;
+            next();
+            return;
+        }
+
+        // Cached result is not valid or doesn't exist, call PHP server
         try {
             const phpResponse = await callPhpApi('/api/v1/action', {
                 action: 'auth',
@@ -48,27 +67,34 @@ export const authenticateToken = async (req, res, next) => {
             
             if (phpResponse.success) {
                 // PHP verification successful
-                req.user = {
+                const user = {
                     id: decoded.data.id || null,
                     email: decoded.data.email || null,
                     name: decoded.data.name || 'User'
                 };
-                
-                console.log(`Authentication successful via PHP for user ${req.user.id} (${req.user.email}) on ${req.path}`);
+
+                // Cache the successful result for 12 hours
+                tokenCache.set(cacheKey, {
+                    user: user,
+                    timestamp: Date.now()
+                });
+
+                req.user = user;
                 next();
                 return;
             } else {
-                console.log(`Token verification failed with PHP server for token:`, decoded);
                 return res.status(403).json({ error: phpResponse.message || 'Invalid or expired token' });
             }
         } catch (phpErr) {
-            console.error('Token verification with PHP server failed:', phpErr.message);
             return res.status(403).json({ 
                 error: phpErr.message || 'Authentication service failed.' 
             });
         }
     } catch (err) {
-        console.error('Token verification error for', req.path, ':', err);
+        // If JWT verification fails, remove from cache if it exists
+        const cacheKey = getTokenCacheKey(token);
+        tokenCache.delete(cacheKey);
+        
         return res.status(403).json({ error: 'Invalid or expired token' });
     }
 };

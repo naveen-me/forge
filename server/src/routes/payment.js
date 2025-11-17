@@ -6,11 +6,16 @@ const router = express.Router();
 
 router.use(authenticateToken);
 
+// Organized by resource operation type:
+
+// Get operations (GET)
+router.get('/user', getUserPayments);
+router.get('/:paymentId/status', getPaymentStatus);
+
+// Post operations (POST/PUT)
 router.post('/log', logPaymentAction);
 router.post('/initiate-verification', initiateVerification);
-router.get('/:paymentId/status', getPaymentStatus);
-router.post('/:paymentId/cancel', cancelPayment);
 router.post('/complete', completePayment);
-router.get('/user', getUserPayments);
+router.post('/:paymentId/cancel', cancelPayment);
 
 export default router;

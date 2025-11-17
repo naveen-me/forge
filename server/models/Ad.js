@@ -56,6 +56,10 @@ const Ad = sequelize.define('Ad', {
     type: DataTypes.INTEGER,
     defaultValue: 0,
   },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
   createdAt: {
     type: DataTypes.DATE,
     defaultValue: DataTypes.NOW

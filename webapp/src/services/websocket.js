@@ -1,7 +1,7 @@
 import { useMediaStore } from '../stores/media';
 import { useAdStore } from '../stores/ads';
 
-const socketUrl = 'ws://localhost:3001';
+const socketUrl = `ws://${window.location.host}/ws`;
 let socket;
 
 function connect() {

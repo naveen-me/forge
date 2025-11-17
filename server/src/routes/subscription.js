@@ -11,10 +11,17 @@ import { authenticateToken } from '../middleware/auth.js';
 const router = Router();
 
 // Protected routes - require authentication
+// Organized by resource operation type:
+
+// Get operations (GET)
+router.get('/my-subscription', getUserSubscription);
+
+// Post operations (POST/PUT)
 router.post('/subscribe', subscribe);
 router.post('/purchase-feature', purchaseFeature);
-router.get('/my-subscription', getUserSubscription);
-router.delete('/cancel', cancelSubscription);
 router.post('/verify-and-activate', verifyAndActivateSubscription);
+
+// Delete operations (DELETE)
+router.delete('/cancel', cancelSubscription);
 
 export default router;

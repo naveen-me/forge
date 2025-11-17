@@ -30,7 +30,8 @@ router.get('/select-files', async (req, res) => {
 router.get('/', async (req, res) => {
     try {
       const { groupId } = req.query;
-      const where = {};
+      const userId = req.user.id; // Get userId from authenticated user
+      const where = { userId }; // Add userId filter
       if (groupId) {
         where.parentId = groupId;
       } else {
@@ -50,6 +51,7 @@ router.get('/', async (req, res) => {
 router.post('/files', async (req, res) => {
   try {
     const { files, parentId } = req.body;
+    const userId = req.user.id; // Get userId from authenticated user
 
     if (!files || !Array.isArray(files) || files.length === 0) {
       return res.status(400).json({ error: 'Files array is required' });
@@ -70,6 +72,7 @@ router.post('/files', async (req, res) => {
         duration: null,
         dimensions: null,
         parentId: parentId || null,
+        userId: userId, // Add userId from authenticated user
         status: 'processing',
       });
 
@@ -90,12 +93,18 @@ router.put('/:id/rename', async (req, res) => {
   try {
     const { id } = req.params;
     const { name } = req.body;
+    const userId = req.user.id; // Get userId from authenticated user
 
     if (!name) {
       return res.status(400).json({ error: 'Name is required' });
     }
 
-    const item = await Ad.findByPk(id);
+    const item = await Ad.findOne({
+      where: {
+        id: id,
+        userId: userId // Ensure user owns the item
+      }
+    });
     if (!item) {
       return res.status(404).json({ error: 'Item not found' });
     }
@@ -110,10 +119,12 @@ router.put('/:id/rename', async (req, res) => {
 
 router.post('/group', async (req, res) => {
     const { name } = req.body;
+    const userId = req.user.id; // Get userId from authenticated user
     try {
       const newGroup = await Ad.create({
         name: name || 'New Group',
         type: 'group',
+        userId: userId, // Add userId from authenticated user
       });
       res.status(200).json({
         message: `Successfully created group.`,
@@ -126,6 +137,7 @@ router.post('/group', async (req, res) => {
 
   router.post('/order', async (req, res) => {
     const { orderedIds, parentId } = req.body;
+    const userId = req.user.id; // Get userId from authenticated user
 
     if (!orderedIds || !Array.isArray(orderedIds)) {
       return res.status(400).json({ error: 'orderedIds must be an array.' });
@@ -141,6 +153,7 @@ router.post('/group', async (req, res) => {
           {
             where: {
               id: adId,
+              userId: userId, // Ensure user owns the items
               parentId: parentId,
             },
             transaction: t,
@@ -168,8 +181,14 @@ const __dirname = dirname(__filename);
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user.id; // Get userId from authenticated user
 
-    const item = await Ad.findByPk(id);
+    const item = await Ad.findOne({
+      where: {
+        id: id,
+        userId: userId // Ensure user owns the item
+      }
+    });
     if (!item) {
       return res.status(404).json({ error: 'Item not found' });
     }

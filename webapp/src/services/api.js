@@ -93,8 +93,8 @@ mediaApi.interceptors.response.use(
 
 const mediaService = {
   getFolderContents(parentId = null) {
-    const url = parentId ? `/folder/${parentId}` : '/folder';
-    return mediaApi.get(url);
+    const params = parentId ? { parentId } : {};
+    return mediaApi.get('/', { params });
   },
 
   createFolder(name, parentId = null) {

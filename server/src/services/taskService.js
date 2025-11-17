@@ -6,7 +6,7 @@ const jobQueue = [];
 let isProcessing = false;
 
 function setupWebSocket(server) {
-  wss = new WebSocketServer({ server });
+  wss = new WebSocketServer({ server, path: '/ws' });
 
   wss.on('connection', ws => {
     console.log('Client connected');

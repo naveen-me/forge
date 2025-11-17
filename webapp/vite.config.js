@@ -6,9 +6,14 @@ export default defineConfig({
   plugins: [vue()],
   server: {
     proxy: {
+      '/ws': {
+        target: 'ws://localhost:3001',
+        ws: true,
+      },
       '/api': {
         target: 'http://localhost:3001',
         changeOrigin: true,
+        ws: true,
         configure: (proxy, options) => {
           proxy.on('proxyReq', (proxyReq, req, res) => {
             // Ensure authorization header is preserved
@@ -22,6 +27,7 @@ export default defineConfig({
       '/auth': {
         target: 'http://localhost:3001',
         changeOrigin: true,
+        ws: true,
         configure: (proxy, options) => {
           proxy.on('proxyReq', (proxyReq, req, res) => {
             // Ensure authorization header is preserved

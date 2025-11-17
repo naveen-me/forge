@@ -150,7 +150,7 @@ router.post('/files', async (req, res) => {
       createdFiles.push(newFile);
 
       addThumbnailJob(newFile.id, 'MediaItem');
-    }
+     }
 
     res.status(201).json(createdFiles);
   } catch (error) {

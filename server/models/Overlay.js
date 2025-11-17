@@ -79,6 +79,10 @@ const Overlay = sequelize.define('Overlay', {
     type: DataTypes.INTEGER,
     defaultValue: 0,
   },
+  userId: {
+    type: DataTypes.INTEGER,
+    allowNull: false,
+  },
 }, {
   timestamps: true,
 });

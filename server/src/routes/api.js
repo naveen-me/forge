@@ -13,17 +13,23 @@ import {
 
 const router = Router();
 
-// Public Routes
+// Public Routes (available without authentication)
 router.get('/subscription/plans', getPlans);
 
-// Protected Routes
+// Protected Routes (require authentication)
+// Organized by business domain:
+
+// Subscription and payment management
 router.use('/subscription', authenticateToken, subscriptionRoutes);
 router.use('/payment', authenticateToken, paymentRoutes);
 router.use('/upi', authenticateToken, upiRoutes);
+
+// Media and content management
 router.use('/media', authenticateToken, mediaRoutes);
 
-router.get('/stats', getStats);
-router.post('/test-api', testExternalApi);
-router.post('/connect-obs', connectObs);
+// System and utility endpoints
+router.get('/stats', authenticateToken, getStats);
+router.post('/test-api', authenticateToken, testExternalApi);
+router.post('/connect-obs', authenticateToken, connectObs);
 
 export default router;

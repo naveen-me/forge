@@ -1,15 +1,21 @@
 import express from 'express';
 import Overlay from '../models/Overlay.js';
 import { Op } from 'sequelize';
+import { authenticateToken } from '../src/middleware/auth.js';
 
 const router = express.Router();
 
-// Get all overlays
+// Apply authentication to all overlay routes
+router.use(authenticateToken);
+
+// Get all overlays for the authenticated user
 router.get('/', async (req, res) => {
   try {
-    const [overlays] = await Overlay.sequelize.query(
-      'SELECT * FROM Overlays ORDER BY "order" ASC'
-    );
+    const userId = req.user.id; // Get userId from authenticated user
+    const overlays = await Overlay.findAll({
+      where: { userId },
+      order: [['order', 'ASC']]
+    });
     res.json(overlays);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -19,7 +25,11 @@ router.get('/', async (req, res) => {
 // Create an overlay
 router.post('/', async (req, res) => {
   try {
-    const overlay = await Overlay.create(req.body);
+    const userId = req.user.id; // Get userId from authenticated user
+    const overlay = await Overlay.create({
+      ...req.body,
+      userId // Include userId from authenticated user
+    });
     res.status(201).json(overlay);
   } catch (error) {
     res.status(400).json({ error: error.message });
@@ -29,7 +39,13 @@ router.post('/', async (req, res) => {
 // Get an overlay by ID
 router.get('/:id', async (req, res) => {
   try {
-    const overlay = await Overlay.findByPk(req.params.id);
+    const userId = req.user.id; // Get userId from authenticated user
+    const overlay = await Overlay.findOne({
+      where: { 
+        id: req.params.id,
+        userId: userId 
+      }
+    });
     if (overlay) {
       res.json(overlay);
     } else {
@@ -43,7 +59,13 @@ router.get('/:id', async (req, res) => {
 // Update an overlay
 router.put('/:id', async (req, res) => {
   try {
-    const overlay = await Overlay.findByPk(req.params.id);
+    const userId = req.user.id; // Get userId from authenticated user
+    const overlay = await Overlay.findOne({
+      where: { 
+        id: req.params.id,
+        userId: userId 
+      }
+    });
     if (overlay) {
       await overlay.update(req.body);
       res.json(overlay);
@@ -58,7 +80,13 @@ router.put('/:id', async (req, res) => {
 // Delete an overlay
 router.delete('/:id', async (req, res) => {
   try {
-    const overlay = await Overlay.findByPk(req.params.id);
+    const userId = req.user.id; // Get userId from authenticated user
+    const overlay = await Overlay.findOne({
+      where: { 
+        id: req.params.id,
+        userId: userId 
+      }
+    });
     if (overlay) {
       await overlay.destroy();
       res.status(204).send();
@@ -73,6 +101,8 @@ router.delete('/:id', async (req, res) => {
 // Create a group from selected overlays
 router.post('/group', async (req, res) => {
   const { name, overlayIds } = req.body;
+  const userId = req.user.id; // Get userId from authenticated user
+  
   if (!overlayIds || !Array.isArray(overlayIds) || overlayIds.length === 0) {
     return res.status(400).json({ error: 'overlayIds must be a non-empty array.' });
   }
@@ -82,12 +112,18 @@ router.post('/group', async (req, res) => {
     const newGroup = await Overlay.create({
       name: name || 'New Group',
       type: 'group',
+      userId: userId // Include userId for the group
     });
 
-    // 2. Update the parentId for all selected overlays
+    // 2. Update the parentId for all selected overlays (only those belonging to the user)
     const [updateCount] = await Overlay.update(
       { parentId: newGroup.id },
-      { where: { id: { [Op.in]: overlayIds } } }
+      { 
+        where: { 
+          id: { [Op.in]: overlayIds },
+          userId: userId // Only update overlays that belong to the user
+        }
+      }
     );
 
     res.status(200).json({
@@ -102,6 +138,7 @@ router.post('/group', async (req, res) => {
 // Update overlay order
 router.post('/order', async (req, res) => {
   const { orderedIds, parentId } = req.body;
+  const userId = req.user.id; // Get userId from authenticated user
 
   if (!orderedIds || !Array.isArray(orderedIds)) {
     return res.status(400).json({ error: 'orderedIds must be an array.' });
@@ -117,6 +154,7 @@ router.post('/order', async (req, res) => {
         {
           where: {
             id: overlayId,
+            userId: userId, // Only update overlays that belong to the user
             parentId: parentId, // Sequelize handles parentId: null as 'IS NULL'
           },
           transaction: t,

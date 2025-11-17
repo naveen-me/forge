@@ -27,8 +27,11 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files from the 'public' directory
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Serve thumbnails directory
+app.use('/thumbnails', express.static(path.join(__dirname, 'thumbnails')));
+
 // Import routes using ES modules
-import mediaRoutes from './routes/media.js';
+import mediaRoutes from './src/routes/media.js';
 import streamRoutes from './routes/stream.js';
 import overlayRoutes from './routes/overlays.js';
 import adRoutes from './routes/ads.js';
@@ -40,28 +43,39 @@ const loadRoutes = async () => {
   const { default: authRoutes } = await import('./src/routes/auth.js');
   const { default: apiRoutes } = await import('./src/routes/api.js');
 
-  // Routes
-  app.use('/api/media', mediaRoutes);
-  app.use('/api/stream', streamRoutes);
-  app.use('/api/overlays', overlayRoutes);
-  app.use('/api/ads', adRoutes);
-  app.use('/api/links', linkRoutes);
-  app.use('/api/schedule', scheduleRoutes);
+  // Authentication routes (public) - should be loaded first
   app.use('/auth', authRoutes);  // Auth endpoints like /auth/login, /auth/register
+
+  // Main API routes (protected) - core business logic
   app.use('/api', apiRoutes);    // Main API endpoints with auth middleware
+
+  // Resource-specific routes (protected) - organized by resource type
+  app.use('/api/media', mediaRoutes);      // Media management
+  app.use('/api/overlays', overlayRoutes); // Overlay management
+  app.use('/api/ads', adRoutes);           // Ads management
+  app.use('/api/links', linkRoutes);       // Links management
+  app.use('/api/schedule', scheduleRoutes); // Schedule management
+  app.use('/api/stream', streamRoutes);    // Stream management
 };
 
 // Initialize database
 const initializeDatabase = async () => {
   try {
-    const models = { Ad, MediaItem };
-    Ad.associate(models);
-    MediaItem.associate(models);
+    const models = { Ad, MediaItem, Overlay, Link, Schedule };
+    for (const modelName in models) {
+      if (models[modelName].associate) {
+        models[modelName].associate(models);
+      }
+    }
     
     // Try to sync the database, but don't crash if it fails
     try {
-      await sequelize.sync({ alter: true }); // Alter tables to match model definitions
-      console.log('Database connected and synchronized');
+      // Using { force: true } will drop and recreate tables. This is useful in development
+      // but will cause data loss. Use { alter: true } in production.
+      await sequelize.query('PRAGMA foreign_keys = OFF;', null, { raw: true });
+      await sequelize.sync({ force: true }); // Force sync to recreate tables
+      await sequelize.query('PRAGMA foreign_keys = ON;', null, { raw: true });
+      console.log('Database connected and synchronized (forced)');
     } catch (syncError) {
       console.warn('Database sync failed, continuing with existing schema:', syncError.message);
     }
