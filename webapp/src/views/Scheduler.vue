@@ -185,6 +185,11 @@
       @close="closeEditModal"
       @save="saveItem"
     />
+    <duration-modal
+      v-if="showDurationModal"
+      @close="showDurationModal = false"
+      @save="addLinkWithDuration"
+    />
     <!-- Link Modal -->
     <div v-if="showLinkModal" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
       <div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
@@ -208,12 +213,14 @@
 import draggable from 'vuedraggable';
 import { api } from '../services/api'; // Use correct API service with auth
 import ScheduleItemModal from '../components/ScheduleItemModal.vue';
+import DurationModal from '../components/DurationModal.vue';
 
 export default {
   name: 'Scheduler',
   components: {
     draggable,
     ScheduleItemModal,
+    DurationModal,
   },
   data() {
     return {
@@ -234,6 +241,8 @@ export default {
       showEditModal: false,
       editingItem: null,
       viewMode: 'list',
+      showDurationModal: false,
+      pendingLink: null,
     };
   },
   computed: {
@@ -337,44 +346,73 @@ export default {
     },
     async onAddToSchedule(event) {
       const { newIndex } = event;
-      // vuedraggable has already added a clone to the schedule array.
-      // We need to get the original data from the source item.
       const originalItem = event.item._underlying_vm_;
-
-      // If we can't get the original item, fall back to the cloned item.
       const sourceItem = originalItem || this.schedule[newIndex];
 
-      // Create a new object that matches the structure of the existing schedule items.
-      // This ensures the template can find the name/title.
+      if (sourceItem.item_type === 'link') {
+        this.pendingLink = { sourceItem, newIndex };
+        this.showDurationModal = true;
+        // We need to remove the item that vuedraggable added optimistically
+        // because we are now showing a modal before actually adding it.
+        this.schedule.splice(newIndex, 1);
+      } else {
+        const tempScheduleItem = {
+          id: `temp-${Date.now()}`,
+          item_id: sourceItem.id,
+          item_type: sourceItem.item_type,
+          item: { ...sourceItem },
+          start_time: null,
+          end_time: null,
+        };
+        this.schedule.splice(newIndex, 1, tempScheduleItem);
+
+        const newItemForApi = {
+          item_id: sourceItem.id,
+          item_type: sourceItem.item_type,
+          duration: sourceItem.duration || 300,
+          order: newIndex,
+        };
+
+        try {
+          await api.post('/schedule/1', newItemForApi);
+          await this.fetchSchedule();
+        } catch (error) {
+          console.error('Error adding item to schedule:', error);
+          await this.fetchSchedule();
+        }
+      }
+    },
+    async addLinkWithDuration(duration) {
+      this.showDurationModal = false;
+      if (!this.pendingLink) return;
+
+      const { sourceItem, newIndex } = this.pendingLink;
+
       const tempScheduleItem = {
-        id: `temp-${Date.now()}`, // A temporary unique ID for the key
+        id: `temp-${Date.now()}`,
         item_id: sourceItem.id,
         item_type: sourceItem.item_type,
-        // Nest the source item's data so the template can access it via `element.item.name` etc.
         item: { ...sourceItem },
-        // We don't have start/end time yet, but that's okay for the initial display.
         start_time: null,
         end_time: null,
       };
-
-      // Replace the item vuedraggable added with our properly structured temporary item.
-      this.schedule.splice(newIndex, 1, tempScheduleItem);
+      this.schedule.splice(newIndex, 0, tempScheduleItem);
 
       const newItemForApi = {
         item_id: sourceItem.id,
         item_type: sourceItem.item_type,
-        duration: sourceItem.duration || 300,
+        duration: duration,
         order: newIndex,
       };
 
       try {
         await api.post('/schedule/1', newItemForApi);
-        // Fetching the schedule will replace the temporary item with the real one from the DB.
         await this.fetchSchedule();
       } catch (error) {
-        console.error('Error adding item to schedule:', error);
-        // If the API call fails, refetch to remove the optimistic update.
+        console.error('Error adding link to schedule:', error);
         await this.fetchSchedule();
+      } finally {
+        this.pendingLink = null;
       }
     },
     async updateScheduleOrder() {

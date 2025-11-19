@@ -13,7 +13,7 @@ const MediaItem = sequelize.define('MediaItem', {
     allowNull: false
   },
   type: {
-    type: DataTypes.ENUM('file', 'folder'),
+    type: DataTypes.ENUM('file', 'group'),
     allowNull: false
   },
   filePath: {
@@ -51,6 +51,10 @@ const MediaItem = sequelize.define('MediaItem', {
       model: 'MediaItems',
       key: 'id'
     }
+  },
+  order: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
   },
   userId: {
     type: DataTypes.INTEGER,

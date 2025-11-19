@@ -25,15 +25,18 @@ Schedule.init({
     type: DataTypes.DATE,
     allowNull: false,
   },
-  end_time: {
-    type: DataTypes.DATE,
-    allowNull: false,
-  },
-  order: {
-    type: DataTypes.INTEGER,
-    allowNull: false,
-  },
-}, {
+      end_time: {
+        type: DataTypes.DATE,
+        allowNull: false,
+      },
+      duration: {
+        type: DataTypes.INTEGER, // Duration in seconds
+        allowNull: false,
+      },
+      order: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },}, {
   sequelize,
   modelName: 'Schedule',
 });

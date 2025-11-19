@@ -63,7 +63,6 @@ class SchedulerService {
         if (precedingItem) {
           lastEndTime = new Date(precedingItem.end_time);
         } else {
-          // If there is no preceding item, start from the beginning of the day
           const startOfToday = new Date();
           startOfToday.setHours(0, 0, 0, 0);
           lastEndTime = startOfToday;
@@ -75,12 +74,9 @@ class SchedulerService {
       }
 
       for (const item of items) {
-        const model = this.getModel(item.item_type);
-        const media = await model.findByPk(item.item_id, { transaction: t });
-        const duration = (media.duration || 300) * 1000; // Default to 5 mins for links
-
+        const durationMs = item.duration * 1000;
         item.start_time = lastEndTime;
-        item.end_time = new Date(lastEndTime.getTime() + duration);
+        item.end_time = new Date(lastEndTime.getTime() + durationMs);
         await item.save({ transaction: t });
 
         lastEndTime = item.end_time;
@@ -96,9 +92,21 @@ class SchedulerService {
   async addItem(channel_id, itemData) {
     const t = await sequelize.transaction();
     try {
-      const { item_id, item_type, order } = itemData;
+      const { item_id, item_type, order, duration } = itemData;
 
-      // Get the start time for the new item
+      await Schedule.update(
+        { order: sequelize.literal('`order` + 1') },
+        {
+          where: {
+            channel_id,
+            order: {
+              [Op.gte]: order,
+            },
+          },
+          transaction: t,
+        }
+      );
+
       let startTime;
       if (order > 0) {
         const precedingItem = await Schedule.findOne({
@@ -108,7 +116,6 @@ class SchedulerService {
         if (precedingItem) {
           startTime = new Date(precedingItem.end_time);
         } else {
-          // This case should be handled carefully. Maybe default to start of day
           const startOfToday = new Date();
           startOfToday.setHours(0, 0, 0, 0);
           startTime = startOfToday;
@@ -123,14 +130,15 @@ class SchedulerService {
       const media = await model.findByPk(item_id, { transaction: t });
       if (!media) throw new Error('Media item not found');
 
-      const duration = (media.duration || 300) * 1000; // Default to 5 mins for links
+      const itemDurationSeconds = Math.round(duration || media.duration || 300);
 
       const newItem = await Schedule.create({
         channel_id,
         item_id,
         item_type,
         start_time: startTime,
-        end_time: new Date(startTime.getTime() + duration),
+        end_time: new Date(startTime.getTime() + itemDurationSeconds * 1000),
+        duration: itemDurationSeconds,
         order,
       }, { transaction: t });
 
@@ -149,6 +157,11 @@ class SchedulerService {
       const item = await Schedule.findByPk(schedule_id, { transaction: t });
       if (!item) throw new Error('Schedule item not found');
 
+      // If duration is updated, we must update it in the schedule item
+      if (updateData.duration) {
+        item.duration = updateData.duration;
+      }
+      
       await item.update(updateData, { transaction: t });
 
       await t.commit();
@@ -168,6 +181,19 @@ class SchedulerService {
 
       const order = item.order;
       await item.destroy({ transaction: t });
+
+      await Schedule.update(
+        { order: sequelize.literal('`order` - 1') },
+        {
+          where: {
+            channel_id,
+            order: {
+              [Op.gt]: order,
+            },
+          },
+          transaction: t,
+        }
+      );
 
       await t.commit();
       await this.recalculateSchedule(channel_id, order);
