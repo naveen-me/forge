@@ -17,12 +17,97 @@
           <input type="datetime-local" id="start_time" v-model="editableItem.start_time" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" />
         </div>
         <div>
-          <label for="duration" class="block text-sm font-medium text-gray-700">Duration (seconds)</label>
-          <input type="number" id="duration" v-model="editableItem.duration" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm" />
+          <label class="block text-sm font-medium text-gray-700 mb-2">Duration</label>
+          <div class="flex gap-2 mb-4">
+            <div class="flex-1">
+              <input
+                type="number"
+                v-model.number="hours"
+                min="0"
+                placeholder="HH"
+                class="w-full px-3 py-2 text-center rounded-md border border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              />
+              <p class="text-xs text-gray-500 text-center mt-1">Hours</p>
+            </div>
+            <div class="flex items-center self-end pb-3">:</div>
+            <div class="flex-1">
+              <input
+                type="number"
+                v-model.number="minutes"
+                min="0"
+                max="59"
+                placeholder="MM"
+                class="w-full px-3 py-2 text-center rounded-md border border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              />
+              <p class="text-xs text-gray-500 text-center mt-1">Minutes</p>
+            </div>
+            <div class="flex items-center self-end pb-3">:</div>
+            <div class="flex-1">
+              <input
+                type="number"
+                v-model.number="seconds"
+                min="0"
+                max="59"
+                placeholder="SS"
+                class="w-full px-3 py-2 text-center rounded-md border border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              />
+              <p class="text-xs text-gray-500 text-center mt-1">Seconds</p>
+            </div>
+          </div>
         </div>
+
+        <div class="p-3 bg-gray-50 rounded-md text-sm mb-4">
+          <div class="text-gray-700">Total duration: <span class="font-medium text-primary">{{ formatDuration(totalSeconds) }}</span> ({{ totalSeconds }} seconds)</div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Video Start Offset</label>
+          <div class="flex gap-2">
+            <div class="flex-1">
+              <input
+                type="number"
+                v-model.number="offset_hours"
+                min="0"
+                placeholder="HH"
+                class="w-full px-3 py-2 text-center rounded-md border border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              />
+              <p class="text-xs text-gray-500 text-center mt-1">Hours</p>
+            </div>
+            <div class="flex items-center self-end pb-3">:</div>
+            <div class="flex-1">
+              <input
+                type="number"
+                v-model.number="offset_minutes"
+                min="0"
+                max="59"
+                placeholder="MM"
+                class="w-full px-3 py-2 text-center rounded-md border border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              />
+              <p class="text-xs text-gray-500 text-center mt-1">Minutes</p>
+            </div>
+            <div class="flex items-center self-end pb-3">:</div>
+            <div class="flex-1">
+              <input
+                type="number"
+                v-model.number="offset_seconds"
+                min="0"
+                max="59"
+                placeholder="SS"
+                class="w-full px-3 py-2 text-center rounded-md border border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+              />
+              <p class="text-xs text-gray-500 text-center mt-1">Seconds</p>
+            </div>
+          </div>
+          <div class="mt-2 text-xs text-gray-500">The time in the video where playback should start (e.g., skip intro)</div>
+        </div>
+
+        <div class="p-3 bg-gray-50 rounded-md text-sm">
+          <div class="text-gray-700">Video start offset: <span class="font-medium text-primary">{{ formatDuration(totalOffsetSeconds) }}</span> ({{ totalOffsetSeconds }} seconds)</div>
+        </div>
+
         <div class="flex justify-end gap-2">
           <button type="button" @click="$emit('close')" class="px-4 py-2 rounded-md text-gray-600 bg-gray-100 hover:bg-gray-200">Cancel</button>
-          <button type="submit" class="px-4 py-2 rounded-md bg-primary text-white">Save</button>
+          <button type="submit" class="px-4 py-2 rounded-md bg-primary text-white" :disabled="!isValidDuration">Save</button>
         </div>
       </form>
     </div>
@@ -42,20 +127,46 @@ export default {
     return {
       editableItem: {
         start_time: '',
-        duration: 0,
       },
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      offset_hours: 0,
+      offset_minutes: 0,
+      offset_seconds: 0,
     };
+  },
+  computed: {
+    totalSeconds() {
+      return (this.hours * 3600) + (this.minutes * 60) + this.seconds;
+    },
+    totalOffsetSeconds() {
+      return (this.offset_hours * 3600) + (this.offset_minutes * 60) + this.offset_seconds;
+    },
+    isValidDuration() {
+      return this.totalSeconds > 0;
+    }
   },
   watch: {
     item: {
       immediate: true,
       handler(newItem) {
-        if (newItem) {
+        if (newItem && this.editableItem) {
           this.editableItem.start_time = this.formatDateForInput(newItem.start_time);
-          this.editableItem.duration = this.getDurationInSeconds(newItem);
+          const duration = this.getDurationInSeconds(newItem);
+          this.updateDurationFields(duration);
+          this.updateOffsetFields(newItem.offset_time || 0);
         }
       },
     },
+    // Watch for changes to duration fields and update internal state
+    hours() { this.updateDurationField(); },
+    minutes() { this.updateDurationField(); },
+    seconds() { this.updateDurationField(); },
+    // Watch for changes to offset fields and update internal state
+    offset_hours() { this.updateOffsetField(); },
+    offset_minutes() { this.updateOffsetField(); },
+    offset_seconds() { this.updateOffsetField(); },
   },
   methods: {
     formatDateForInput(dateString) {
@@ -75,13 +186,47 @@ export default {
       const diff = end.getTime() - start.getTime();
       return Math.round(diff / 1000);
     },
+    updateDurationFields(seconds) {
+      this.hours = Math.floor(seconds / 3600);
+      this.minutes = Math.floor((seconds % 3600) / 60);
+      this.seconds = seconds % 60;
+    },
+    updateOffsetFields(seconds) {
+      this.offset_hours = Math.floor(seconds / 3600);
+      this.offset_minutes = Math.floor((seconds % 3600) / 60);
+      this.offset_seconds = seconds % 60;
+    },
+    updateDurationField() {
+      // This is just to trigger the computed property when components change
+    },
+    updateOffsetField() {
+      // This is just to trigger the computed property when components change
+    },
+    formatDuration(totalSeconds) {
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+
+      const hoursStr = hours.toString().padStart(2, '0');
+      const minutesStr = minutes.toString().padStart(2, '0');
+      const secondsStr = seconds.toString().padStart(2, '0');
+
+      if (hours > 0) {
+        return `${hoursStr}:${minutesStr}:${secondsStr}`;
+      }
+      return `${minutesStr}:${secondsStr}`;
+    },
     save() {
-      const end_time = new Date(new Date(this.editableItem.start_time).getTime() + this.editableItem.duration * 1000);
-      this.$emit('save', {
-        ...this.item,
-        start_time: new Date(this.editableItem.start_time).toISOString(),
-        end_time: end_time.toISOString(),
-      });
+      if (this.isValidDuration) {
+        const end_time = new Date(new Date(this.editableItem.start_time).getTime() + this.totalSeconds * 1000);
+        this.$emit('save', {
+          ...this.item,
+          start_time: new Date(this.editableItem.start_time).toISOString(),
+          end_time: end_time.toISOString(),
+          duration: this.totalSeconds, // Also send duration for API compatibility
+          offset_time: this.totalOffsetSeconds, // Send offset time
+        });
+      }
     },
   },
 };

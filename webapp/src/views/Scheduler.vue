@@ -62,7 +62,7 @@
                       <span class="material-symbols-outlined">{{ getItemIcon(element.item_type) }}</span>
                     </div>
                     <div class="flex-1 grid grid-cols-12 items-center gap-4">
-                      <div class="flex flex-col col-span-5">
+                      <div class="flex flex-col col-span-4">
                         <p class="text-gray-900 text-base font-medium leading-normal line-clamp-1">
                           <span v-if="isNowPlaying(element)">Now Playing: </span>
                           {{ element.item?.name || element.name || element.item?.title || element.title || element.item_type }}
@@ -74,6 +74,8 @@
                       <p class="text-gray-500 text-sm font-mono col-span-2 text-right">{{ formatTime(element.start_time) }}</p>
                       <p class="text-gray-500 text-sm font-mono col-span-2 text-right">{{ formatTime(element.end_time) }}</p>
                       <p class="text-gray-500 text-sm font-mono col-span-2 text-right">{{ formatDuration(getDuration(element)) }}</p>
+                      <p v-if="element.offset_time && element.offset_time > 0" class="text-gray-500 text-sm font-mono col-span-1 text-right" title="Video Start Offset">{{ formatDuration(element.offset_time) }}</p>
+                      <p v-else class="text-gray-500 text-sm font-mono col-span-1 text-right" title="Video Start Offset">0s</p>
                     </div>
                   </div>
                   <div class="flex items-center justify-end gap-2 mt-2">
@@ -459,9 +461,17 @@ export default {
       if (totalSeconds < 60) {
         return `${totalSeconds}s`;
       }
-      const minutes = Math.floor(totalSeconds / 60);
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
       const seconds = totalSeconds % 60;
-      return seconds === 0 ? `${minutes}m` : `${minutes}m ${seconds}s`;
+
+      if (hours > 0) {
+        return `${hours}h ${minutes}m ${seconds}s`;
+      } else if (seconds === 0) {
+        return `${minutes}m`;
+      } else {
+        return `${minutes}m ${seconds}s`;
+      }
     },
     getCurrentProgressTime(item) {
       if (!this.isNowPlaying(item)) return '0:00';

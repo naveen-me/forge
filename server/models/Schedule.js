@@ -33,6 +33,11 @@ Schedule.init({
         type: DataTypes.INTEGER, // Duration in seconds
         allowNull: false,
       },
+      offset_time: {
+        type: DataTypes.INTEGER, // Video start offset in seconds, default 0
+        defaultValue: 0,
+        allowNull: true,
+      },
       order: {
         type: DataTypes.INTEGER,
         allowNull: false,

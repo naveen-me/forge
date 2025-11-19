@@ -89,6 +89,26 @@ class SchedulerService {
     }
   }
 
+  // Helper function to convert duration in HH:MM:SS format to seconds
+  convertDurationToSeconds(duration) {
+    if (typeof duration === 'number') {
+      return duration; // If it's already in seconds, return as is
+    }
+    if (typeof duration === 'string') {
+      // Check if it's in HH:MM:SS format
+      const timeParts = duration.split(':');
+      if (timeParts.length === 3) { // HH:MM:SS
+        const [hours, minutes, seconds] = timeParts.map(Number);
+        return (hours * 3600) + (minutes * 60) + seconds;
+      } else if (timeParts.length === 2) { // MM:SS
+        const [minutes, seconds] = timeParts.map(Number);
+        return (minutes * 60) + seconds;
+      }
+    }
+    // If format is unrecognized, return the original value or 0
+    return typeof duration !== 'undefined' ? Number(duration) : 0;
+  }
+
   async addItem(channel_id, itemData) {
     const t = await sequelize.transaction();
     try {
@@ -130,7 +150,7 @@ class SchedulerService {
       const media = await model.findByPk(item_id, { transaction: t });
       if (!media) throw new Error('Media item not found');
 
-      const itemDurationSeconds = Math.round(duration || media.duration || 300);
+      const itemDurationSeconds = Math.round(this.convertDurationToSeconds(duration) || media.duration || 300);
 
       const newItem = await Schedule.create({
         channel_id,
@@ -139,6 +159,7 @@ class SchedulerService {
         start_time: startTime,
         end_time: new Date(startTime.getTime() + itemDurationSeconds * 1000),
         duration: itemDurationSeconds,
+        offset_time: itemData.offset_time || 0,
         order,
       }, { transaction: t });
 
@@ -157,11 +178,16 @@ class SchedulerService {
       const item = await Schedule.findByPk(schedule_id, { transaction: t });
       if (!item) throw new Error('Schedule item not found');
 
-      // If duration is updated, we must update it in the schedule item
+      // If duration is updated, convert it to seconds if necessary
       if (updateData.duration) {
-        item.duration = updateData.duration;
+        updateData.duration = this.convertDurationToSeconds(updateData.duration);
       }
-      
+
+      // If offset_time is updated, ensure it's a valid number
+      if (updateData.offset_time !== undefined) {
+        updateData.offset_time = parseInt(updateData.offset_time) || 0;
+      }
+
       await item.update(updateData, { transaction: t });
 
       await t.commit();
@@ -299,6 +325,7 @@ class SchedulerService {
         item_type: 'media',
         start_time: currentStartTime,
         end_time: new Date(currentStartTime.getTime() + itemDuration),
+        offset_time: 0, // Default offset for buffer content
         order: precedingOrder + 1,
       });
 
