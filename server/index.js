@@ -37,6 +37,7 @@ import overlayRoutes from './routes/overlays.js';
 import adRoutes from './routes/ads.js';
 import linkRoutes from './routes/links.js';
 import scheduleRoutes from './routes/schedule.js';
+import settingsRoutes from './routes/settings.js';
 
 // Import ES modules using dynamic imports
 const loadRoutes = async () => {

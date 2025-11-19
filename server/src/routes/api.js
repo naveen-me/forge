@@ -3,6 +3,7 @@ import subscriptionRoutes from './subscription.js';
 import paymentRoutes from './payment.js';
 import upiRoutes from './upiManagement.js';
 import mediaRoutes from './media.js';
+import settingsRoutes from '../../routes/settings.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { getPlans } from '../controllers/subscriptionController.js';
 import {
@@ -26,6 +27,9 @@ router.use('/upi', authenticateToken, upiRoutes);
 
 // Media and content management
 router.use('/media', authenticateToken, mediaRoutes);
+
+// Settings management
+router.use('/settings', authenticateToken, settingsRoutes);
 
 // System and utility endpoints
 router.get('/stats', authenticateToken, getStats);

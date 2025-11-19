@@ -7,7 +7,8 @@ router.get('/:channel_id/:date', async (req, res) => {
   try {
     const schedule = await schedulerService.getSchedule(
       req.params.channel_id,
-      req.params.date
+      req.params.date,
+      req.user ? req.user.id : null
     );
     res.json(schedule);
   } catch (error) {

@@ -442,6 +442,8 @@ export default {
       return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     },
     isNowPlaying(item) {
+      // Use the same timezone for all time comparisons
+      // Convert all times to milliseconds for consistent comparison
       const now = this.currentTime.getTime();
       const start = new Date(item.start_time).getTime();
       const end = new Date(item.end_time).getTime();

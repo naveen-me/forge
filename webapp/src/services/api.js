@@ -91,7 +91,72 @@ mediaApi.interceptors.response.use(
   }
 );
 
+// Settings API methods
+const settingsApi = axios.create({
+  baseURL: '/api/settings',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
 
+// Add auth interceptors to the settings API
+settingsApi.interceptors.request.use(
+  async (config) => {
+    // Dynamically import the store to avoid circular dependency
+    const { useAuthStore } = await import('../store/index');
+    const authStore = useAuthStore();
+    if (authStore.token) {
+      config.headers.Authorization = `Bearer ${authStore.token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+settingsApi.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    if (error.response?.status === 401 || error.response?.status === 403) {
+      // Dynamically import the store to avoid circular dependency
+      const { useAuthStore } = await import('../store/index');
+      const authStore = useAuthStore();
+      authStore.logout();
+      window.location.href = '/login'; // Force redirect to login
+    }
+    return Promise.reject(error);
+  }
+);
+
+const settingsService = {
+  getSettings() {
+    return settingsApi.get('/');
+  },
+
+  updateSettings(settings) {
+    return settingsApi.put('/', settings);
+  },
+
+  getSetting(key) {
+    return settingsApi.get(`/${key}`);
+  }
+};
+
+
+// Auth API does not need authentication interceptors
+authApi.interceptors.response.use(
+    (response) => {
+        return response;
+    },
+    (error) => {
+        return Promise.reject(error);
+    }
+);
+
+// Update media service to use the mediaApi instance
 const mediaService = {
   getFolderContents(parentId = null) {
     const params = parentId ? { parentId } : {};
@@ -129,9 +194,9 @@ const mediaService = {
   searchItems(query) {
     return mediaApi.get(`/search/${query}`);
   },
-  
+
   getAllFolders() {
-    return mediaApi.get('/folder'); 
+    return mediaApi.get('/folder');
   },
 
   getFolderPath(folderId) {
@@ -140,17 +205,6 @@ const mediaService = {
   }
 };
 
-
-// Auth API does not need authentication interceptors
-authApi.interceptors.response.use(
-    (response) => {
-        return response;
-    },
-    (error) => {
-        return Promise.reject(error);
-    }
-);
-
 // Export all instances and the new service
-export { api, authApi, mediaService };
+export { api, authApi, mediaService, settingsService };
 export default api;

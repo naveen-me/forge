@@ -2,17 +2,77 @@ import Schedule from '../../models/Schedule.js';
 import MediaItem from '../../models/MediaItem.js';
 import Link from '../../models/Link.js';
 import Ad from '../../models/Ad.js';
+import Setting from '../../models/Setting.js';
 import sequelize from '../database.js';
 import { Op } from 'sequelize';
+import { syncToOBS } from './taskService.js';
 
 const BUFFER_LIST_FOLDER = '/media/buffer';
 
+// Mapping of timezone names to their offsets in minutes (this is a simplified mapping)
+const TIMEZONE_OFFSETS = {
+  'UTC': 0,
+  'GMT': 0,
+  'EST': -300, // UTC-5
+  'EDT': -240, // UTC-4
+  'CST': -360, // UTC-6
+  'CDT': -300, // UTC-5
+  'MST': -420, // UTC-7
+  'MDT': -360, // UTC-6
+  'PST': -480, // UTC-8
+  'PDT': -420, // UTC-7
+  'IST': 330,  // UTC+5:30
+  'JST': 540,  // UTC+9
+  'CET': 60,   // UTC+1
+  'CEST': 120, // UTC+2
+  // Add more as needed
+};
+
 class SchedulerService {
-  async getSchedule(channel_id, date) {
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
+  // Helper method to get timezone offset in minutes
+  getTimezoneOffset(timezone) {
+    return TIMEZONE_OFFSETS[timezone] || 0;
+  }
+
+  async getSchedule(channel_id, date, user_id = null) {
+    // Get user's timezone if available
+    let userTimezone = 'UTC'; // Default to UTC
+    if (user_id) {
+      const userSetting = await Setting.findOne({
+        where: { userId: user_id }
+      });
+      if (userSetting && userSetting.timezone) {
+        userTimezone = userSetting.timezone;
+      }
+    }
+
+    // Convert the date string assuming it's in the user's timezone
+    const dateStr = date.split('T')[0]; // Extract date part in YYYY-MM-DD format
+
+    // Use the timezone offset to convert user's day to UTC times for database lookup
+    // This requires calculating the actual timezone offset for the specific date
+    // since some timezones have daylight saving changes
+    let startOfDay, endOfDay;
+
+    try {
+      // Create date objects for the start and end of the user's day
+      const startLocal = new Date(`${dateStr}T00:00:00`);
+      const endLocal = new Date(`${dateStr}T23:59:59.999`);
+
+      // Calculate the offset in milliseconds for the user's timezone
+      // For this approach, we'll use a simple conversion based on the timezone offset mapping
+      const offsetMinutes = this.getTimezoneOffset(userTimezone);
+      const offsetMs = offsetMinutes * 60000;
+
+      // Convert user's local times to UTC for database query
+      startOfDay = new Date(startLocal.getTime() - offsetMs);
+      endOfDay = new Date(endLocal.getTime() - offsetMs);
+    } catch (error) {
+      console.error("Error calculating timezone offsets:", error);
+      // Fallback to default behavior - use the date as UTC
+      startOfDay = new Date(`${dateStr}T00:00:00.000Z`);
+      endOfDay = new Date(`${dateStr}T23:59:59.999Z`);
+    }
 
     const scheduleItems = await Schedule.findAll({
       where: {
@@ -126,14 +186,27 @@ class SchedulerService {
         });
 
         if (latestItem) {
+          // Use the end time of the latest item as the start time for the new item
           finalStartTime = new Date(latestItem.end_time);
         } else {
-          const startOfToday = new Date();
-          startOfToday.setHours(0, 0, 0, 0);
-          finalStartTime = startOfToday;
+          // For new channel or empty schedule, start at beginning of today in UTC
+          finalStartTime = new Date();
+          // Set to UTC midnight to have consistent starting point
+          finalStartTime.setUTCHours(0, 0, 0, 0);
         }
       } else {
-        finalStartTime = new Date(start_time);
+        // Handle different date string formats to avoid timezone issues
+        if (typeof start_time === 'string') {
+          // If it's a date-only string like "YYYY-MM-DD", interpret as start of day in UTC
+          if (/^\d{4}-\d{2}-\d{2}$/.test(start_time)) {
+            finalStartTime = new Date(`${start_time}T00:00:00.000Z`);
+          } else {
+            // Otherwise, create date normally (this handles ISO strings with timezone info)
+            finalStartTime = new Date(start_time);
+          }
+        } else {
+          finalStartTime = new Date(start_time);
+        }
       }
 
       const model = this.getModel(item_type);
@@ -372,7 +445,18 @@ class SchedulerService {
       // Check for start_time updates and validate against collisions
       let updatedStartTime = item.start_time;
       if (updateData.start_time) {
-        updatedStartTime = new Date(updateData.start_time);
+        // Handle different date string formats to avoid timezone issues
+        if (typeof updateData.start_time === 'string') {
+          // If it's a date-only string like "YYYY-MM-DD", interpret as start of day in UTC
+          if (/^\d{4}-\d{2}-\d{2}$/.test(updateData.start_time)) {
+            updatedStartTime = new Date(`${updateData.start_time}T00:00:00.000Z`);
+          } else {
+            // Otherwise, create date normally (this handles ISO strings with timezone info)
+            updatedStartTime = new Date(updateData.start_time);
+          }
+        } else {
+          updatedStartTime = new Date(updateData.start_time);
+        }
 
         // Check for collisions with other items
         const conflictingItem = await Schedule.findOne({
