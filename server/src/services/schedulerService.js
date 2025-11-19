@@ -14,7 +14,7 @@ class SchedulerService {
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
-    return Schedule.findAll({
+    const scheduleItems = await Schedule.findAll({
       where: {
         channel_id,
         start_time: {
@@ -23,16 +23,30 @@ class SchedulerService {
       },
       order: [['order', 'ASC']],
     });
+
+    // Eagerly load the associated item for each schedule entry
+    const enrichedSchedule = await Promise.all(
+      scheduleItems.map(async (item) => {
+        const model = this.getModel(item.item_type);
+        const associatedItem = await model.findByPk(item.item_id);
+        // Use dataValues to get a plain object and attach the item to it
+        const plainItem = item.get({ plain: true });
+        plainItem.item = associatedItem ? associatedItem.get({ plain: true }) : null;
+        return plainItem;
+      })
+    );
+
+    return enrichedSchedule;
   }
 
-  async recalculateSchedule(channel_id, fromDate) {
+  async recalculateSchedule(channel_id, fromOrder) {
     const t = await sequelize.transaction();
     try {
       const items = await Schedule.findAll({
         where: {
           channel_id,
-          start_time: {
-            [Op.gte]: fromDate,
+          order: {
+            [Op.gte]: fromOrder,
           },
         },
         order: [['order', 'ASC']],
@@ -40,7 +54,25 @@ class SchedulerService {
         lock: t.LOCK.UPDATE,
       });
 
-      let lastEndTime = fromDate;
+      let lastEndTime;
+      if (fromOrder > 0) {
+        const precedingItem = await Schedule.findOne({
+          where: { channel_id, order: fromOrder - 1 },
+          transaction: t,
+        });
+        if (precedingItem) {
+          lastEndTime = new Date(precedingItem.end_time);
+        } else {
+          // If there is no preceding item, start from the beginning of the day
+          const startOfToday = new Date();
+          startOfToday.setHours(0, 0, 0, 0);
+          lastEndTime = startOfToday;
+        }
+      } else {
+        const startOfToday = new Date();
+        startOfToday.setHours(0, 0, 0, 0);
+        lastEndTime = startOfToday;
+      }
 
       for (const item of items) {
         const model = this.getModel(item.item_type);
@@ -103,7 +135,7 @@ class SchedulerService {
       }, { transaction: t });
 
       await t.commit();
-      await this.recalculateSchedule(channel_id, new Date(newItem.start_time));
+      await this.recalculateSchedule(channel_id, order);
       return newItem;
     } catch (error) {
       await t.rollback();
@@ -120,7 +152,7 @@ class SchedulerService {
       await item.update(updateData, { transaction: t });
 
       await t.commit();
-      await this.recalculateSchedule(channel_id, new Date(item.start_time));
+      await this.recalculateSchedule(channel_id, item.order);
       return item;
     } catch (error) {
       await t.rollback();
@@ -134,11 +166,32 @@ class SchedulerService {
       const item = await Schedule.findByPk(schedule_id, { transaction: t });
       if (!item) throw new Error('Schedule item not found');
 
-      const startTime = new Date(item.start_time);
+      const order = item.order;
       await item.destroy({ transaction: t });
 
       await t.commit();
-      await this.recalculateSchedule(channel_id, startTime);
+      await this.recalculateSchedule(channel_id, order);
+    } catch (error) {
+      await t.rollback();
+      throw error;
+    }
+  }
+
+  async updateScheduleOrder(channel_id, scheduleData) {
+    const t = await sequelize.transaction();
+    try {
+      for (const item of scheduleData) {
+        await Schedule.update(
+          { order: item.order },
+          { where: { id: item.id, channel_id }, transaction: t }
+        );
+      }
+      await t.commit();
+      
+      if (scheduleData.length > 0) {
+        const firstItemOrder = Math.min(...scheduleData.map(i => i.order));
+        await this.recalculateSchedule(channel_id, firstItemOrder);
+      }
     } catch (error) {
       await t.rollback();
       throw error;

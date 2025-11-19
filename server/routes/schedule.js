@@ -42,6 +42,19 @@ router.put('/:channel_id/:schedule_id', async (req, res) => {
   }
 });
 
+// Update schedule order
+router.put('/:channel_id/order', async (req, res) => {
+  try {
+    await schedulerService.updateScheduleOrder(
+      req.params.channel_id,
+      req.body.schedule
+    );
+    res.json({ message: 'Schedule order updated' });
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 // Delete a schedule item
 router.delete('/:channel_id/:schedule_id', async (req, res) => {
   try {
