@@ -50,12 +50,15 @@
             >
               <template #item="{ element }">
                 <div
-                  class="flex flex-col p-4 rounded-lg border bg-white shadow-sm"
+                  class="flex flex-col p-4 rounded-lg border bg-white shadow-sm cursor-move"
                   :class="{
                     'border-green-500 shadow-md': isNowPlaying(element),
                     'border-gray-200': !isNowPlaying(element)
                   }"
                   :style="isNowPlaying(element) ? getProgressBgStyle(element) : {}"
+                  draggable="true"
+                  @dragstart="onDragStart($event, element)"
+                  @dragend="onDragEndItem($event, element)"
                 >
                   <div class="flex items-start gap-4">
                     <div class="text-white flex items-center justify-center rounded-lg bg-primary/20 text-primary shrink-0 size-12">
@@ -83,7 +86,11 @@
                       <span class="material-symbols-outlined text-sm">layers</span>
                       Overlays <span class="rounded-full px-1.5 py-0.5 text-xs" :class="isNowPlaying(element) ? 'text-gray-400 bg-gray-200' : 'text-gray-500 bg-gray-200'">0</span>
                     </button>
-                    <button :disabled="isNowPlaying(element)" class="px-3 py-1.5 text-xs font-medium rounded-md flex items-center gap-1" :class="isNowPlaying(element) ? 'text-gray-400 bg-gray-100 cursor-not-allowed' : 'text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors'">
+                    <button
+                      :disabled="isNowPlaying(element)"
+                      @click="manageAds(element)"
+                      class="px-3 py-1.5 text-xs font-medium rounded-md flex items-center gap-1"
+                      :class="isNowPlaying(element) ? 'text-gray-400 bg-gray-100 cursor-not-allowed' : 'text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors'">
                       <span class="material-symbols-outlined text-sm">monetization_on</span>
                       Ads <span class="rounded-full px-1.5 py-0.5 text-xs" :class="isNowPlaying(element) ? 'text-gray-400 bg-gray-200' : 'text-gray-500 bg-gray-200'">0</span>
                     </button>
@@ -208,6 +215,14 @@
         </form>
       </div>
     </div>
+
+    <!-- Ad Manager Modal -->
+    <ad-manager-modal
+      v-if="showAdModal"
+      :schedule-item="adManagingItem"
+      @close="showAdModal = false"
+      @ads-updated="handleAdsUpdated"
+    />
   </div>
 </template>
 
@@ -216,6 +231,7 @@ import draggable from 'vuedraggable';
 import { api } from '../services/api'; // Use correct API service with auth
 import ScheduleItemModal from '../components/ScheduleItemModal.vue';
 import DurationModal from '../components/DurationModal.vue';
+import AdManagerModal from '../components/AdManagerModal.vue';
 
 export default {
   name: 'Scheduler',
@@ -223,6 +239,7 @@ export default {
     draggable,
     ScheduleItemModal,
     DurationModal,
+    AdManagerModal,
   },
   data() {
     return {
@@ -245,6 +262,9 @@ export default {
       viewMode: 'list',
       showDurationModal: false,
       pendingLink: null,
+      draggedItem: null,
+      showAdModal: false,
+      adManagingItem: null,
     };
   },
   computed: {
@@ -347,32 +367,26 @@ export default {
       }
     },
     async onAddToSchedule(event) {
-      const { newIndex } = event;
       const originalItem = event.item._underlying_vm_;
-      const sourceItem = originalItem || this.schedule[newIndex];
+      const sourceItem = originalItem;
 
       if (sourceItem.item_type === 'link') {
-        this.pendingLink = { sourceItem, newIndex };
+        this.pendingLink = { sourceItem };
         this.showDurationModal = true;
-        // We need to remove the item that vuedraggable added optimistically
-        // because we are now showing a modal before actually adding it.
-        this.schedule.splice(newIndex, 1);
+        // Remove the temporary item added by vuedraggable
+        event.item.remove();
       } else {
-        const tempScheduleItem = {
-          id: `temp-${Date.now()}`,
-          item_id: sourceItem.id,
-          item_type: sourceItem.item_type,
-          item: { ...sourceItem },
-          start_time: null,
-          end_time: null,
-        };
-        this.schedule.splice(newIndex, 1, tempScheduleItem);
+        // Calculate a reasonable start time - either at the end of the day or after the last item
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
 
         const newItemForApi = {
           item_id: sourceItem.id,
           item_type: sourceItem.item_type,
           duration: sourceItem.duration || 300,
-          order: newIndex,
+          offset_time: 0, // Default offset
         };
 
         try {
@@ -380,6 +394,7 @@ export default {
           await this.fetchSchedule();
         } catch (error) {
           console.error('Error adding item to schedule:', error);
+          alert(error.response?.data?.message || 'Error adding item to schedule');
           await this.fetchSchedule();
         }
       }
@@ -388,23 +403,13 @@ export default {
       this.showDurationModal = false;
       if (!this.pendingLink) return;
 
-      const { sourceItem, newIndex } = this.pendingLink;
-
-      const tempScheduleItem = {
-        id: `temp-${Date.now()}`,
-        item_id: sourceItem.id,
-        item_type: sourceItem.item_type,
-        item: { ...sourceItem },
-        start_time: null,
-        end_time: null,
-      };
-      this.schedule.splice(newIndex, 0, tempScheduleItem);
+      const { sourceItem } = this.pendingLink;
 
       const newItemForApi = {
         item_id: sourceItem.id,
         item_type: sourceItem.item_type,
         duration: duration,
-        order: newIndex,
+        offset_time: 0, // Default offset for links
       };
 
       try {
@@ -412,6 +417,7 @@ export default {
         await this.fetchSchedule();
       } catch (error) {
         console.error('Error adding link to schedule:', error);
+        alert(error.response?.data?.message || 'Error adding link to schedule');
         await this.fetchSchedule();
       } finally {
         this.pendingLink = null;
@@ -513,14 +519,28 @@ export default {
         this.closeEditModal();
       } catch (error) {
         console.error('Error updating schedule item:', error);
+        alert(error.response?.data?.message || 'Error updating schedule item');
       }
     },
+    async extendItem(id, newDuration) {
+      try {
+        const response = await api.put(`/schedule/1/${id}/extend`, { newDuration });
+        this.fetchSchedule();
+        return response.data;
+      } catch (error) {
+        console.error('Error extending schedule item:', error);
+        alert(error.response?.data?.message || 'Error extending schedule item');
+        throw error;
+      }
+    },
+
     async deleteItem(id) {
       try {
         await api.delete(`/schedule/1/${id}`);
         this.fetchSchedule();
       } catch (error) {
         console.error('Error deleting schedule item:', error);
+        alert(error.response?.data?.message || 'Error deleting schedule item');
       }
     },
     editLink(link) {
@@ -569,6 +589,66 @@ export default {
           //
       }
     },
+    onDragStart(event, element) {
+      this.draggedItem = element;
+      event.dataTransfer.setData('text/plain', element.id);
+      event.dataTransfer.effectAllowed = 'move';
+    },
+    onDragEndItem(event, element) {
+      // Reset dragged item after drag ends
+      this.draggedItem = null;
+    },
+    manageAds(item) {
+      this.adManagingItem = item;
+      this.showAdModal = true;
+    },
+    handleAdsUpdated(ads) {
+      console.log('Ads updated:', ads);
+      // In a full implementation, this would save the ads to backend
+      // For now, just close the modal
+      this.showAdModal = false;
+      // Optionally, update the local schedule to show any changes
+      // this.fetchSchedule();
+    },
+  },
+  computed: {
+    currentDateISO: {
+      get() {
+        return this.currentDate.toISOString().split('T')[0];
+      },
+      set(isoDate) {
+        this.currentDate = new Date(isoDate);
+      }
+    },
+    formattedCurrentDate() {
+      return this.currentDate.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      });
+    },
+    content() {
+      switch (this.activeTab) {
+        case 'media':
+          return this.media;
+        case 'ads':
+          return this.ads;
+        case 'links':
+          return this.links;
+        default:
+          return [];
+      }
+    },
+    // Filter content based on search
+    filteredContent() {
+      if (!this.searchQuery) {
+        return this.content;
+      }
+      return this.content.filter(item =>
+        (item.name && item.name.toLowerCase().includes(this.searchQuery.toLowerCase())) ||
+        (item.title && item.title.toLowerCase().includes(this.searchQuery.toLowerCase()))
+      );
+    }
   },
   watch: {
     activeTab: {

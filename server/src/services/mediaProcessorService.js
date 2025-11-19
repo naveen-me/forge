@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { MediaItem } from '../../models/MediaItem.js';
 import { Ad } from '../../models/Ad.js';
+import { broadcast } from './taskService.js';
 
 // Function to process a media item or ad - extract metadata and generate thumbnail
 export const processMediaItem = async (itemId, modelName = 'MediaItem') => {
@@ -104,10 +105,28 @@ const processImage = async (item, filePath, fileSize, modelName) => {
       mimeType: getMimeType(filePath),
       status: 'available'
     });
+
+    // Fetch updated item to send to clients
+    const updatedItem = await item.reload();
+
+    // Broadcast the updated item to all connected clients
+    broadcast({
+      type: 'media-updated',
+      item: updatedItem.toJSON(),
+      modelName
+    });
   } catch (error) {
     console.error(`Error processing image:`, error);
     const Model = modelName === 'Ad' ? Ad : MediaItem;
     await Model.update({ status: 'error' }, { where: { id: item.id } });
+
+    // Broadcast error to clients
+    broadcast({
+      type: 'media-error',
+      itemId: item.id,
+      modelName,
+      error: error.message
+    });
   }
 };
 
@@ -129,10 +148,28 @@ const processVideo = async (item, filePath, fileSize, modelName) => {
       thumbnailPath: thumbnailPath,
       status: 'available'
     });
+
+    // Fetch updated item to send to clients
+    const updatedItem = await item.reload();
+
+    // Broadcast the updated item to all connected clients
+    broadcast({
+      type: 'media-updated',
+      item: updatedItem.toJSON(),
+      modelName
+    });
   } catch (error) {
     console.error(`Error processing video:`, error);
     const Model = modelName === 'Ad' ? Ad : MediaItem;
     await Model.update({ status: 'error' }, { where: { id: item.id } });
+
+    // Broadcast error to clients
+    broadcast({
+      type: 'media-error',
+      itemId: item.id,
+      modelName,
+      error: error.message
+    });
   }
 };
 
@@ -145,10 +182,28 @@ const processOtherFile = async (item, filePath, fileSize, mimeType, modelName) =
       mimeType: mimeType,
       status: 'available'
     });
+
+    // Fetch updated item to send to clients
+    const updatedItem = await item.reload();
+
+    // Broadcast the updated item to all connected clients
+    broadcast({
+      type: 'media-updated',
+      item: updatedItem.toJSON(),
+      modelName
+    });
   } catch (error) {
     console.error(`Error processing other file:`, error);
     const Model = modelName === 'Ad' ? Ad : MediaItem;
     await Model.update({ status: 'error' }, { where: { id: item.id } });
+
+    // Broadcast error to clients
+    broadcast({
+      type: 'media-error',
+      itemId: item.id,
+      modelName,
+      error: error.message
+    });
   }
 };
 

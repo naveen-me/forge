@@ -111,7 +111,7 @@ const mediaService = {
   },
 
   renameItem(id, name) {
-    return mediaApi.put(`/${id}/rename`, { name });
+    return mediaApi.put(`/${id}/rename`, { newName: name });
   },
 
   moveItem(id, parentId) {
@@ -120,6 +120,10 @@ const mediaService = {
 
   deleteItem(id) {
     return mediaApi.delete(`/${id}`);
+  },
+
+  deleteItems(ids) {
+    return mediaApi.post('/delete', { ids });
   },
 
   searchItems(query) {

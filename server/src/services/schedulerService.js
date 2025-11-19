@@ -109,41 +109,31 @@ class SchedulerService {
     return typeof duration !== 'undefined' ? Number(duration) : 0;
   }
 
+  // Method to add item at specific time with collision detection
   async addItem(channel_id, itemData) {
     const t = await sequelize.transaction();
     try {
-      const { item_id, item_type, order, duration } = itemData;
+      const { item_id, item_type, start_time, duration } = itemData;
 
-      await Schedule.update(
-        { order: sequelize.literal('`order` + 1') },
-        {
-          where: {
-            channel_id,
-            order: {
-              [Op.gte]: order,
-            },
-          },
-          transaction: t,
-        }
-      );
-
-      let startTime;
-      if (order > 0) {
-        const precedingItem = await Schedule.findOne({
-          where: { channel_id, order: order - 1 },
-          transaction: t,
+      // If no start_time is provided, find the next available slot
+      let finalStartTime;
+      if (!start_time) {
+        // Find the latest item to determine the default start time
+        const latestItem = await Schedule.findOne({
+          where: { channel_id },
+          order: [['end_time', 'DESC']],
+          transaction: t
         });
-        if (precedingItem) {
-          startTime = new Date(precedingItem.end_time);
+
+        if (latestItem) {
+          finalStartTime = new Date(latestItem.end_time);
         } else {
           const startOfToday = new Date();
           startOfToday.setHours(0, 0, 0, 0);
-          startTime = startOfToday;
+          finalStartTime = startOfToday;
         }
       } else {
-        const startOfToday = new Date();
-        startOfToday.setHours(0, 0, 0, 0);
-        startTime = startOfToday;
+        finalStartTime = new Date(start_time);
       }
 
       const model = this.getModel(item_type);
@@ -151,21 +141,212 @@ class SchedulerService {
       if (!media) throw new Error('Media item not found');
 
       const itemDurationSeconds = Math.round(this.convertDurationToSeconds(duration) || media.duration || 300);
+      const finalEndTime = new Date(finalStartTime.getTime() + itemDurationSeconds * 1000);
+
+      // Check for collisions with existing items
+      const conflictingItem = await Schedule.findOne({
+        where: {
+          channel_id,
+          [Op.or]: [
+            // Check if the new time range overlaps with existing items
+            {
+              start_time: { [Op.lt]: finalEndTime },
+              end_time: { [Op.gt]: finalStartTime }
+            }
+          ]
+        },
+        transaction: t
+      });
+
+      if (conflictingItem) {
+        throw new Error('Schedule conflict: The selected time overlaps with another scheduled item');
+      }
 
       const newItem = await Schedule.create({
         channel_id,
         item_id,
         item_type,
-        start_time: startTime,
-        end_time: new Date(startTime.getTime() + itemDurationSeconds * 1000),
+        start_time: finalStartTime,
+        end_time: finalEndTime,
         duration: itemDurationSeconds,
         offset_time: itemData.offset_time || 0,
-        order,
+        // For individual movement approach, we don't use order-based system
+        // Instead, we rely on time-based positioning
+        order: await this.getNextOrderValue(channel_id, t)
       }, { transaction: t });
 
       await t.commit();
-      await this.recalculateSchedule(channel_id, order);
       return newItem;
+    } catch (error) {
+      await t.rollback();
+      throw error;
+    }
+  }
+
+  // Helper method to get the next order value for items
+  async getNextOrderValue(channel_id, transaction) {
+    const maxOrder = await Schedule.max('order', {
+      where: { channel_id },
+      transaction: transaction
+    });
+    return maxOrder ? maxOrder + 1 : 1;
+  }
+
+  // Method to create a gap (empty time slot) in the schedule
+  async createGap(channel_id, start_time, duration) {
+    const t = await sequelize.transaction();
+    try {
+      const startTime = new Date(start_time);
+      const endTime = new Date(startTime.getTime() + (duration * 1000));
+
+      // Check for collisions with existing items
+      const conflictingItem = await Schedule.findOne({
+        where: {
+          channel_id,
+          [Op.or]: [
+            // Check if the new gap overlaps with existing items
+            {
+              start_time: { [Op.lt]: endTime },
+              end_time: { [Op.gt]: startTime }
+            }
+          ]
+        },
+        transaction: t
+      });
+
+      if (conflictingItem) {
+        throw new Error('Schedule conflict: The selected time for gap overlaps with another scheduled item');
+      }
+
+      // Create a gap item with special type
+      const gapItem = await Schedule.create({
+        channel_id,
+        item_id: null, // No associated item
+        item_type: 'gap', // Special type for gaps
+        start_time: startTime,
+        end_time: endTime,
+        duration: duration,
+        offset_time: 0,
+        order: await this.getNextOrderValue(channel_id, t)
+      }, { transaction: t });
+
+      await t.commit();
+      return gapItem;
+    } catch (error) {
+      await t.rollback();
+      throw error;
+    }
+  }
+
+  // Method to extend item duration with collision detection
+  async extendItemDuration(channel_id, schedule_id, newDuration) {
+    const t = await sequelize.transaction();
+    try {
+      const item = await Schedule.findByPk(schedule_id, { transaction: t });
+      if (!item) throw new Error('Schedule item not found');
+
+      // Validate duration is positive
+      if (newDuration <= 0) {
+        throw new Error('Duration must be greater than 0 seconds');
+      }
+
+      // Check if the new end time would conflict with other items
+      const newEndTime = new Date(new Date(item.start_time).getTime() + (newDuration * 1000));
+
+      // Check for collisions with other items
+      const conflictingItem = await Schedule.findOne({
+        where: {
+          channel_id,
+          id: { [Op.ne]: schedule_id }, // Exclude the item being updated
+          [Op.or]: [
+            // Check if the extended time range overlaps with existing items
+            {
+              start_time: { [Op.lt]: newEndTime },
+              end_time: { [Op.gt]: item.start_time }
+            }
+          ]
+        },
+        transaction: t
+      });
+
+      if (conflictingItem) {
+        throw new Error('Schedule conflict: Extending this item would overlap with another scheduled item');
+      }
+
+      // Update the item's duration and end time
+      await item.update({
+        duration: newDuration,
+        end_time: newEndTime
+      }, { transaction: t });
+
+      await t.commit();
+      return item;
+    } catch (error) {
+      await t.rollback();
+      throw error;
+    }
+  }
+
+  // Method to extend item by pushing next item forward (if it's not locked/gap)
+  async extendItemByPushingNext(channel_id, schedule_id, extensionDuration) {
+    const t = await sequelize.transaction();
+    try {
+      const item = await Schedule.findByPk(schedule_id, { transaction: t });
+      if (!item) throw new Error('Schedule item not found');
+
+      // Validate extension is positive
+      if (extensionDuration <= 0) {
+        throw new Error('Extension duration must be greater than 0 seconds');
+      }
+
+      // Find the next item in the timeline (if any)
+      const nextItem = await Schedule.findOne({
+        where: {
+          channel_id,
+          start_time: { [Op.gte]: item.end_time },
+        },
+        order: [['start_time', 'ASC']],
+        transaction: t
+      });
+
+      if (!nextItem) {
+        // No next item, just extend current item
+        const newDuration = item.duration + extensionDuration;
+        const newEndTime = new Date(new Date(item.start_time).getTime() + (newDuration * 1000));
+
+        await item.update({
+          duration: newDuration,
+          end_time: newEndTime
+        }, { transaction: t });
+
+        await t.commit();
+        return item;
+      }
+
+      // Check if we can push the next item
+      const newEndTime = new Date(new Date(item.end_time).getTime() + (extensionDuration * 1000));
+
+      // For now, only allow pushing if the next item is a gap or can be safely moved
+      // In a real scenario, you might have "locked" items that can't be moved
+      await item.update({
+        duration: item.duration + extensionDuration,
+        end_time: newEndTime
+      }, { transaction: t });
+
+      // Push the next item forward by the same duration
+      const newNextStartTime = newEndTime;
+      const newNextEndTime = new Date(newNextStartTime.getTime() + (nextItem.duration * 1000));
+
+      await nextItem.update({
+        start_time: newNextStartTime,
+        end_time: newNextEndTime
+      }, { transaction: t });
+
+      await t.commit();
+      return {
+        updatedItem: item,
+        pushedItem: nextItem
+      };
     } catch (error) {
       await t.rollback();
       throw error;
@@ -188,10 +369,55 @@ class SchedulerService {
         updateData.offset_time = parseInt(updateData.offset_time) || 0;
       }
 
+      // Check for start_time updates and validate against collisions
+      let updatedStartTime = item.start_time;
+      if (updateData.start_time) {
+        updatedStartTime = new Date(updateData.start_time);
+
+        // Check for collisions with other items
+        const conflictingItem = await Schedule.findOne({
+          where: {
+            channel_id,
+            id: { [Op.ne]: schedule_id }, // Exclude the item being updated
+            [Op.or]: [
+              // Check if the new time range overlaps with existing items
+              {
+                start_time: {
+                  [Op.lt]: new Date(updatedStartTime.getTime() + (item.duration * 1000))
+                },
+                end_time: { [Op.gt]: updatedStartTime }
+              },
+              {
+                start_time: { [Op.lt]: updatedStartTime },
+                end_time: {
+                  [Op.gt]: new Date(updatedStartTime.getTime() + (item.duration * 1000))
+                }
+              }
+            ]
+          },
+          transaction: t
+        });
+
+        if (conflictingItem) {
+          throw new Error('Schedule conflict: The selected time overlaps with another scheduled item');
+        }
+      }
+
+      // Update the item with validation
       await item.update(updateData, { transaction: t });
 
+      // If start_time was updated, recalculate the schedule for this specific item
+      if (updateData.start_time) {
+        // Calculate new end_time based on the new start_time and duration
+        const newEndTime = new Date(new Date(updateData.start_time).getTime() + (item.duration * 1000));
+        await item.update({
+          start_time: new Date(updateData.start_time),
+          end_time: newEndTime
+        }, { transaction: t });
+      }
+
       await t.commit();
-      await this.recalculateSchedule(channel_id, item.order);
+      // Don't recalculate the entire schedule chain as we're using individual movement
       return item;
     } catch (error) {
       await t.rollback();
@@ -205,24 +431,10 @@ class SchedulerService {
       const item = await Schedule.findByPk(schedule_id, { transaction: t });
       if (!item) throw new Error('Schedule item not found');
 
-      const order = item.order;
       await item.destroy({ transaction: t });
 
-      await Schedule.update(
-        { order: sequelize.literal('`order` - 1') },
-        {
-          where: {
-            channel_id,
-            order: {
-              [Op.gt]: order,
-            },
-          },
-          transaction: t,
-        }
-      );
-
       await t.commit();
-      await this.recalculateSchedule(channel_id, order);
+      // Don't recalculate the entire schedule chain for individual item deletion
     } catch (error) {
       await t.rollback();
       throw error;

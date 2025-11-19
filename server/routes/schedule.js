@@ -42,6 +42,51 @@ router.put('/:channel_id/:schedule_id', async (req, res) => {
   }
 });
 
+// Extend schedule item duration
+router.put('/:channel_id/:schedule_id/extend', async (req, res) => {
+  try {
+    const { newDuration } = req.body;
+    const updatedItem = await schedulerService.extendItemDuration(
+      req.params.channel_id,
+      req.params.schedule_id,
+      newDuration
+    );
+    res.json(updatedItem);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Create a gap in the schedule
+router.post('/:channel_id/gap', async (req, res) => {
+  try {
+    const { start_time, duration } = req.body;
+    const gap = await schedulerService.createGap(
+      req.params.channel_id,
+      start_time,
+      duration
+    );
+    res.json(gap);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+// Extend item by pushing next item
+router.put('/:channel_id/:schedule_id/extend-with-push', async (req, res) => {
+  try {
+    const { extensionDuration } = req.body;
+    const result = await schedulerService.extendItemByPushingNext(
+      req.params.channel_id,
+      req.params.schedule_id,
+      extensionDuration
+    );
+    res.json(result);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
 // Update schedule order
 router.put('/:channel_id/order', async (req, res) => {
   try {

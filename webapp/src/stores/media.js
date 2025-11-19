@@ -61,10 +61,13 @@ export const useMediaStore = defineStore('media', {
     },
 
     async deleteSelectedItems() {
-        for (const id of this.selectedItems) {
-            await mediaService.deleteItem(id);
-        }
+        await mediaService.deleteItems(this.selectedItems);
         this.selectedItems = [];
+        await this.fetchFolderContents(this.currentFolderId);
+    },
+
+    async deleteItem(id) {
+        await mediaService.deleteItem(id);
         await this.fetchFolderContents(this.currentFolderId);
     },
 

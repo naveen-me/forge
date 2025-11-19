@@ -32,7 +32,40 @@ router.post('/move', moveMediaItems);
 // POST /api/media/copy
 router.post('/copy', copyMediaItems);
 
-// POST /api/media/delete
+// DELETE /api/media/:id (for single item deletion)
+router.delete('/:id', async (req, res) => {
+  const { id } = req.params;
+  const userId = req.user.id;
+
+  try {
+    // Check if the item exists and belongs to the user
+    const item = await MediaItem.findOne({
+      where: {
+        id: parseInt(id),
+        userId: userId
+      }
+    });
+
+    if (!item) {
+      return res.status(404).json({ success: false, message: 'Media item not found or not authorized.' });
+    }
+
+    // Delete the item
+    await MediaItem.destroy({
+      where: {
+        id: parseInt(id),
+        userId: userId
+      }
+    });
+
+    res.json({ success: true, message: 'Media item deleted successfully.' });
+  } catch (error) {
+    console.error('Error deleting media item:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete media item.' });
+  }
+});
+
+// POST /api/media/delete (for batch deletion)
 router.post('/delete', deleteMediaItems);
 
 // GET /api/media/stream/:id

@@ -22,7 +22,7 @@ function connect() {
     try {
       const message = JSON.parse(event.data);
       // Access stores only when needed to prevent potential timing issues
-      if (message.type === 'thumbnail-generated') {
+      if (message.type === 'media-updated' || message.type === 'thumbnail-generated') {
         if (message.item && message.item.modelName === 'Ad') {
           const adStore = useAdStore();
           adStore.updateItem(message.item);
@@ -30,11 +30,11 @@ function connect() {
           const mediaStore = useMediaStore();
           mediaStore.updateItem(message.item);
         }
-      } else if (message.type === 'thumbnail-processing') {
+      } else if (message.type === 'thumbnail-processing' || message.type === 'media-processing') {
         // Optional: Update status to processing to provide user feedback
         // This could be implemented to show a "processing" indicator in the UI
-      } else if (message.type === 'thumbnail-error') {
-        console.error(`Thumbnail generation failed for ${message.modelName} ${message.mediaId}:`, message.error);
+      } else if (message.type === 'thumbnail-error' || message.type === 'media-error') {
+        console.error(`Media processing failed for ${message.modelName} ${message.itemId || (message.item && message.item.id)}:`, message.error);
       }
     } catch (error) {
       console.error('Error processing WebSocket message:', error);

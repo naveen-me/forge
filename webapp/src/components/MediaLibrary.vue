@@ -156,12 +156,18 @@
             <div v-if="video.isMissing" class="absolute inset-0 bg-black/50 flex items-center justify-center text-white">
               <span class="material-symbols-outlined text-lg">error_outline</span>
             </div>
-            <span v-if="video.dimensions" class="absolute bottom-1.5 right-1.5 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded">{{ video.dimensions }}</span>
+            <span v-if="video.duration" class="absolute bottom-1.5 right-1.5 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded">{{ formatDuration(video.duration) }}</span>
           </div>
           <div class="p-2.5">
             <input v-if="renamingItemId === video.id" v-model="renamingText" @blur="finishRenaming" @keyup.enter="finishRenaming" @keyup.esc="cancelRenaming" type="text" class="font-semibold text-text-light dark:text-text-dark bg-gray-100 dark:bg-gray-800 rounded-md px-2 py-0.5 border border-primary focus:outline-none focus:ring-1 focus:ring-primary w-full text-sm" />
             <p v-else @click="startRenaming(video)" class="font-semibold text-text-light dark:text-text-dark truncate text-sm cursor-pointer">{{ video.name }}</p>
-            <p class="text-xs text-subtext-light dark:text-subtext-dark mt-1">{{ video.extension ? video.extension.toUpperCase() : (video.mimeType && video.mimeType.includes('/') ? video.mimeType.split('/')[1].toUpperCase() : (video.mimeType ? video.mimeType.split(',')[0].toUpperCase() : '')) }} · {{ formatFileSize(video.size) }}</p>
+            <p class="text-xs text-subtext-light dark:text-subtext-dark mt-1 flex items-center gap-1">
+              <span>{{ video.extension ? video.extension.toUpperCase() : (video.mimeType && video.mimeType.includes('/') ? video.mimeType.split('/')[1].toUpperCase() : (video.mimeType ? video.mimeType.split(',')[0].toUpperCase() : '')) }}</span>
+              <span>•</span>
+              <span>{{ formatFileSize(video.size) }}</span>
+              <span v-if="video.duration">•</span>
+              <span v-if="video.duration" class="text-primary font-medium">{{ formatDuration(video.duration) }}</span>
+            </p>
             <span v-if="video.isMissing" class="text-red-500 dark:text-red-400 text-xs font-semibold mt-1 inline-block">Source Missing</span>
           </div>
         </div>
@@ -173,8 +179,8 @@
               <th class="p-3" scope="col"><input class="form-checkbox h-4 w-4 rounded-full text-primary bg-gray-100 border-gray-300 focus:ring-0 focus:ring-offset-0 dark:bg-gray-600 dark:border-gray-500" type="checkbox"/></th>
               <th class="p-3" scope="col">File Name</th>
               <th class="p-3" scope="col">Format</th>
-              <th class="p-3" scope="col">Dimensions</th>
               <th class="p-3" scope="col">File Size</th>
+              <th class="p-3" scope="col">Duration</th>
               <th class="p-3" scope="col"></th>
             </tr>
           </thead>
@@ -200,8 +206,9 @@
                 </div>
               </td>
               <td class="p-3">{{ video.extension ? video.extension.toUpperCase() : (video.mimeType && video.mimeType.includes('/') ? video.mimeType.split('/')[1].toUpperCase() : (video.mimeType ? video.mimeType.split(',')[0].toUpperCase() : '')) }}</td>
-              <td class="p-3">{{ video.dimensions || '-' }}</td>
               <td class="p-3">{{ formatFileSize(video.size) }}</td>
+              <td class="p-3" v-if="video.duration">{{ formatDuration(video.duration) }}</td>
+              <td class="p-3" v-else>-</td>
               <td class="p-3 text-right">
                 <span v-if="video.isMissing" class="text-red-500 dark:text-red-400 text-xs font-semibold bg-red-100 dark:bg-red-900/30 px-2 py-1 rounded-full">Source Missing</span>
               </td>

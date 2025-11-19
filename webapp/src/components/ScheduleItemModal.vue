@@ -218,12 +218,10 @@ export default {
     },
     save() {
       if (this.isValidDuration) {
-        const end_time = new Date(new Date(this.editableItem.start_time).getTime() + this.totalSeconds * 1000);
         this.$emit('save', {
           ...this.item,
           start_time: new Date(this.editableItem.start_time).toISOString(),
-          end_time: end_time.toISOString(),
-          duration: this.totalSeconds, // Also send duration for API compatibility
+          duration: this.totalSeconds, // Send duration for API compatibility
           offset_time: this.totalOffsetSeconds, // Send offset time
         });
       }
