@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Content Scheduler</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet"/>
+<script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .progress-bg {
+            background: linear-gradient(to right, #eef7ff 68%, white 68%);
+        }
+    </style>
+</head>
+<body class="bg-background-light font-display text-gray-800">
+<div class="flex h-screen">
+<main class="flex-1 flex flex-col h-screen overflow-hidden">
+<header class="p-6 border-b border-gray-200">
+<div class="flex flex-wrap justify-between items-center gap-3">
+<div class="flex flex-col gap-1">
+<h1 class="text-gray-900 text-3xl font-bold leading-tight tracking-tight">Scheduler</h1>
+</div>
+</div>
+</header>
+<div class="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-6 p-6 overflow-hidden">
+<div class="lg:col-span-2 flex flex-col bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200">
+<div class="p-4 border-b border-gray-200 flex justify-between items-center">
+<h2 class="text-gray-900 text-lg font-bold">Timeline</h2>
+<div class="flex items-center gap-2">
+<button class="p-2 rounded-md hover:bg-gray-100 transition-colors">
+<span class="material-symbols-outlined text-gray-500">chevron_left</span>
+</button>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-gray-600">calendar_month</span>
+<p class="text-gray-700 font-medium text-sm">October 26, 2023</p>
+</div>
+<button class="p-2 rounded-md hover:bg-gray-100 transition-colors">
+<span class="material-symbols-outlined text-gray-500">chevron_right</span>
+</button>
+<div class="relative group">
+<button class="p-2 rounded-md hover:bg-gray-100 text-gray-500">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+<div class="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 py-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto z-10">
+<a class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100" href="#">
+<span class="material-symbols-outlined text-base">content_copy</span>
+                                    Duplicate Timeline
+                                </a>
+<a class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100" href="#">
+<span class="material-symbols-outlined text-base">repeat</span>
+                                    Repeat Timeline
+                                </a>
+</div>
+</div>
+</div>
+</div>
+<div class="flex-1 p-4 space-y-4 overflow-y-auto">
+<div class="flex flex-col p-4 rounded-lg border-2 border-green-500 shadow-md relative progress-bg">
+<div class="flex items-start gap-4">
+<div class="text-white flex items-center justify-center rounded-lg bg-primary/20 text-primary shrink-0 size-12">
+<span class="material-symbols-outlined">play_circle</span>
+</div>
+<div class="flex-1 grid grid-cols-12 items-center gap-4">
+<div class="flex flex-col col-span-5">
+<p class="text-gray-900 text-base font-medium leading-normal">Now Playing: Ad_Campaign_Q3</p>
+<p class="text-green-500 text-sm font-medium leading-normal">Active (3:24 / 5:00)</p>
+</div>
+<p class="text-gray-500 text-sm font-mono col-span-2 text-right">10:30 AM</p>
+<p class="text-gray-500 text-sm font-mono col-span-2 text-right">10:35 AM</p>
+<p class="text-gray-500 text-sm font-mono col-span-2 text-right">(5 min)</p>
+</div>
+</div>
+<div class="flex items-center justify-end gap-2 mt-2">
+<button class="px-3 py-1.5 text-xs font-medium rounded-md text-gray-400 bg-gray-100 flex items-center gap-1 cursor-not-allowed" disabled="">
+<span class="material-symbols-outlined text-sm">layers</span>
+                                Overlays <span class="text-gray-400 bg-gray-200 rounded-full px-1.5 py-0.5 text-xs">2</span>
+</button>
+<button class="px-3 py-1.5 text-xs font-medium rounded-md text-gray-400 bg-gray-100 flex items-center gap-1 cursor-not-allowed" disabled="">
+<span class="material-symbols-outlined text-sm">monetization_on</span>
+                                Ads <span class="text-gray-400 bg-gray-200 rounded-full px-1.5 py-0.5 text-xs">1</span>
+</button>
+<button class="px-3 py-1.5 text-xs font-medium rounded-md text-gray-400 bg-gray-100 flex items-center gap-1 cursor-not-allowed" disabled="">
+<span class="material-symbols-outlined text-sm">edit</span>
+                                Edit
+                            </button>
+<button class="px-3 py-1.5 text-xs font-medium rounded-md text-red-300 bg-red-50 flex items-center gap-1 cursor-not-allowed" disabled="">
+<span class="material-symbols-outlined text-sm">delete</span>
+                                Delete
+                            </button>
+<div class="relative">
+<button class="p-2 rounded-full hover:bg-gray-100 text-gray-500 disabled:text-gray-400" disabled="">
+<span class="material-symbols-outlined text-base">more_vert</span>
+</button>
+</div>
+</div>
+</div>
+<div class="flex flex-col p-4 rounded-lg border border-gray-200 bg-white">
+<div class="flex items-start gap-4">
+<div class="text-white flex items-center justify-center rounded-lg bg-primary/20 text-primary shrink-0 size-12">
+<span class="material-symbols-outlined">videocam</span>
+</div>
+<div class="flex-1 grid grid-cols-12 items-center gap-4">
+<p class="text-gray-900 text-base font-medium leading-normal line-clamp-1 col-span-5">Up Next: Product_Demo_Video</p>
+<p class="text-gray-500 text-sm font-mono col-span-2 text-right">10:35 AM</p>
+<p class="text-gray-500 text-sm font-mono col-span-2 text-right">10:45 AM</p>
+<p class="text-gray-500 text-sm font-mono col-span-2 text-right">(10 min)</p>
+</div>
+</div>
+<div class="flex items-center justify-end gap-2 mt-2">
+<button class="px-3 py-1.5 text-xs font-medium rounded-md text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">layers</span>
+                                Overlays <span class="text-gray-500 bg-gray-200 rounded-full px-1.5 py-0.5 text-xs">0</span>
+</button>
+<button class="px-3 py-1.5 text-xs font-medium rounded-md text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">monetization_on</span>
+                                Ads <span class="text-gray-500 bg-gray-200 rounded-full px-1.5 py-0.5 text-xs">4</span>
+</button>
+<button class="px-3 py-1.5 text-xs font-medium rounded-md text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">edit</span>
+                                Edit
+                            </button>
+<button class="px-3 py-1.5 text-xs font-medium rounded-md text-red-600 bg-red-100 hover:bg-red-200 transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">delete</span>
+                                Delete
+                            </button>
+<div class="relative group">
+<button class="p-2 rounded-full hover:bg-gray-100 text-gray-500">
+<span class="material-symbols-outlined text-base">more_vert</span>
+</button>
+<div class="absolute right-0 top-full mt-2 w-40 bg-white rounded-lg shadow-xl border border-gray-200 py-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto z-10">
+<a class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100" href="#">
+<span class="material-symbols-outlined text-base">content_copy</span>
+                                        Duplicate
+                                    </a>
+<a class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100" href="#">
+<span class="material-symbols-outlined text-base">repeat</span>
+                                        Repeat
+                                    </a>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col p-4 rounded-lg border border-gray-200 bg-white">
+<div class="flex items-start gap-4">
+<div class="text-white flex items-center justify-center rounded-lg bg-primary/20 text-primary shrink-0 size-12">
+<span class="material-symbols-outlined">image</span>
+</div>
+<div class="flex-1 grid grid-cols-12 items-center gap-4">
+<p class="text-gray-900 text-base font-medium leading-normal line-clamp-1 col-span-5">Company_Infographic_Sept</p>
+<p class="text-gray-500 text-sm font-mono col-span-2 text-right">10:45 AM</p>
+<p class="text-gray-500 text-sm font-mono col-span-2 text-right">10:50 AM</p>
+<p class="text-gray-500 text-sm font-mono col-span-2 text-right">(5 min)</p>
+</div>
+</div>
+<div class="flex items-center justify-end gap-2 mt-2">
+<button class="px-3 py-1.5 text-xs font-medium rounded-md text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">layers</span>
+                                Overlays <span class="text-gray-500 bg-gray-200 rounded-full px-1.5 py-0.5 text-xs">1</span>
+</button>
+<button class="px-3 py-1.5 text-xs font-medium rounded-md text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">monetization_on</span>
+                                Ads <span class="text-gray-500 bg-gray-200 rounded-full px-1.5 py-0.5 text-xs">0</span>
+</button>
+<button class="px-3 py-1.5 text-xs font-medium rounded-md text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">edit</span>
+                                Edit
+                            </button>
+<button class="px-3 py-1.5 text-xs font-medium rounded-md text-red-600 bg-red-100 hover:bg-red-200 transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">delete</span>
+                                Delete
+                            </button>
+<div class="relative group">
+<button class="p-2 rounded-full hover:bg-gray-100 text-gray-500">
+<span class="material-symbols-outlined text-base">more_vert</span>
+</button>
+<div class="absolute right-0 top-full mt-2 w-40 bg-white rounded-lg shadow-xl border border-gray-200 py-1 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto z-10">
+<a class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100" href="#">
+<span class="material-symbols-outlined text-base">content_copy</span>
+                                        Duplicate
+                                    </a>
+<a class="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-100" href="#">
+<span class="material-symbols-outlined text-base">repeat</span>
+                                        Repeat
+                                    </a>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="lg:col-span-1 flex flex-col bg-white rounded-xl overflow-hidden shadow-sm border border-gray-200">
+<div class="p-4 border-b border-gray-200">
+<div class="flex items-center">
+<button class="px-4 py-2 text-sm font-medium border-b-2 border-primary text-primary">Media</button>
+<button class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">Ads</button>
+<button class="px-4 py-2 text-sm font-medium border-b-2 border-transparent text-gray-500 hover:text-gray-700">Links</button>
+</div>
+</div>
+<div class="flex-1 flex flex-col overflow-y-auto">
+<div class="flex flex-col h-full">
+<div class="p-4 border-b border-gray-200 flex items-center gap-2">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-gray-100 border border-transparent focus:ring-2 focus:ring-primary focus:border-primary rounded-lg text-sm text-gray-900 placeholder-gray-400" placeholder="Search Media..." type="text"/>
+</div>
+<div class="flex items-center bg-gray-100 rounded-lg p-0.5">
+<button class="p-1.5 rounded-md text-gray-400 hover:bg-white hover:text-gray-700 transition-colors">
+<span class="material-symbols-outlined text-xl">grid_view</span>
+</button>
+<button class="p-1.5 rounded-md text-primary bg-white shadow-sm transition-colors">
+<span class="material-symbols-outlined text-xl">view_list</span>
+</button>
+</div>
+</div>
+<div class="p-4 space-y-3 flex-1 overflow-y-auto">
+<div class="flex items-center gap-4 p-2 rounded-lg hover:bg-gray-100 cursor-grab">
+<div class="relative group bg-center bg-no-repeat aspect-video bg-cover rounded-md w-20 h-12" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBzOajWgghAU0WhwB6YDwWEpVHg7MaefJkrlT5wPPTxhKvgiMBeAaTpTYXTnS013rBE9TNmTBDlSsIrxtsVUdK31ZQ1-3V_1ZZt8EdX9IgSQ_bg82Wx2s-7xn4napvtuoV023-n76aFx_FMU7wXC5GOP_ZtcJJapgOYschu3WE9LKXlYEXl-SWE0SLldJWwlx5n1Zl1NVuU5OQdZSYY7i_sNIBSOmIrxdGEjO76bCXDQAgYgmoBMoOCNngZJvEBu6910_Vyy-FXppE2");'>
+<div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+</div>
+</div>
+<div class="flex-1">
+<p class="text-gray-900 text-sm font-medium">Corporate_Intro.mp4</p>
+<p class="text-gray-500 text-xs">Video - 2:15</p>
+</div>
+</div>
+<div class="flex items-center gap-4 p-2 rounded-lg hover:bg-gray-100 cursor-grab">
+<div class="relative group bg-center bg-no-repeat aspect-video bg-cover rounded-md w-20 h-12" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCc8UP9Uu0yAMicH_KOEEa0Yg9r4wAwTWkvkcS3DtLoHsQ1ZjKKFDzqOG6sLel_k9Ls-yDe6P2NfS9M1ZHfZaUMHDCCCFe_tN5IiQe1v5WhejSshuDJxuOhhz-4FfX0CUDJFMhUq-ozzUE2_eNDQsxFNfK5j2JDYH-fdi76DsfWi_6eLkuFQcLfzyKS9p8WuXSJJQPaWTGEuY07Vg5gjiU0L_qgzq7uwQu-0Xg2sSoekVrkQMTAliTZ9hXtFxiWD9Pm5qP9ZWVhbs9Y");'>
+</div>
+<div class="flex-1">
+<p class="text-gray-900 text-sm font-medium">Mountain_Promo.jpeg</p>
+<p class="text-gray-500 text-xs">Image - 1920x1080</p>
+</div>
+</div>
+<div class="flex items-center gap-4 p-2 rounded-lg hover:bg-gray-100 cursor-grab">
+<div class="relative group bg-center bg-no-repeat aspect-video bg-cover rounded-md w-20 h-12" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAXjAQQfvjvZfFY_whUMCb4oIwKw16L42jl3kX2XDYK76P30k0IQOemZVhSHMiR8a2e57tOLxurE2lMNkSh4LwRRRg3PvAfwhECWNjT7muXEuCY8QiNh_08vcz_bPeJoscNwtdC4YLrUBPOs8rc-tk1gD_MPS4WQPuOl3NKWrMn8FdRgH1Y28qTE9T7kW_39zkOCgkMNhZzupeKibaGIV6H1iR5KF7wfxRhCJLSVMzsoT647ySNF7IKAYmqP3gGwzzHHe89PZxct1Q7");'>
+<div class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">play_circle</span>
+</div>
+</div>
+<div class="flex-1">
+<p class="text-gray-900 text-sm font-medium">Team_Update.mp4</p>
+<p class="text-gray-500 text-xs">Video - 5:30</p>
+</div>
+</div>
+</div>
+</div>
+<div class="hidden flex-col h-full">
+<div class="p-4 border-b border-gray-200 flex items-center gap-2">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-gray-100 border border-transparent focus:ring-2 focus:ring-primary focus:border-primary rounded-lg text-sm text-gray-900 placeholder-gray-400" placeholder="Search Ads..." type="text"/>
+</div>
+<div class="flex items-center bg-gray-100 rounded-lg p-0.5">
+<button class="p-1.5 rounded-md text-gray-400 hover:bg-white hover:text-gray-700 transition-colors">
+<span class="material-symbols-outlined text-xl">grid_view</span>
+</button>
+<button class="p-1.5 rounded-md text-primary bg-white shadow-sm transition-colors">
+<span class="material-symbols-outlined text-xl">view_list</span>
+</button>
+</div>
+</div>
+<div class="p-4 space-y-3 flex-1 overflow-y-auto">
+<div class="flex items-center gap-4 p-2 rounded-lg hover:bg-gray-100 cursor-grab">
+<div class="flex items-center justify-center w-20 h-12 bg-gray-100 rounded-md shrink-0">
+<span class="material-symbols-outlined text-gray-400">monetization_on</span>
+</div>
+<div class="flex-1">
+<p class="text-gray-900 text-sm font-medium">Ad_Campaign_Q3</p>
+<p class="text-gray-500 text-xs">Ad - 30s</p>
+</div>
+</div>
+<div class="flex items-center gap-4 p-2 rounded-lg hover:bg-gray-100 cursor-grab">
+<div class="flex items-center justify-center w-20 h-12 bg-gray-100 rounded-md shrink-0">
+<span class="material-symbols-outlined text-gray-400">monetization_on</span>
+</div>
+<div class="flex-1">
+<p class="text-gray-900 text-sm font-medium">Summer_Sale_Banner</p>
+<p class="text-gray-500 text-xs">Ad - 15s</p>
+</div>
+</div>
+</div>
+</div>
+<div class="hidden flex-col h-full">
+<div class="p-4 border-b border-gray-200 flex items-center gap-2">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xl">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-gray-100 border border-transparent focus:ring-2 focus:ring-primary focus:border-primary rounded-lg text-sm text-gray-900 placeholder-gray-400" placeholder="Search Links..." type="text"/>
+</div>
+<div class="flex items-center bg-gray-100 rounded-lg p-0.5">
+<button class="p-1.5 rounded-md text-gray-400 hover:bg-white hover:text-gray-700 transition-colors">
+<span class="material-symbols-outlined text-xl">grid_view</span>
+</button>
+<button class="p-1.5 rounded-md text-primary bg-white shadow-sm transition-colors">
+<span class="material-symbols-outlined text-xl">view_list</span>
+</button>
+</div>
+</div>
+<div class="p-4 space-y-3 flex-1 overflow-y-auto">
+<div class="flex items-center gap-4 p-2 rounded-lg hover:bg-gray-100 cursor-grab">
+<div class="flex items-center justify-center w-20 h-12 bg-gray-100 rounded-md shrink-0">
+<span class="material-symbols-outlined text-gray-400">link</span>
+</div>
+<div class="flex-1">
+<p class="text-gray-900 text-sm font-medium">Company Website</p>
+<p class="text-gray-500 text-xs truncate">https://example.com</p>
+</div>
+</div>
+<div class="flex items-center gap-4 p-2 rounded-lg hover:bg-gray-100 cursor-grab">
+<div class="flex items-center justify-center w-20 h-12 bg-gray-100 rounded-md shrink-0">
+<span class="material-symbols-outlined text-gray-400">link</span>
+</div>
+<div class="flex-1">
+<p class="text-gray-900 text-sm font-medium">Product Launch Page</p>
+<p class="text-gray-500 text-xs truncate">https://example.com/new-product</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+
+</body></html>
