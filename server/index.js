@@ -67,10 +67,11 @@ const initializeDatabase = async () => {
         models[modelName].associate(models);
       }
     }
-    
+
     // Try to sync the database, but don't crash if it fails
     try {
       // Using { alter: true } will only update tables if needed, preserving existing data
+      // In production, you should use proper migrations via `npm run migrate`
       await sequelize.sync({ alter: true }); // Alter tables to match models without losing data
       console.log('Database connected and synchronized (altered)');
     } catch (syncError) {

@@ -8,7 +8,9 @@
     "start": "node index.js",
     "dev": "nodemon index.js",
     "worker": "node worker.js",
-    "migrate": "node src/db-migrate.js"
+    "migrate": "npx sequelize-cli db:migrate",
+    "migrate:undo": "npx sequelize-cli db:migrate:undo",
+    "migrate:undo:all": "npx sequelize-cli db:migrate:undo:all"
   },
   "dependencies": {
     "axios": "^1.13.2",
