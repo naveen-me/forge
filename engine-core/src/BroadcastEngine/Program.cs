@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -15,6 +17,10 @@ namespace PlayoutEngine
         static void Main(string[] args)
         {
             var hostBuilder = Host.CreateDefaultBuilder(args)
+                .ConfigureWebHostDefaults(webBuilder =>
+                {
+                    webBuilder.UseStartup<Startup>();
+                })
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
                     // Find the project root by searching upward for the directory containing the 'config' folder
@@ -65,12 +71,14 @@ namespace PlayoutEngine
                     services.AddSingleton<IObsIntegrationService, ObsIntegrationService>();
                     services.AddSingleton<ILicenseService, LicenseService>();
                     services.AddSingleton<IHealthCheckService, HealthCheckService>();
-                    services.AddSingleton<BufferService>();
+                    services.AddSingleton<IBufferManager, BufferManager>();
                     services.AddSingleton<LogoService>();
                     services.AddSingleton<PlayoutArbiter>();
 
-                    // Register hosted services
-                    services.AddHostedService<PlayoutEngineService>();
+                    // Register the engine service as singleton so it can be injected into controllers
+                    services.AddSingleton<PlayoutEngineService>();
+                    // Also register it as a hosted service
+                    services.AddHostedService(provider => provider.GetRequiredService<PlayoutEngineService>());
                 })
                 .ConfigureLogging(logging =>
                 {
@@ -88,6 +96,36 @@ namespace PlayoutEngine
 
             // Start the application
             host.Run();
+        }
+    }
+
+    public class Startup
+    {
+        public IConfiguration Configuration { get; }
+
+        public Startup(IConfiguration configuration)
+        {
+            Configuration = configuration;
+        }
+
+        public void ConfigureServices(IServiceCollection services)
+        {
+            services.AddControllers();
+            services.AddRouting(options => options.LowercaseUrls = true);
+        }
+
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        {
+            if (env.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+
+            app.UseRouting();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+            });
         }
     }
 }

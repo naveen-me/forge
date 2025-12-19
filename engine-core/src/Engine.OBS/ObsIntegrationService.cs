@@ -22,6 +22,10 @@ namespace PlayoutEngine.OBS
 
     public interface IObsIntegrationService
     {
+        event Action<string, JObject>? OnMediaEvent;
+        event Action<string, JObject>? OnSceneOrVisibilityEvent;
+        event Action? OnObsConnected;
+
         Task<bool> ConnectToObsAsync(string host, int port, string password);
         bool SetScene(string sceneName);
         bool SetSourceVisibility(string sourceName, bool visible);
@@ -36,6 +40,11 @@ namespace PlayoutEngine.OBS
         bool SetSourceFilterSettings(string sourceName, string filterName, object settings);
         bool SetMediaTime(string mediaSourceName, double timeSeconds);
         bool GetMediaTime(string mediaSourceName);
+        Task<T?> SendRequestAsync<T>(string requestType, object? requestData = null);
+        Task<GetCurrentProgramSceneResponse?> GetCurrentSceneAsync();
+        Task<GetSceneItemListResponse?> GetSceneItemsAsync(string sceneName);
+        Task<GetInputSettingsResponse?> GetInputSettingsAsync(string inputName);
+        Task<GetMediaInputStatusResponse?> GetMediaInputStatusAsync(string inputName);
         Task DisconnectAsync();
         void StartAutoReconnect();
         void StopAutoReconnect();
@@ -48,6 +57,7 @@ namespace PlayoutEngine.OBS
         private bool _isConnected;
         private readonly object _lockObject = new object();
         private readonly Dictionary<string, string> _requestIdMap = new Dictionary<string, string>();
+        private readonly Dictionary<string, TaskCompletionSource<object?>> _pendingRequests = new Dictionary<string, TaskCompletionSource<object?>>();
         private readonly Microsoft.Extensions.Logging.ILogger<ObsIntegrationService> _logger;
 
         // Fields for reconnection mechanism
@@ -87,6 +97,9 @@ namespace PlayoutEngine.OBS
             StopReconnectLoop();
             _logger.LogInformation("OBS_CONNECTED");
             _lastReconnectAttempt = DateTime.UtcNow;
+
+            // Trigger state rebuild after connection
+            OnObsConnected?.Invoke();
         }
 
         public async Task<bool> ConnectToObsAsync(string host, int port, string password)
@@ -164,6 +177,10 @@ namespace PlayoutEngine.OBS
                         _logger.LogInformation("OBS v5 authenticated successfully");
                         OnConnection(msg);
                     }
+                    else if (opCode == 7) // Request response
+                    {
+                        HandleRequestResponse(jsonObject);
+                    }
                 }
                 else
                 {
@@ -177,6 +194,17 @@ namespace PlayoutEngine.OBS
                             OnConnection(msg);
                         }
                         _logger.LogDebug("OBS Event: {UpdateType}", updateType);
+
+                        // Handle media ended events
+                        if (updateType == "MediaEnded" || updateType == "MediaStopped")
+                        {
+                            HandleMediaEvent(updateType, jsonObject);
+                        }
+                        // Handle other important events
+                        else if (updateType == "SceneChanged" || updateType == "SourceVisibilityChanged")
+                        {
+                            HandleSceneOrVisibilityEvent(updateType, jsonObject);
+                        }
                     }
                 }
             }
@@ -184,6 +212,63 @@ namespace PlayoutEngine.OBS
             {
                 _logger.LogError(ex, "Error parsing OBS message: {Message}", ex.Message);
             }
+        }
+
+        private void HandleRequestResponse(JObject jsonObject)
+        {
+            var responseData = jsonObject["d"];
+            var requestId = responseData?["requestId"]?.ToString();
+            var requestStatus = responseData?["requestStatus"];
+            var result = responseData?["responseData"];
+
+            if (string.IsNullOrEmpty(requestId))
+            {
+                _logger.LogWarning("Received request response without requestId");
+                return;
+            }
+
+            TaskCompletionSource<object?>? tcs = null;
+            lock (_pendingRequests)
+            {
+                if (_pendingRequests.TryGetValue(requestId, out var pendingTcs))
+                {
+                    tcs = pendingTcs;
+                    _pendingRequests.Remove(requestId);
+                }
+            }
+
+            if (tcs != null)
+            {
+                if (requestStatus?["result"]?.Value<bool>() == true)
+                {
+                    tcs.SetResult(result?.ToObject<object>());
+                }
+                else
+                {
+                    var errorMessage = requestStatus?["comment"]?.ToString() ?? "Unknown error";
+                    _logger.LogWarning("OBS request failed: {RequestId} - {ErrorMessage}", requestId, errorMessage);
+                    tcs.SetResult(null);
+                }
+            }
+        }
+
+        // Event handling methods
+        public event Action<string, JObject>? OnMediaEvent;
+        public event Action<string, JObject>? OnSceneOrVisibilityEvent;
+        public event Action? OnObsConnected;
+
+        private void HandleMediaEvent(string eventType, JObject data)
+        {
+            _logger.LogDebug("Media event received: {EventType}", eventType);
+
+            OnMediaEvent?.Invoke(eventType, data);
+        }
+
+        private void HandleSceneOrVisibilityEvent(string eventType, JObject data)
+        {
+            _logger.LogDebug("Scene/Visibility event received: {EventType}", eventType);
+
+            OnSceneOrVisibilityEvent?.Invoke(eventType, data);
         }
 
         private void OnDisconnection(object info)
@@ -582,6 +667,115 @@ namespace PlayoutEngine.OBS
             _websocketClient.Send(requestJson);
 
             return true;
+        }
+
+        public async Task<T?> SendRequestAsync<T>(string requestType, object? requestData = null)
+        {
+            if (!_isConnected || _websocketClient == null || !_websocketClient.IsRunning)
+            {
+                _logger.LogWarning("Cannot send request: Not connected to OBS");
+                return default(T);
+            }
+
+            var requestId = Guid.NewGuid().ToString();
+            var request = new
+            {
+                op = 6,
+                d = new
+                {
+                    requestType = requestType,
+                    requestId = requestId,
+                    requestData = requestData
+                }
+            };
+
+            var requestJson = Newtonsoft.Json.JsonConvert.SerializeObject(request);
+            _logger.LogDebug("Sending OBS request: {RequestType}", requestType);
+
+            // Create a TaskCompletionSource to wait for the response
+            var tcs = new TaskCompletionSource<object?>();
+            lock (_pendingRequests)
+            {
+                _pendingRequests[requestId] = tcs;
+            }
+
+            _websocketClient.Send(requestJson);
+
+            // Wait for response with timeout
+            var timeoutTask = Task.Delay(TimeSpan.FromSeconds(5));
+            var responseTask = tcs.Task;
+
+            var completedTask = await Task.WhenAny(responseTask, timeoutTask);
+
+            if (completedTask == timeoutTask)
+            {
+                // Timeout occurred
+                lock (_pendingRequests)
+                {
+                    _pendingRequests.Remove(requestId);
+                }
+                _logger.LogWarning("OBS request timeout: {RequestType}", requestType);
+                return default(T);
+            }
+
+            var response = await responseTask;
+
+            // Remove from pending requests
+            lock (_pendingRequests)
+            {
+                _pendingRequests.Remove(requestId);
+            }
+
+            if (response == null)
+            {
+                return default(T);
+            }
+
+            try
+            {
+                // Convert response to the expected type
+                if (response is JObject jObject)
+                {
+                    return jObject.ToObject<T>();
+                }
+                else if (response is T typedResponse)
+                {
+                    return typedResponse;
+                }
+                else
+                {
+                    var json = Newtonsoft.Json.JsonConvert.SerializeObject(response);
+                    return Newtonsoft.Json.JsonConvert.DeserializeObject<T>(json);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deserializing OBS response for request {RequestType}", requestType);
+                return default(T);
+            }
+        }
+
+        public async Task<GetCurrentProgramSceneResponse?> GetCurrentSceneAsync()
+        {
+            return await SendRequestAsync<GetCurrentProgramSceneResponse?>("GetCurrentProgramScene");
+        }
+
+        public async Task<GetSceneItemListResponse?> GetSceneItemsAsync(string sceneName)
+        {
+            var requestData = new { sceneName = sceneName };
+            return await SendRequestAsync<GetSceneItemListResponse?>("GetSceneItemList", requestData);
+        }
+
+        public async Task<GetInputSettingsResponse?> GetInputSettingsAsync(string inputName)
+        {
+            var requestData = new { inputName = inputName };
+            return await SendRequestAsync<GetInputSettingsResponse?>("GetInputSettings", requestData);
+        }
+
+        public async Task<GetMediaInputStatusResponse?> GetMediaInputStatusAsync(string inputName)
+        {
+            var requestData = new { inputName = inputName };
+            return await SendRequestAsync<GetMediaInputStatusResponse?>("GetMediaInputStatus", requestData);
         }
 
         public async Task DisconnectAsync()

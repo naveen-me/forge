@@ -202,4 +202,37 @@ namespace PlayoutEngine.Models
         public string Path { get; set; } = string.Empty;
         public double Offset { get; set; } = 0.0;
     }
+
+    // OBS Response Models
+    public class GetCurrentProgramSceneResponse
+    {
+        public string? CurrentProgramSceneName { get; set; }
+    }
+
+    public class SceneItem
+    {
+        public string? SourceName { get; set; }
+        public string? InputKind { get; set; }
+        public int SceneItemId { get; set; }
+        public bool SceneItemEnabled { get; set; }
+        public string? SceneItemName { get; set; }
+    }
+
+    public class GetSceneItemListResponse
+    {
+        public List<SceneItem>? SceneItems { get; set; }
+    }
+
+    public class GetInputSettingsResponse
+    {
+        public string? InputKind { get; set; }
+        public Dictionary<string, object>? InputSettings { get; set; }
+    }
+
+    public class GetMediaInputStatusResponse
+    {
+        public double? MediaDuration { get; set; }
+        public double? MediaCursor { get; set; }
+        public string? PlayPauseState { get; set; }
+    }
 }
