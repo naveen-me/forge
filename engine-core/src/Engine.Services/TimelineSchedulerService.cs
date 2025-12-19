@@ -24,7 +24,7 @@ namespace PlayoutEngine.Services
         private bool _isPlaying;
         private readonly IObsIntegrationService _obsService;
         private readonly Dictionary<string, string> _activeSourceMap = new Dictionary<string, string>();
-        private string _currentScene = "Broadcast Scene";
+        private string _currentScene = "Scene"; // Default OBS scene name
 
         public TimelineSchedulerService(IObsIntegrationService obsService)
         {

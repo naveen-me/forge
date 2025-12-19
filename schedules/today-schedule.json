@@ -1,87 +1,92 @@
 {
-  "schemaVersion": "2.0",
+  "SchemaVersion": "2.0",
+  "Timezone": "Asia/Kolkata",
+
   "CanvasSettings": {
     "Width": 1920,
     "Height": 1080,
     "Fps": 30
   },
-  "Timezone": "Asia/Kolkata",
+
   "Schedule": {
-    "Id": "today-schedule-0130pm-ist",
-    "StartTime": "2025-12-19T08:00:00Z",
-    "EndTime": "2025-12-19T09:15:00Z"
+    "Id": "schedule-19-12-2025-0920pm-ist",
+    "StartTime": "2025-12-19T15:50:00Z",
+    "EndTime": "2025-12-19T15:52:30Z"
   },
+
   "Assets": {
     "Media": [
       {
         "Id": "media-1",
-        "Name": "Sample Video 1",
-        "Path": "E:\\\\jaya\\\\new\\\\videos\\\\11842463-hd_1920_1080_60fps.mp4",
-        "Duration": 30,
-        "SourceType": "MEDIA_SOURCE",
-        "ObsProperties": {
-          "Loop": false,
-          "RestartOnActivate": true
-        }
+        "Name": "Video 1",
+        "Path": "C:\\Users\\navee\\Downloads\\videos\\11842463-hd_1920_1080_60fps.mp4",
+        "SourceType": "MEDIA_SOURCE"
       },
       {
         "Id": "media-2",
-        "Name": "Sample Video 2",
-        "Path": "E:\\\\jaya\\\\new\\\\videos\\\\13633468_1920_1080_25fps.mp4",
-        "Duration": 30,
-        "SourceType": "MEDIA_SOURCE",
-        "ObsProperties": {
-          "Loop": false,
-          "RestartOnActivate": true
-        }
+        "Name": "Video 2",
+        "Path": "C:\\Users\\navee\\Downloads\\videos\\13633378_1920_1080_25fps.mp4",
+        "SourceType": "MEDIA_SOURCE"
       },
       {
         "Id": "media-3",
-        "Name": "Lokah Chapter 1",
-        "Path": "E:\\\\jaya\\\\new\\\\videos\\\\Lokah-Chapter-1-Chandra-Telugu-2025-to5yp.mp4",
-        "Duration": 120,
-        "SourceType": "MEDIA_SOURCE",
-        "ObsProperties": {
-          "Loop": false,
-          "RestartOnActivate": true
-        }
+        "Name": "Video 3",
+        "Path": "C:\\Users\\navee\\Downloads\\videos\\13633468_1920_1080_25fps.mp4",
+        "SourceType": "MEDIA_SOURCE"
+      },
+      {
+        "Id": "media-4",
+        "Name": "Video 4",
+        "Path": "C:\\Users\\navee\\Downloads\\videos\\13749857_1920_1080_25fps.mp4",
+        "SourceType": "MEDIA_SOURCE"
+      },
+      {
+        "Id": "media-5",
+        "Name": "Video 5",
+        "Path": "C:\\Users\\navee\\Downloads\\videos\\14078407_1920_1080_60fps.mp4",
+        "SourceType": "MEDIA_SOURCE"
       }
     ],
-    "Ad": [],
+
     "Overlays": [
       {
         "Id": "overlay-logo",
-        "Name": "Company Logo",
+        "Name": "Logo",
         "OverlayType": "IMAGE",
-        "Path": "E:\\\\jaya\\\\new\\\\images\\\\logo.png",
+        "Path": "E:\\jaya\\new\\images\\logo.png",
         "DefaultTransform": {
-          "X": 1700,
-          "Y": 50,
-          "Width": 200,
-          "Height": 100,
-          "Rotation": 0,
-          "Opacity": 0.8,
-          "ZIndex": 999
+          "X": 1720,
+          "Y": 20,
+          "Width": 180,
+          "Height": 90,
+          "Opacity": 1,
+          "ZIndex": 100
         }
       },
       {
-        "Id": "overlay-branding",
-        "Name": "Branding Image",
+        "Id": "overlay-bottom-strip",
+        "Name": "Bottom Strip",
         "OverlayType": "IMAGE",
-        "Path": "E:\\\\jaya\\\\new\\\\images\\\\New Project.jpg",
+        "Path": "E:\\jaya\\new\\images\\bottom_strip.jpg",
         "DefaultTransform": {
-          "X": 50,
-          "Y": 50,
-          "Width": 300,
-          "Height": 150,
-          "Rotation": 0,
-          "Opacity": 0.7,
-          "ZIndex": 998
+          "X": 0,
+          "Y": 1000,
+          "Width": 1920,
+          "Height": 80,
+          "Opacity": 1,
+          "ZIndex": 90
+        },
+        "Filters": {
+          "Scroll": {
+            "Direction": "HORIZONTAL",
+            "Speed": 45,
+            "Loop": true
+          }
         }
       }
-    ],
-    "Live": []
+    ]
   },
+
   "Timeline": {
     "Tracks": [
       {
@@ -89,98 +94,47 @@
         "Type": "PROGRAM",
         "ZIndex": 0,
         "Items": [
-          {
-            "Id": "item-1",
-            "AssetRef": "media-1",
-            "Timeline": {
-              "Start": 0,
-              "End": 30
-            },
-            "Playback": {
-              "OffsetStart": 0
-            },
-            "Transform": {
-              "X": 0,
-              "Y": 0,
-              "Width": 1920,
-              "Height": 1080,
-              "Rotation": 0,
-              "Opacity": 1,
-              "ZIndex": 0
-            }
-          },
-          {
-            "Id": "item-2",
-            "AssetRef": "media-2",
-            "Timeline": {
-              "Start": 30,
-              "End": 60
-            },
-            "Playback": {
-              "OffsetStart": 0
-            },
-            "Transform": {
-              "X": 0,
-              "Y": 0,
-              "Width": 1920,
-              "Height": 1080,
-              "Rotation": 0,
-              "Opacity": 1,
-              "ZIndex": 0
-            }
-          },
-          {
-            "Id": "item-3",
-            "AssetRef": "media-3",
-            "Timeline": {
-              "Start": 60,
-              "End": 180
-            },
-            "Playback": {
-              "OffsetStart": 0
-            },
-            "Transform": {
-              "X": 0,
-              "Y": 0,
-              "Width": 1920,
-              "Height": 1080,
-              "Rotation": 0,
-              "Opacity": 1,
-              "ZIndex": 0
-            }
-          }
+          { "Id": "p1", "AssetRef": "media-1", "Timeline": { "Start": 0, "End": 30 } },
+          { "Id": "p2", "AssetRef": "media-2", "Timeline": { "Start": 30, "End": 60 } },
+          { "Id": "p3", "AssetRef": "media-3", "Timeline": { "Start": 60, "End": 90 } },
+          { "Id": "p4", "AssetRef": "media-4", "Timeline": { "Start": 90, "End": 120 } },
+          { "Id": "p5", "AssetRef": "media-5", "Timeline": { "Start": 120, "End": 150 } }
         ]
       },
+
       {
         "Id": "overlay-track",
         "Type": "OVERLAY",
         "ZIndex": 1,
         "Items": [
           {
-            "Id": "overlay-item-1",
+            "Id": "logo-visible",
             "AssetRef": "overlay-logo",
             "Scope": "GLOBAL",
             "Timeline": {
-              "Start": 0,
-              "End": 180
+              "Start": 60,
+              "End": 150,
+              "Unit": "SCHEDULE"
             }
           },
           {
-            "Id": "overlay-branding-item",
-            "AssetRef": "overlay-branding",
+            "Id": "bottom-strip-always",
+            "AssetRef": "overlay-bottom-strip",
             "Scope": "GLOBAL",
             "Timeline": {
               "Start": 0,
-              "End": 90
+              "End": 150,
+              "Unit": "SCHEDULE"
             }
           }
         ]
       }
     ]
   },
+
   "EngineRules": {
-    "ResumeAfterAd": true,
+    "OnTimelineEnd": "BUFFER",
     "OnObsDisconnect": "RETRY",
-    "OnError": "STOP"
+    "OnError": "CONTINUE"
   }
 }

@@ -38,6 +38,7 @@ namespace PlayoutEngine
         private string _schedulePath = string.Empty;
         private Stopwatch _uptimeStopwatch = new Stopwatch();
         private TimelineConfigurationV2? _currentScheduleV2;
+        private bool _isV2ScheduleLoaded = false; // Track if a V2 schedule is loaded
         private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
 
         public PlayoutEngineService(
@@ -300,11 +301,23 @@ namespace PlayoutEngine
                 {
                     _logger.LogInformation("LOADING_V2_SCHEMA schedule_path={SchedulePath}", schedulePath);
                     loaded = await _schedulerService.LoadScheduleV2Async(schedulePath);
+                    if (loaded)
+                    {
+                        // Mark that a V2 schedule is loaded
+                        _isV2ScheduleLoaded = true;
+                        // Also load it into the timeline scheduler service
+                        await _timelineSchedulerService.LoadTimelineScheduleAsync(schedulePath);
+                    }
                 }
                 else
                 {
                     _logger.LogInformation("LOADING_V1_SCHEMA schedule_path={SchedulePath}", schedulePath);
                     loaded = await _schedulerService.LoadScheduleAsync(schedulePath);
+                    if (loaded)
+                    {
+                        // Mark that a V1 schedule is loaded
+                        _isV2ScheduleLoaded = false;
+                    }
                 }
 
                 if (loaded)
@@ -356,7 +369,7 @@ namespace PlayoutEngine
                 }
 
                 // Determine which scheduler to use based on the loaded schedule type
-                if (_currentScheduleV2 != null)
+                if (_isV2ScheduleLoaded)
                 {
                     _logger.LogInformation("STARTING_V2_TIMELINE_SCHEDULE");
                     await _timelineSchedulerService.StartScheduleAsync();
@@ -392,7 +405,7 @@ namespace PlayoutEngine
             try
             {
                 // Determine which scheduler to pause based on the loaded schedule type
-                if (_currentScheduleV2 != null)
+                if (_isV2ScheduleLoaded)
                 {
                     await _timelineSchedulerService.PauseScheduleAsync();
                 }
@@ -426,7 +439,7 @@ namespace PlayoutEngine
             try
             {
                 // Determine which scheduler to stop based on the loaded schedule type
-                if (_currentScheduleV2 != null)
+                if (_isV2ScheduleLoaded)
                 {
                     await _timelineSchedulerService.StopScheduleAsync();
                 }

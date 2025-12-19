@@ -202,7 +202,11 @@ namespace PlayoutEngine.OBS
 
         public bool SetScene(string sceneName)
         {
-            if (!_isConnected || _websocketClient == null || !_websocketClient.IsRunning) return false;
+            if (!_isConnected || _websocketClient == null || !_websocketClient.IsRunning)
+            {
+                _logger.LogWarning("Cannot set scene: Not connected to OBS");
+                return false;
+            }
 
             var request = new
             {
@@ -216,6 +220,7 @@ namespace PlayoutEngine.OBS
             };
 
             var requestJson = Newtonsoft.Json.JsonConvert.SerializeObject(request);
+            _logger.LogDebug("Sending SetScene request: {RequestJson}", requestJson);
             _websocketClient.Send(requestJson);
 
             return true;
@@ -223,30 +228,17 @@ namespace PlayoutEngine.OBS
 
         public bool SetSourceVisibility(string sourceName, bool visible)
         {
-            if (!_isConnected || _websocketClient == null || !_websocketClient.IsRunning) return false;
-
-            var sceneName = "YOUR_SCENE_NAME"; // You need to get the scene name where the source is located
-            var sceneItemId = -1; // You need to get the scene item id
-
-            var getSceneItemIdRequest = new
+            if (!_isConnected || _websocketClient == null || !_websocketClient.IsRunning)
             {
-                op = 6,
-                d = new
-                {
-                    requestType = "GetSceneItemId",
-                    requestId = Guid.NewGuid().ToString(),
-                    requestData = new
-                    {
-                        sceneName = sceneName,
-                        sourceName = sourceName
-                    }
-                }
-            };
-            var requestJson = Newtonsoft.Json.JsonConvert.SerializeObject(getSceneItemIdRequest);
-            _websocketClient.Send(requestJson);
+                _logger.LogWarning("Cannot set source visibility: Not connected to OBS");
+                return false;
+            }
 
-            // You would need to handle the response to get the scene item id. For simplicity, this is not implemented here.
+            // Use a standard scene name that should exist in OBS by default
+            var sceneName = "Scene"; // Default OBS scene name
 
+            // Try to use SetSceneItemEnabled with source name directly (OBS WebSocket 5.x approach)
+            // This approach doesn't require knowing the sceneItemId in advance
             var request = new
             {
                 op = 6,
@@ -257,13 +249,14 @@ namespace PlayoutEngine.OBS
                     requestData = new
                     {
                         sceneName = sceneName,
-                        sceneItemId = sceneItemId,
+                        sourceName = sourceName, // Use source name instead of sceneItemId
                         sceneItemEnabled = visible
                     }
                 }
             };
 
-            requestJson = Newtonsoft.Json.JsonConvert.SerializeObject(request);
+            var requestJson = Newtonsoft.Json.JsonConvert.SerializeObject(request);
+            _logger.LogDebug("Sending SetSceneItemEnabled request: {RequestJson}", requestJson);
             _websocketClient.Send(requestJson);
 
             return true;
@@ -271,7 +264,11 @@ namespace PlayoutEngine.OBS
 
         public bool PlayMedia(string mediaSourceName, string filePath)
         {
-            if (!_isConnected || _websocketClient == null || !_websocketClient.IsRunning) return false;
+            if (!_isConnected || _websocketClient == null || !_websocketClient.IsRunning)
+            {
+                _logger.LogWarning("Cannot play media: Not connected to OBS");
+                return false;
+            }
 
             // This is a complex operation in OBS v5 and might require a sequence of requests.
             // For simplicity, we assume the media source is already configured.
@@ -292,6 +289,7 @@ namespace PlayoutEngine.OBS
             };
 
             var requestJson = Newtonsoft.Json.JsonConvert.SerializeObject(request);
+            _logger.LogDebug("Sending PlayMedia request: {RequestJson}", requestJson);
             _websocketClient.Send(requestJson);
 
             return true;
@@ -423,7 +421,16 @@ namespace PlayoutEngine.OBS
 
         public bool CreateSource(string sourceName, string sourceType, string sceneName, object settings)
         {
-            if (!_isConnected || _websocketClient == null || !_websocketClient.IsRunning) return false;
+            if (!_isConnected || _websocketClient == null || !_websocketClient.IsRunning)
+            {
+                _logger.LogWarning("Cannot create source: Not connected to OBS");
+                return false;
+            }
+
+            // Log the settings being passed
+            var settingsJson = Newtonsoft.Json.JsonConvert.SerializeObject(settings);
+            _logger.LogDebug("Creating source '{SourceName}' of type '{SourceType}' in scene '{SceneName}' with settings: {Settings}",
+                sourceName, sourceType, sceneName, settingsJson);
 
             var request = new
             {
@@ -444,6 +451,7 @@ namespace PlayoutEngine.OBS
             };
 
             var requestJson = Newtonsoft.Json.JsonConvert.SerializeObject(request);
+            _logger.LogDebug("Sending CreateInput request: {RequestJson}", requestJson);
             _websocketClient.Send(requestJson);
 
             return true;
