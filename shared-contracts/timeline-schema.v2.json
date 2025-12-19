@@ -1,0 +1,542 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Broadcast Playout Timeline Schema v2.0",
+  "description": "Schema for broadcast playout timeline configurations - VERSION 2.0 (FOUR CONTENT TYPES)",
+  "type": "object",
+  "required": ["schemaVersion", "canvas", "timezone", "schedule", "assets", "timeline", "engineRules"],
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "description": "Schema version - MUST be '2.0' for this version",
+      "enum": ["2.0"]
+    },
+    "canvas": {
+      "type": "object",
+      "required": ["width", "height", "fps"],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "description": "Base canvas width in pixels",
+          "minimum": 640,
+          "maximum": 7680
+        },
+        "height": {
+          "type": "integer",
+          "description": "Base canvas height in pixels",
+          "minimum": 480,
+          "maximum": 4320
+        },
+        "fps": {
+          "type": "integer",
+          "description": "Frames per second",
+          "minimum": 1,
+          "maximum": 120
+        }
+      }
+    },
+    "timezone": {
+      "type": "string",
+      "description": "Timezone for the schedule",
+      "default": "UTC"
+    },
+    "schedule": {
+      "type": "object",
+      "required": ["id", "startTime", "endTime"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the schedule"
+        },
+        "startTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Start date and time for the schedule"
+        },
+        "endTime": {
+          "type": "string",
+          "format": "date-time",
+          "description": "End date and time for the schedule"
+        }
+      }
+    },
+    "assets": {
+      "type": "object",
+      "properties": {
+        "media": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/mediaAsset"
+          }
+        },
+        "ads": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/adAsset"
+          }
+        },
+        "overlays": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/overlayAsset"
+          }
+        },
+        "live": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/liveAsset"
+          }
+        }
+      }
+    },
+    "timeline": {
+      "type": "object",
+      "required": ["tracks"],
+      "properties": {
+        "tracks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/timelineTrack"
+          }
+        }
+      }
+    },
+    "engineRules": {
+      "type": "object",
+      "properties": {
+        "resumeAfterAd": {
+          "type": "boolean",
+          "description": "Whether to resume main media after ad",
+          "default": true
+        },
+        "onObsDisconnect": {
+          "type": "string",
+          "enum": ["RETRY", "STOP", "CONTINUE"],
+          "description": "Action to take when OBS disconnects",
+          "default": "RETRY"
+        },
+        "onError": {
+          "type": "string",
+          "enum": ["STOP", "CONTINUE", "RETRY"],
+          "description": "Action to take when an error occurs",
+          "default": "STOP"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "mediaAsset": {
+      "type": "object",
+      "required": ["id", "name", "path", "duration", "sourceType"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the media asset"
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name for the asset"
+        },
+        "path": {
+          "type": "string",
+          "description": "File path to the media asset"
+        },
+        "duration": {
+          "type": "number",
+          "description": "Duration of the media in seconds",
+          "minimum": 0
+        },
+        "sourceType": {
+          "type": "string",
+          "enum": ["MEDIA_SOURCE"],
+          "description": "Type of OBS source"
+        },
+        "obsProperties": {
+          "type": "object",
+          "properties": {
+            "loop": {
+              "type": "boolean",
+              "description": "Whether the media should loop",
+              "default": false
+            },
+            "restartOnActivate": {
+              "type": "boolean",
+              "description": "Whether to restart media when activated",
+              "default": true
+            }
+          }
+        },
+        "filters": {
+          "$ref": "#/definitions/filters"
+        }
+      }
+    },
+    "adAsset": {
+      "type": "object",
+      "required": ["id", "name", "path", "duration", "sourceType"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ad asset"
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name for the ad"
+        },
+        "path": {
+          "type": "string",
+          "description": "File path to the ad asset"
+        },
+        "duration": {
+          "type": "number",
+          "description": "Duration of the ad in seconds",
+          "minimum": 0
+        },
+        "sourceType": {
+          "type": "string",
+          "enum": ["MEDIA_SOURCE"],
+          "description": "Type of OBS source"
+        },
+        "filters": {
+          "$ref": "#/definitions/filters"
+        }
+      }
+    },
+    "overlayAsset": {
+      "type": "object",
+      "required": ["id", "name", "overlayType"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the overlay asset"
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name for the overlay"
+        },
+        "overlayType": {
+          "type": "string",
+          "enum": ["IMAGE", "VIDEO", "TEXT"],
+          "description": "Type of overlay"
+        },
+        "path": {
+          "type": "string",
+          "description": "File path to the overlay asset (optional for TEXT)"
+        },
+        "defaultTransform": {
+          "$ref": "#/definitions/transform"
+        },
+        "filters": {
+          "$ref": "#/definitions/filters"
+        }
+      }
+    },
+    "liveAsset": {
+      "type": "object",
+      "required": ["id", "name", "url", "sourceType"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the live asset"
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name for the live source"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL for the browser source"
+        },
+        "sourceType": {
+          "type": "string",
+          "enum": ["BROWSER_SOURCE"],
+          "description": "Type of OBS source"
+        },
+        "browserSettings": {
+          "type": "object",
+          "properties": {
+            "width": {
+              "type": "integer",
+              "description": "Browser source width",
+              "default": 1920
+            },
+            "height": {
+              "type": "integer",
+              "description": "Browser source height",
+              "default": 1080
+            },
+            "fps": {
+              "type": "integer",
+              "description": "Browser source target FPS",
+              "default": 30
+            },
+            "shutdownWhenHidden": {
+              "type": "boolean",
+              "description": "Whether to shutdown browser when hidden",
+              "default": true
+            }
+          }
+        }
+      }
+    },
+    "timelineTrack": {
+      "type": "object",
+      "required": ["id", "type", "zIndex", "items"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the track"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["PROGRAM", "LIVE", "ADS", "OVERLAY"],
+          "description": "Type of content in this track"
+        },
+        "zIndex": {
+          "type": "integer",
+          "description": "Z-order layer for this track",
+          "minimum": 0
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "oneOf": [
+              { "$ref": "#/definitions/programTimelineItem" },
+              { "$ref": "#/definitions/adTimelineItem" },
+              { "$ref": "#/definitions/overlayTimelineItem" },
+              { "$ref": "#/definitions/liveTimelineItem" }
+            ]
+          }
+        }
+      }
+    },
+    "programTimelineItem": {
+      "type": "object",
+      "required": ["id", "assetRef"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the timeline item"
+        },
+        "assetRef": {
+          "type": "string",
+          "description": "Reference to media asset ID"
+        },
+        "timeline": {
+          "type": "object",
+          "required": ["start", "end"],
+          "properties": {
+            "start": {
+              "type": "number",
+              "description": "Start time in seconds from schedule start",
+              "minimum": 0
+            },
+            "end": {
+              "type": "number",
+              "description": "End time in seconds from schedule start",
+              "minimum": 0
+            }
+          }
+        },
+        "playback": {
+          "type": "object",
+          "properties": {
+            "offsetStart": {
+              "type": "number",
+              "description": "Start offset within media file in seconds",
+              "default": 0
+            }
+          }
+        },
+        "transform": {
+          "$ref": "#/definitions/transform"
+        }
+      }
+    },
+    "adTimelineItem": {
+      "type": "object",
+      "required": ["id", "assetRef"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ad item"
+        },
+        "assetRef": {
+          "type": "string",
+          "description": "Reference to ad asset ID"
+        },
+        "insertAt": {
+          "type": "number",
+          "description": "Time to insert ad in seconds from schedule start"
+        },
+        "resumeMainMedia": {
+          "type": "boolean",
+          "description": "Whether to resume main media after ad",
+          "default": true
+        }
+      }
+    },
+    "overlayTimelineItem": {
+      "type": "object",
+      "required": ["id", "assetRef", "scope"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the overlay item"
+        },
+        "assetRef": {
+          "type": "string",
+          "description": "Reference to overlay asset ID"
+        },
+        "scope": {
+          "type": "string",
+          "enum": ["GLOBAL", "PROGRAM"],
+          "description": "Scope of the overlay"
+        },
+        "targetProgramId": {
+          "type": "string",
+          "description": "Target program ID if scope is PROGRAM"
+        },
+        "timeline": {
+          "type": "object",
+          "required": ["start", "end"],
+          "properties": {
+            "start": {
+              "type": "number",
+              "description": "Start time in seconds from schedule start",
+              "minimum": 0
+            },
+            "end": {
+              "type": "number",
+              "description": "End time in seconds from schedule start",
+              "minimum": 0
+            }
+          }
+        },
+        "transformOverride": {
+          "$ref": "#/definitions/transform"
+        }
+      }
+    },
+    "liveTimelineItem": {
+      "type": "object",
+      "required": ["id", "assetRef"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the live item"
+        },
+        "assetRef": {
+          "type": "string",
+          "description": "Reference to live asset ID"
+        },
+        "timeline": {
+          "type": "object",
+          "required": ["start", "end"],
+          "properties": {
+            "start": {
+              "type": "number",
+              "description": "Start time in seconds from schedule start",
+              "minimum": 0
+            },
+            "end": {
+              "type": "number",
+              "description": "End time in seconds from schedule start",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "transform": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "description": "X coordinate position in pixels",
+          "default": 0
+        },
+        "y": {
+          "type": "number",
+          "description": "Y coordinate position in pixels",
+          "default": 0
+        },
+        "width": {
+          "type": "number",
+          "description": "Width in pixels",
+          "default": 1920
+        },
+        "height": {
+          "type": "number",
+          "description": "Height in pixels",
+          "default": 1080
+        },
+        "rotation": {
+          "type": "number",
+          "description": "Rotation in degrees",
+          "default": 0
+        },
+        "opacity": {
+          "type": "number",
+          "description": "Opacity value (0.0 to 1.0)",
+          "default": 1,
+          "minimum": 0,
+          "maximum": 1
+        },
+        "zIndex": {
+          "type": "integer",
+          "description": "Z-index for layering",
+          "default": 0
+        }
+      }
+    },
+    "filters": {
+      "type": "object",
+      "properties": {
+        "chromaKey": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Whether chroma key filter is enabled",
+              "default": false
+            },
+            "color": {
+              "type": "string",
+              "description": "Hex color for chroma key",
+              "default": "#00FF00"
+            },
+            "similarity": {
+              "type": "number",
+              "description": "Chroma key similarity (0.0 to 1.0)",
+              "default": 0.1,
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "scroll": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Whether scroll filter is enabled",
+              "default": false
+            },
+            "speed": {
+              "type": "number",
+              "description": "Scroll speed in pixels per second",
+              "default": 10
+            },
+            "direction": {
+              "type": "string",
+              "enum": ["HORIZONTAL", "VERTICAL"],
+              "description": "Scroll direction",
+              "default": "HORIZONTAL"
+            }
+          }
+        }
+      }
+    }
+  }
+}

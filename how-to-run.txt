@@ -1,0 +1,86 @@
+  Here are the simple steps to run and view the complete application:
+
+  🔹 Option 1: Full Development Environment (Recommended)
+  Run both the engine and UI simultaneously:
+
+   1 # Navigate to the playout directory
+   2 cd playout
+   3
+   4 # Run the development script (Windows)
+   5 .\dev.ps1
+
+  Or use the batch version:
+
+   1 .\dev.bat
+
+  This will:
+   - Start the .NET playout engine on port 7001
+   - Start the Electron UI on port 8080
+   - Open the application automatically
+   - Show health status at: http://localhost:7001/health
+
+  🔹 Option 2: UI Only (For UI Development)
+  If you only want to work on the UI:
+
+   1 # Navigate to the UI directory
+   2 cd playout\electron-ui
+   3
+   4 # Install dependencies if you haven't already
+   5 npm install
+   6
+   7 # Run the UI with hot reload
+   8 npm run electron:serve
+
+  🔹 Option 3: Engine Only (For Backend Development)
+  If you only want to test the engine:
+
+   1 # Navigate to the engine directory
+   2 cd playout\engine-core\src\BroadcastEngine
+   3
+   4 # Build and run the engine
+   5 dotnet build
+   6 dotnet run
+
+  🖥️ What You'll See:
+
+   1. Electron UI Window - The main Broadcast Playout Editor interface with:
+      - Media library browser
+      - Timeline scheduler
+      - Overlay management
+      - Schedule editor
+      - Engine connection status
+
+   2. Engine Console - Status messages showing:
+      - Health check endpoints
+      - Connection status
+      - Playout events
+      - Licensing status
+
+   3. Health Check - Visit http://localhost:7001/health to see:
+
+   1    {
+   2      "status": "running",
+   3      "uptime": 12345,
+   4      "currentState": "STOPPED",
+   5      "isObsConnected": true,
+   6      "isLicensed": true,
+   7      "timestamp": "2025-12-19T00:00:00Z",
+   8      "version": "1.0.0"
+   9    }
+
+  🔄 Making Changes:
+
+   1. For UI Changes:
+      - Edit files in playout\electron-ui\src\
+      - Changes auto-refresh in the running Electron app
+
+   2. For Engine Changes:
+      - Edit files in playout\engine-core\src\
+      - Rebuild with dotnet build and restart with dotnet run
+
+   3. For Configuration Changes:
+      - Edit files in playout\config\
+      - Restart the application for changes to take effect
+
+  The development environment is fully set up with hot-reload for UI development and proper health monitoring
+  for the engine!

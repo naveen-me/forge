@@ -1,0 +1,277 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Broadcast Playout Timeline Schema v1.0",
+  "description": "Schema for broadcast playout timeline configurations - VERSION 1.0 (STABLE)",
+  "type": "object",
+  "required": ["id", "name", "version", "segments"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the schedule"
+    },
+    "version": {
+      "type": "string",
+      "description": "Schema version - MUST be '1.0' for this version",
+      "enum": ["1.0"]
+    },
+    "name": {
+      "type": "string",
+      "description": "Display name for the schedule"
+    },
+    "startDate": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Start date and time for the schedule"
+    },
+    "endDate": {
+      "type": "string",
+      "format": "date-time",
+      "description": "End date and time for the schedule"
+    },
+    "timezone": {
+      "type": "string",
+      "description": "Timezone for the schedule",
+      "default": "UTC"
+    },
+    "segments": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/segment"
+      }
+    },
+    "obsConfiguration": {
+      "$ref": "#/definitions/obsConfiguration"
+    }
+  },
+  "definitions": {
+    "segment": {
+      "type": "object",
+      "required": ["id", "name", "startTimeOffset", "duration"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the segment"
+        },
+        "name": {
+          "type": "string",
+          "description": "Display name for the segment"
+        },
+        "startTimeOffset": {
+          "type": "number",
+          "description": "Start time offset in seconds from schedule start",
+          "minimum": 0
+        },
+        "duration": {
+          "type": "number",
+          "description": "Duration of the segment in seconds",
+          "minimum": 0
+        },
+        "media": {
+          "$ref": "#/definitions/mediaAsset"
+        },
+        "overlays": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/overlayElement"
+          }
+        },
+        "ads": {
+          "$ref": "#/definitions/adInsertionConfig"
+        },
+        "repeatPattern": {
+          "$ref": "#/definitions/repeatPattern"
+        },
+        "scheduledDays": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+          }
+        }
+      }
+    },
+    "mediaAsset": {
+      "type": "object",
+      "required": ["path"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "description": "File path to the media asset"
+        },
+        "loop": {
+          "type": "boolean",
+          "description": "Whether the media should loop",
+          "default": false
+        },
+        "sourceName": {
+          "type": "string",
+          "description": "OBS source name for this media"
+        }
+      }
+    },
+    "overlayElement": {
+      "type": "object",
+      "required": ["id", "type", "source"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the overlay"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["image", "text", "video"],
+          "description": "Type of overlay element"
+        },
+        "source": {
+          "type": "string",
+          "description": "Path to the overlay source"
+        },
+        "position": {
+          "$ref": "#/definitions/position"
+        },
+        "size": {
+          "$ref": "#/definitions/size"
+        },
+        "timing": {
+          "$ref": "#/definitions/timing"
+        }
+      }
+    },
+    "position": {
+      "type": "object",
+      "properties": {
+        "x": {
+          "type": "number",
+          "description": "X coordinate position",
+          "default": 0
+        },
+        "y": {
+          "type": "number",
+          "description": "Y coordinate position",
+          "default": 0
+        },
+        "unit": {
+          "type": "string",
+          "enum": ["%", "pixels"],
+          "description": "Unit of measurement for position",
+          "default": "%"
+        }
+      }
+    },
+    "size": {
+      "type": "object",
+      "properties": {
+        "width": {
+          "type": "number",
+          "description": "Width dimension",
+          "default": 100
+        },
+        "height": {
+          "type": "number",
+          "description": "Height dimension",
+          "default": 100
+        },
+        "unit": {
+          "type": "string",
+          "enum": ["pixels", "%"],
+          "description": "Unit of measurement for size",
+          "default": "pixels"
+        }
+      }
+    },
+    "timing": {
+      "type": "object",
+      "properties": {
+        "showAt": {
+          "type": "number",
+          "description": "Time to show the overlay (seconds from segment start)",
+          "default": 0
+        },
+        "hideAt": {
+          "type": "number",
+          "description": "Time to hide the overlay (seconds from segment start)",
+          "default": 0
+        }
+      }
+    },
+    "adInsertionConfig": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether ad insertion is enabled for this segment",
+          "default": false
+        },
+        "maxDuration": {
+          "type": "number",
+          "description": "Maximum duration for ad insertion in seconds",
+          "default": 0
+        },
+        "insertionPoints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/adInsertionPoint"
+          }
+        }
+      }
+    },
+    "adInsertionPoint": {
+      "type": "object",
+      "required": ["offset", "duration", "groupId"],
+      "properties": {
+        "offset": {
+          "type": "number",
+          "description": "Offset from segment start for ad insertion (seconds)",
+          "minimum": 0
+        },
+        "duration": {
+          "type": "number",
+          "description": "Duration of the ad slot (seconds)",
+          "minimum": 0
+        },
+        "groupId": {
+          "type": "string",
+          "description": "ID of the ad group to use"
+        }
+      }
+    },
+    "repeatPattern": {
+      "type": "object",
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Whether the segment should repeat",
+          "default": false
+        },
+        "interval": {
+          "type": "number",
+          "description": "Interval between repetitions in seconds"
+        }
+      }
+    },
+    "obsConfiguration": {
+      "type": "object",
+      "required": ["scene"],
+      "properties": {
+        "scene": {
+          "type": "string",
+          "description": "OBS scene to use for this schedule"
+        },
+        "output": {
+          "$ref": "#/definitions/outputConfiguration"
+        }
+      }
+    },
+    "outputConfiguration": {
+      "type": "object",
+      "required": ["type", "settings"],
+      "properties": {
+        "type": "string",
+        "settings": {
+          "type": "object",
+          "description": "OBS output settings"
+        }
+      }
+    }
+  }
+}

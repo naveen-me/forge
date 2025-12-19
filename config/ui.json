@@ -1,0 +1,21 @@
+{
+  "Port": 8080,
+  "EngineAPIUrl": "http://localhost:7001",
+  "RefreshInterval": 1000,
+  "AutoReconnect": true,
+  "ReconnectInterval": 5000,
+  "MaxReconnectAttempts": 10,
+  "Theme": {
+    "PrimaryColor": "#3B82F6",
+    "SecondaryColor": "#10B981",
+    "DarkMode": false
+  },
+  "MediaLibrary": {
+    "DefaultPath": "./media-assets/",
+    "SupportedFormats": [".mp4", ".mov", ".avi", ".mkv", ".wmv"]
+  },
+  "Preview": {
+    "Enabled": true,
+    "PreviewPort": 8081
+  }
+}

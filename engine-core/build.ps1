@@ -1,0 +1,1 @@
+dotnet build "src\PlayoutEngine.sln" /p:Configuration=Release

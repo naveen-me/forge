@@ -1,0 +1,186 @@
+{
+  "schemaVersion": "2.0",
+  "CanvasSettings": {
+    "Width": 1920,
+    "Height": 1080,
+    "Fps": 30
+  },
+  "Timezone": "Asia/Kolkata",
+  "Schedule": {
+    "Id": "today-schedule-0130pm-ist",
+    "StartTime": "2025-12-19T08:00:00Z",
+    "EndTime": "2025-12-19T09:15:00Z"
+  },
+  "Assets": {
+    "Media": [
+      {
+        "Id": "media-1",
+        "Name": "Sample Video 1",
+        "Path": "E:\\\\jaya\\\\new\\\\videos\\\\11842463-hd_1920_1080_60fps.mp4",
+        "Duration": 30,
+        "SourceType": "MEDIA_SOURCE",
+        "ObsProperties": {
+          "Loop": false,
+          "RestartOnActivate": true
+        }
+      },
+      {
+        "Id": "media-2",
+        "Name": "Sample Video 2",
+        "Path": "E:\\\\jaya\\\\new\\\\videos\\\\13633468_1920_1080_25fps.mp4",
+        "Duration": 30,
+        "SourceType": "MEDIA_SOURCE",
+        "ObsProperties": {
+          "Loop": false,
+          "RestartOnActivate": true
+        }
+      },
+      {
+        "Id": "media-3",
+        "Name": "Lokah Chapter 1",
+        "Path": "E:\\\\jaya\\\\new\\\\videos\\\\Lokah-Chapter-1-Chandra-Telugu-2025-to5yp.mp4",
+        "Duration": 120,
+        "SourceType": "MEDIA_SOURCE",
+        "ObsProperties": {
+          "Loop": false,
+          "RestartOnActivate": true
+        }
+      }
+    ],
+    "Ad": [],
+    "Overlays": [
+      {
+        "Id": "overlay-logo",
+        "Name": "Company Logo",
+        "OverlayType": "IMAGE",
+        "Path": "E:\\\\jaya\\\\new\\\\images\\\\logo.png",
+        "DefaultTransform": {
+          "X": 1700,
+          "Y": 50,
+          "Width": 200,
+          "Height": 100,
+          "Rotation": 0,
+          "Opacity": 0.8,
+          "ZIndex": 999
+        }
+      },
+      {
+        "Id": "overlay-branding",
+        "Name": "Branding Image",
+        "OverlayType": "IMAGE",
+        "Path": "E:\\\\jaya\\\\new\\\\images\\\\New Project.jpg",
+        "DefaultTransform": {
+          "X": 50,
+          "Y": 50,
+          "Width": 300,
+          "Height": 150,
+          "Rotation": 0,
+          "Opacity": 0.7,
+          "ZIndex": 998
+        }
+      }
+    ],
+    "Live": []
+  },
+  "Timeline": {
+    "Tracks": [
+      {
+        "Id": "program-track",
+        "Type": "PROGRAM",
+        "ZIndex": 0,
+        "Items": [
+          {
+            "Id": "item-1",
+            "AssetRef": "media-1",
+            "Timeline": {
+              "Start": 0,
+              "End": 30
+            },
+            "Playback": {
+              "OffsetStart": 0
+            },
+            "Transform": {
+              "X": 0,
+              "Y": 0,
+              "Width": 1920,
+              "Height": 1080,
+              "Rotation": 0,
+              "Opacity": 1,
+              "ZIndex": 0
+            }
+          },
+          {
+            "Id": "item-2",
+            "AssetRef": "media-2",
+            "Timeline": {
+              "Start": 30,
+              "End": 60
+            },
+            "Playback": {
+              "OffsetStart": 0
+            },
+            "Transform": {
+              "X": 0,
+              "Y": 0,
+              "Width": 1920,
+              "Height": 1080,
+              "Rotation": 0,
+              "Opacity": 1,
+              "ZIndex": 0
+            }
+          },
+          {
+            "Id": "item-3",
+            "AssetRef": "media-3",
+            "Timeline": {
+              "Start": 60,
+              "End": 180
+            },
+            "Playback": {
+              "OffsetStart": 0
+            },
+            "Transform": {
+              "X": 0,
+              "Y": 0,
+              "Width": 1920,
+              "Height": 1080,
+              "Rotation": 0,
+              "Opacity": 1,
+              "ZIndex": 0
+            }
+          }
+        ]
+      },
+      {
+        "Id": "overlay-track",
+        "Type": "OVERLAY",
+        "ZIndex": 1,
+        "Items": [
+          {
+            "Id": "overlay-item-1",
+            "AssetRef": "overlay-logo",
+            "Scope": "GLOBAL",
+            "Timeline": {
+              "Start": 0,
+              "End": 180
+            }
+          },
+          {
+            "Id": "overlay-branding-item",
+            "AssetRef": "overlay-branding",
+            "Scope": "GLOBAL",
+            "Timeline": {
+              "Start": 0,
+              "End": 90
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "EngineRules": {
+    "ResumeAfterAd": true,
+    "OnObsDisconnect": "RETRY",
+    "OnError": "STOP"
+  }
+}

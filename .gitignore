@@ -1,0 +1,65 @@
+# OS generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+.directory
+*.md5
+.npmignore
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# TypeScript v1 declaration files
+typings/
+
+# Production builds
+dist/
+release/
+
+# Built application files
+bin/
+
+# User-specific stuff
+.vs/
+.vscode/
+
+# Environment variables
+.env
+.env.local
+
+# .NET Core
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+**/obj/**
+**/bin/**
+**/Packages/**
+**/Debug/**
+**/Release/**
+
+# Electron
+electron/
+
+# Media files - add specific exceptions if needed
+media-assets/**/*.mp4
+media-assets/**/*.mov
+media-assets/**/*.avi

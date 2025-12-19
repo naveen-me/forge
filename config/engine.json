@@ -1,0 +1,29 @@
+{
+  "Port": 8081,
+  "WebSocketPort": 8082,
+  "OBS": {
+    "Host": "localhost",
+    "Port": 4455,
+    "Password": "Ju$tf0rn0w"
+  },
+  "Logging": {
+    "Level": "Information",
+    "FilePath": "./logs/engine.log",
+    "MaxFileSize": "10MB",
+    "MaxRetainedFiles": 5
+  },
+  "Schedules": {
+    "DefaultPath": "./schedules/",
+    "AutoSaveInterval": 300,
+    "MaxConcurrent": 1
+  },
+  "HealthCheck": {
+    "Enabled": true,
+    "Endpoint": "/health",
+    "Interval": 5000
+  },
+  "Licensing": {
+    "ValidationInterval": 1800000,
+    "ServiceUrl": "https://api.your-license-service.com"
+  }
+}
