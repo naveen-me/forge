@@ -36,6 +36,12 @@ function setupQueueHandler() {
       const { batches, presetId, customName, voiceName, profileId, setId } = job;
       const generatedVideos = [];
 
+      // Find topic language if available
+      const firstQuestion = (db.questions || []).find(q => q.id === (batches[0]?.[0]));
+      const topicId = firstQuestion?.topic_id;
+      const topic = topicId ? (db.topics || []).find(t => t.id === topicId) : null;
+      const language = topic?.language;
+
       for (let i = 0; i < batches.length; i++) {
         // Check if job was cancelled
         if (job.cancelRequested) {
@@ -54,6 +60,7 @@ function setupQueueHandler() {
           voiceName,
           profileId,
           setId,
+          language,
           onProgress: (pct) => {
             // Calculate overall progress including batches
             const batchWeight = 100 / batches.length;
@@ -104,8 +111,14 @@ router.post('/generate', async (req, res) => {
 
     console.log(`Generating video: ${questionIds.length} questions, preset: ${presetId}, name: ${customName || 'auto'}, setId: ${setId || 'none'}`);
 
+    // Find topic language if available
+    const firstQuestion = (db.questions || []).find(q => q.id === questionIds[0]);
+    const topicId = firstQuestion?.topic_id;
+    const topic = topicId ? (db.topics || []).find(t => t.id === topicId) : null;
+    const language = topic?.language;
+
     // Generate video (wait for completion)
-    const result = await videoGenerator.generateVideo(questionIds, presetId, { voiceName, profileId, customName, setId });
+    const result = await videoGenerator.generateVideo(questionIds, presetId, { voiceName, profileId, customName, setId, language });
 
     // Extract filename from path
     const filename = path.basename(result.path);
@@ -173,7 +186,7 @@ router.post('/generate-from-topic', async (req, res) => {
 
     console.log(`Generating video from topic: ${topicId} (${questionIds.length} questions), preset: ${presetId}, setId: ${setId || 'none'}`);
 
-    const result = await videoGenerator.generateVideo(questionIds, presetId, { voiceName, profileId, setId });
+    const result = await videoGenerator.generateVideo(questionIds, presetId, { voiceName, profileId, setId, language: topic.language });
 
     res.json({
       success: true,
@@ -230,11 +243,18 @@ router.post('/generate-async', async (req, res) => {
       error: null
     });
     
+    // Find topic language if available
+    const firstQuestion = (db.questions || []).find(q => q.id === questionIds[0]);
+    const topicId = firstQuestion?.topic_id;
+    const topic = topicId ? (db.topics || []).find(t => t.id === topicId) : null;
+    const language = topic?.language;
+
     // Start video generation in background
     videoGenerator.generateVideo(questionIds, presetId, {
       voiceName,
       profileId,
       setId,
+      language,
       onProgress: (pct) => {
         const cur = jobs.get(jobId);
         if (!cur || cur.status !== 'processing') return;

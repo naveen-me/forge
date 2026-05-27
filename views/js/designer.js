@@ -20,7 +20,7 @@ class DesignerUI {
 
       // Load all presets first
       await this.loadAllPresets();
-      
+
       // Initialize preset selector
       this.initializePresetSelector();
 
@@ -151,6 +151,8 @@ class DesignerUI {
         play_next_question: true,
         play_last_question: true,
         play_options: true,
+        play_correct_answer: true,
+        play_correct_answer_phrase: true,
         question_gap: 1.0,
         option_reveal_mode: 'all',
         option_delay: 0.5,
@@ -195,7 +197,7 @@ class DesignerUI {
   async loadPresetById(presetId) {
     try {
       const preset = this.allPresets.find(p => p.id === presetId); // String comparison
-      
+
       if (!preset) {
         throw new Error('Preset not found');
       }
@@ -247,7 +249,7 @@ class DesignerUI {
         this.renderer = null;
       }
       await this.initRenderer();
-      
+
       console.log(`Loaded preset: ${preset.name}`);
     } catch (error) {
       console.error('Error loading preset:', error);
@@ -329,14 +331,14 @@ class DesignerUI {
     try {
       const response = await fetch('/api/media');
       const media = await response.json();
-      
+
       // Separate images and videos
       this.mediaLibrary = {
         images: media.filter(m => m.type === 'image'),
         videos: media.filter(m => m.type === 'video'),
         all: media
       };
-      
+
       console.log('Media library loaded:', this.mediaLibrary);
     } catch (error) {
       console.error('Error loading media library:', error);
@@ -381,18 +383,18 @@ class DesignerUI {
     if (qFontFamily && this.fontsLibrary.length > 0) {
       // Store default browser fonts
       const defaultOptions = Array.from(qFontFamily.options);
-      
+
       qFontFamily.innerHTML = '';
-      
+
       // Add default browser fonts
       defaultOptions.forEach(opt => qFontFamily.appendChild(opt));
-      
+
       // Add separator
       const separator = document.createElement('option');
       separator.disabled = true;
       separator.textContent = '--- Custom Fonts ---';
       qFontFamily.appendChild(separator);
-      
+
       // Add custom fonts from database
       this.fontsLibrary.forEach(font => {
         const option = document.createElement('option');
@@ -407,18 +409,18 @@ class DesignerUI {
     if (optFontFamily && this.fontsLibrary.length > 0) {
       // Store default browser fonts
       const defaultOptions = Array.from(optFontFamily.options);
-      
+
       optFontFamily.innerHTML = '';
-      
+
       // Add default browser fonts
       defaultOptions.forEach(opt => optFontFamily.appendChild(opt));
-      
+
       // Add separator
       const separator = document.createElement('option');
       separator.disabled = true;
       separator.textContent = '--- Custom Fonts ---';
       optFontFamily.appendChild(separator);
-      
+
       // Add custom fonts from database
       this.fontsLibrary.forEach(font => {
         const option = document.createElement('option');
@@ -501,18 +503,18 @@ class DesignerUI {
       const option = e.target.closest('.custom-select-option');
       if (option && !option.classList.contains('custom-select-no-results')) {
         const presetId = option.dataset.value; // Keep as string - IDs can be UUIDs
-        
+
         // Get text from the span (not the icon)
         const textSpan = option.querySelector('span:not(.custom-select-option-icon)');
         const text = textSpan ? textSpan.textContent.trim() : option.textContent.trim();
-        
+
         // Update display
         valueDisplay.textContent = text;
         valueDisplay.classList.remove('placeholder');
-        
+
         // Close dropdown
         selectEl.classList.remove('open');
-        
+
         // Load the selected preset
         this.updateStatus('Loading preset...', 'loading');
         try {
@@ -541,13 +543,13 @@ class DesignerUI {
   filterPresetOptions(selectEl, searchTerm) {
     const optionsContainer = selectEl.querySelector('.custom-select-options');
     const allOptions = selectEl.customSelectData?.allOptions || [];
-    
-    const filtered = allOptions.filter(opt => 
+
+    const filtered = allOptions.filter(opt =>
       opt.text.toLowerCase().includes(searchTerm.toLowerCase())
     );
-    
+
     optionsContainer.innerHTML = '';
-    
+
     if (filtered.length === 0) {
       optionsContainer.innerHTML = '<div class="custom-select-no-results">No presets found</div>';
     } else {
@@ -559,12 +561,12 @@ class DesignerUI {
           <span class="custom-select-option-icon">${opt.icon}</span>
           <span>${opt.text}</span>
         `;
-        
+
         // Mark as selected if matches current preset
         if (this.currentPresetId && opt.value === this.currentPresetId) {
           optionEl.classList.add('selected');
         }
-        
+
         optionsContainer.appendChild(optionEl);
       });
     }
@@ -582,7 +584,7 @@ class DesignerUI {
 
     const aspectRatio = this.presetConfig.canvas.aspect_ratio;
     const canvasSizeSelect = document.getElementById('canvasSize');
-    
+
     // Check if aspect ratio matches any preset
     let foundPreset = false;
     for (let option of canvasSizeSelect.options) {
@@ -592,7 +594,7 @@ class DesignerUI {
         break;
       }
     }
-    
+
     // If not a preset, set to custom and show custom inputs
     if (!foundPreset && aspectRatio) {
       canvasSizeSelect.value = 'custom';
@@ -601,7 +603,7 @@ class DesignerUI {
       document.getElementById('customWidth').value = this.presetConfig.canvas.width || 1920;
       document.getElementById('customHeight').value = this.presetConfig.canvas.height || 1080;
     }
-    
+
     document.getElementById('bgType').value = this.presetConfig.canvas.background_type;
     document.getElementById('bgColor').value = this.presetConfig.canvas.background_color || '#1a1a1a';
     document.getElementById('bgFit').value = this.presetConfig.canvas.background_fit || 'cover';
@@ -614,7 +616,7 @@ class DesignerUI {
     document.getElementById('outroType').value = this.presetConfig.canvas.outro.type || 'none';
     document.getElementById('outroFit').value = this.presetConfig.canvas.outro.fit || 'cover';
     document.getElementById('outroDuration').value = this.presetConfig.canvas.outro.duration || 3;
-    
+
     // Initialize media dropdowns
     this.initializeMediaSelects();
     this.syncNativeSelectSearches();
@@ -628,7 +630,7 @@ class DesignerUI {
     document.getElementById('qWidth').value = this.presetConfig.question.width || this.presetConfig.question.max_width || 1720;
     document.getElementById('qHeight').value = this.presetConfig.question.height || 0;
     document.getElementById('qTextAlign').value = this.presetConfig.question.text_align;
-    
+
     // Margin setup
     if (!this.presetConfig.question.margin) {
       this.presetConfig.question.margin = { top: 0, right: 0, bottom: 0, left: 0 };
@@ -637,18 +639,18 @@ class DesignerUI {
       const oldMargin = this.presetConfig.question.margin;
       this.presetConfig.question.margin = { top: oldMargin, right: oldMargin, bottom: oldMargin, left: oldMargin };
     }
-    
+
     const margin = this.presetConfig.question.margin;
     document.getElementById('qMarginAll').value = margin.top || 0;
     document.getElementById('qMarginTop').value = margin.top || 0;
     document.getElementById('qMarginRight').value = margin.right || 0;
     document.getElementById('qMarginBottom').value = margin.bottom || 0;
     document.getElementById('qMarginLeft').value = margin.left || 0;
-    
+
     // Check if all sides are equal
     const allEqual = margin.top === margin.right && margin.right === margin.bottom && margin.bottom === margin.left;
     document.getElementById('qMarginMode').value = allEqual ? 'all' : 'custom';
-    
+
     document.getElementById('qBgType').value = this.presetConfig.question.background_type || 'none';
     document.getElementById('qBgColor').value = this.presetConfig.question.background_color || '#000000';
     document.getElementById('qBgFit').value = this.presetConfig.question.background_fit || 'cover';
@@ -668,7 +670,7 @@ class DesignerUI {
     document.getElementById('optVSpacing').value = this.presetConfig.options.spacing.vertical;
     document.getElementById('optBorderRadius').value = this.presetConfig.options.border_radius || 0;
     document.getElementById('optShowBorder').checked = this.presetConfig.options.show_border_preview || false;
-    
+
     // Options margin setup
     if (!this.presetConfig.options.margin) {
       this.presetConfig.options.margin = { top: 0, right: 0, bottom: 0, left: 0 };
@@ -676,24 +678,24 @@ class DesignerUI {
       const oldMargin = this.presetConfig.options.margin;
       this.presetConfig.options.margin = { top: oldMargin, right: oldMargin, bottom: oldMargin, left: oldMargin };
     }
-    
+
     const optMargin = this.presetConfig.options.margin;
     document.getElementById('optMarginAll').value = optMargin.top || 0;
     document.getElementById('optMarginTop').value = optMargin.top || 0;
     document.getElementById('optMarginRight').value = optMargin.right || 0;
     document.getElementById('optMarginBottom').value = optMargin.bottom || 0;
     document.getElementById('optMarginLeft').value = optMargin.left || 0;
-    
+
     const optAllEqual = optMargin.top === optMargin.right && optMargin.right === optMargin.bottom && optMargin.bottom === optMargin.left;
     document.getElementById('optMarginMode').value = optAllEqual ? 'all' : 'custom';
-    
+
     // Option label style and spacing
     let labelStyle = this.presetConfig.options.label_style || 'none';
     if (labelStyle === 'alphabetic') labelStyle = 'alpha'; // Migration
     this.presetConfig.options.label_style = labelStyle; // Update config to match UI value
     document.getElementById('optLabelStyle').value = labelStyle;
     document.getElementById('optLabelSpacing').value = this.presetConfig.options.label_spacing || 10;
-    
+
     document.getElementById('optFontFamily').value = this.presetConfig.options.font_family || 'Arial';
     document.getElementById('optFontSize').value = this.presetConfig.options.font_size;
     document.getElementById('optFontColor').value = this.presetConfig.options.font_color;
@@ -722,17 +724,21 @@ class DesignerUI {
         play_next_question: true,
         play_last_question: true,
         play_options: true,
+        play_correct_answer: true,
+        play_correct_answer_phrase: true,
         question_gap: 1.0,
         option_reveal_mode: 'all',
         option_delay: 0.5,
         question_to_options_gap: 0.5
       };
     }
-    
+
     document.getElementById('audioPlayFirstQuestion').checked = this.presetConfig.audio.play_first_question;
     document.getElementById('audioPlayNextQuestion').checked = this.presetConfig.audio.play_next_question;
     document.getElementById('audioPlayLastQuestion').checked = this.presetConfig.audio.play_last_question;
     document.getElementById('audioPlayOptions').checked = this.presetConfig.audio.play_options;
+    document.getElementById('audioPlayCorrectAnswer').checked = this.presetConfig.audio.play_correct_answer !== false;
+    document.getElementById('audioPlayCorrectAnswerPhrase').checked = this.presetConfig.audio.play_correct_answer_phrase !== false;
     document.getElementById('audioQuestionGap').value = this.presetConfig.audio.question_gap;
     document.getElementById('audioOptionRevealMode').value = this.presetConfig.audio.option_reveal_mode;
     document.getElementById('audioOptionDelay').value = this.presetConfig.audio.option_delay;
@@ -765,7 +771,7 @@ class DesignerUI {
     if (!Array.isArray(this.presetConfig.overlays)) {
       this.presetConfig.overlays = [];
     }
-    
+
     document.getElementById('explEnabled').checked = this.presetConfig.explanation.enabled || false;
     document.getElementById('explDuration').value = this.presetConfig.explanation.duration || 3;
     document.getElementById('explBgType').value = this.presetConfig.explanation.background_type || 'none';
@@ -800,7 +806,7 @@ class DesignerUI {
     this.toggleExplanationBackgroundFields();
     this.toggleExplanationImageFields();
     this.renderOverlayList();
-    
+
     // Force populate options background media after initialization
     setTimeout(() => {
       const optBgType = document.getElementById('optBgType')?.value;
@@ -830,39 +836,39 @@ class DesignerUI {
         document.getElementById(tabId).classList.add('active');
       });
     });
-    
+
     // Setup tab navigation arrows (mobile)
     this.setupTabNavigation();
   }
-  
+
   setupTabNavigation() {
     const tabsContainer = document.querySelector('.panel-tabs.tabs');
     const leftArrow = document.getElementById('tabNavLeft');
     const rightArrow = document.getElementById('tabNavRight');
-    
+
     if (!tabsContainer || !leftArrow || !rightArrow) return;
-    
+
     // Scroll tabs with arrows
     leftArrow.addEventListener('click', () => {
       tabsContainer.scrollBy({ left: -150, behavior: 'smooth' });
     });
-    
+
     rightArrow.addEventListener('click', () => {
       tabsContainer.scrollBy({ left: 150, behavior: 'smooth' });
     });
-    
+
     // Update arrow states based on scroll position
     const updateArrows = () => {
       const scrollLeft = tabsContainer.scrollLeft;
       const maxScroll = tabsContainer.scrollWidth - tabsContainer.clientWidth;
-      
+
       // Disable left arrow if at start
       if (scrollLeft <= 0) {
         leftArrow.classList.add('disabled');
       } else {
         leftArrow.classList.remove('disabled');
       }
-      
+
       // Disable right arrow if at end
       if (scrollLeft >= maxScroll - 1) {
         rightArrow.classList.add('disabled');
@@ -870,60 +876,60 @@ class DesignerUI {
         rightArrow.classList.remove('disabled');
       }
     };
-    
+
     // Update on scroll
     tabsContainer.addEventListener('scroll', updateArrows);
-    
+
     // Initial update
     updateArrows();
-    
+
     // Update on window resize
     window.addEventListener('resize', updateArrows);
-    
+
     // Setup mobile bottom sheet behavior
     this.setupMobileBottomSheet();
   }
-  
+
   setupMobileBottomSheet() {
     // Only on mobile
     if (window.innerWidth > 768) return;
-    
+
     const propertyPanel = document.querySelector('.property-panel');
     const tabsContainer = document.querySelector('.tabs-container');
-    
+
     if (!propertyPanel || !tabsContainer) return;
-    
+
     let startY = 0;
     let currentY = 0;
     let isDragging = false;
     let isExpanded = false;
-    
+
     // Toggle expanded state on tab container click
     tabsContainer.addEventListener('click', (e) => {
       // Don't toggle if clicking arrows or tabs
       if (e.target.closest('.tab-nav-arrow') || e.target.closest('.tab-btn')) return;
-      
+
       isExpanded = !isExpanded;
       propertyPanel.classList.toggle('expanded', isExpanded);
     });
-    
+
     // Swipe gesture support
     tabsContainer.addEventListener('touchstart', (e) => {
       startY = e.touches[0].clientY;
       isDragging = true;
     }, { passive: true });
-    
+
     tabsContainer.addEventListener('touchmove', (e) => {
       if (!isDragging) return;
       currentY = e.touches[0].clientY;
     }, { passive: true });
-    
+
     tabsContainer.addEventListener('touchend', () => {
       if (!isDragging) return;
       isDragging = false;
-      
+
       const deltaY = currentY - startY;
-      
+
       // Swipe down to collapse
       if (deltaY > 50 && isExpanded) {
         isExpanded = false;
@@ -935,7 +941,7 @@ class DesignerUI {
         propertyPanel.classList.add('expanded');
       }
     });
-    
+
     // Re-setup on window resize
     window.addEventListener('resize', () => {
       if (window.innerWidth > 768) {
@@ -952,7 +958,7 @@ class DesignerUI {
         // Show custom size inputs
         document.getElementById('customSizeGroup').style.display = 'block';
         document.getElementById('customHeightGroup').style.display = 'block';
-        
+
         // Use current or default values
         const width = this.presetConfig.canvas.width || 1920;
         const height = this.presetConfig.canvas.height || 1080;
@@ -962,7 +968,7 @@ class DesignerUI {
         // Hide custom size inputs
         document.getElementById('customSizeGroup').style.display = 'none';
         document.getElementById('customHeightGroup').style.display = 'none';
-        
+
         // Apply preset size
         const [width, height] = value.split(':').map(Number);
         this.presetConfig.canvas.width = width;
@@ -1102,7 +1108,7 @@ class DesignerUI {
     this.addRangeListener('qMarginAll', (value) => {
       const val = parseFloat(value);
       this.presetConfig.question.margin = { top: val, right: val, bottom: val, left: val };
-      
+
       // Update individual sliders too
       document.getElementById('qMarginTop').value = val;
       document.getElementById('qMarginRight').value = val;
@@ -1112,7 +1118,7 @@ class DesignerUI {
       document.getElementById('qMarginRightVal').textContent = val + 'px';
       document.getElementById('qMarginBottomVal').textContent = val + 'px';
       document.getElementById('qMarginLeftVal').textContent = val + 'px';
-      
+
       this.scheduleUpdate();
     }, 'qMarginAllVal', (v) => v + 'px');
 
@@ -1123,11 +1129,11 @@ class DesignerUI {
         this.presetConfig.question.margin = { top: 0, right: 0, bottom: 0, left: 0 };
       }
       this.presetConfig.question.margin.top = val;
-      
+
       if (document.getElementById('qMarginLink').checked) {
         this.syncMarginFromSide(val);
       }
-      
+
       this.scheduleUpdate();
     }, 'qMarginTopVal', (v) => v + 'px');
 
@@ -1137,11 +1143,11 @@ class DesignerUI {
         this.presetConfig.question.margin = { top: 0, right: 0, bottom: 0, left: 0 };
       }
       this.presetConfig.question.margin.right = val;
-      
+
       if (document.getElementById('qMarginLink').checked) {
         this.syncMarginFromSide(val);
       }
-      
+
       this.scheduleUpdate();
     }, 'qMarginRightVal', (v) => v + 'px');
 
@@ -1151,11 +1157,11 @@ class DesignerUI {
         this.presetConfig.question.margin = { top: 0, right: 0, bottom: 0, left: 0 };
       }
       this.presetConfig.question.margin.bottom = val;
-      
+
       if (document.getElementById('qMarginLink').checked) {
         this.syncMarginFromSide(val);
       }
-      
+
       this.scheduleUpdate();
     }, 'qMarginBottomVal', (v) => v + 'px');
 
@@ -1165,11 +1171,11 @@ class DesignerUI {
         this.presetConfig.question.margin = { top: 0, right: 0, bottom: 0, left: 0 };
       }
       this.presetConfig.question.margin.left = val;
-      
+
       if (document.getElementById('qMarginLink').checked) {
         this.syncMarginFromSide(val);
       }
-      
+
       this.scheduleUpdate();
     }, 'qMarginLeftVal', (v) => v + 'px');
 
@@ -1285,7 +1291,7 @@ class DesignerUI {
     this.addRangeListener('optMarginAll', (value) => {
       const val = parseFloat(value);
       this.presetConfig.options.margin = { top: val, right: val, bottom: val, left: val };
-      
+
       document.getElementById('optMarginTop').value = val;
       document.getElementById('optMarginRight').value = val;
       document.getElementById('optMarginBottom').value = val;
@@ -1294,7 +1300,7 @@ class DesignerUI {
       document.getElementById('optMarginRightVal').textContent = val + '%';
       document.getElementById('optMarginBottomVal').textContent = val + '%';
       document.getElementById('optMarginLeftVal').textContent = val + '%';
-      
+
       this.scheduleUpdate();
     }, 'optMarginAllVal', (v) => v + '%');
 
@@ -1305,11 +1311,11 @@ class DesignerUI {
         this.presetConfig.options.margin = { top: 0, right: 0, bottom: 0, left: 0 };
       }
       this.presetConfig.options.margin.top = val;
-      
+
       if (document.getElementById('optMarginLink').checked) {
         this.syncOptionsMarginFromSide(val);
       }
-      
+
       this.scheduleUpdate();
     }, 'optMarginTopVal', (v) => v + '%');
 
@@ -1319,11 +1325,11 @@ class DesignerUI {
         this.presetConfig.options.margin = { top: 0, right: 0, bottom: 0, left: 0 };
       }
       this.presetConfig.options.margin.right = val;
-      
+
       if (document.getElementById('optMarginLink').checked) {
         this.syncOptionsMarginFromSide(val);
       }
-      
+
       this.scheduleUpdate();
     }, 'optMarginRightVal', (v) => v + '%');
 
@@ -1333,11 +1339,11 @@ class DesignerUI {
         this.presetConfig.options.margin = { top: 0, right: 0, bottom: 0, left: 0 };
       }
       this.presetConfig.options.margin.bottom = val;
-      
+
       if (document.getElementById('optMarginLink').checked) {
         this.syncOptionsMarginFromSide(val);
       }
-      
+
       this.scheduleUpdate();
     }, 'optMarginBottomVal', (v) => v + '%');
 
@@ -1347,11 +1353,11 @@ class DesignerUI {
         this.presetConfig.options.margin = { top: 0, right: 0, bottom: 0, left: 0 };
       }
       this.presetConfig.options.margin.left = val;
-      
+
       if (document.getElementById('optMarginLink').checked) {
         this.syncOptionsMarginFromSide(val);
       }
-      
+
       this.scheduleUpdate();
     }, 'optMarginLeftVal', (v) => v + '%');
 
@@ -1563,6 +1569,14 @@ class DesignerUI {
       this.presetConfig.audio.play_options = document.getElementById('audioPlayOptions').checked;
     });
 
+    this.addListener('audioPlayCorrectAnswer', 'change', (value) => {
+      this.presetConfig.audio.play_correct_answer = document.getElementById('audioPlayCorrectAnswer').checked;
+    });
+
+    this.addListener('audioPlayCorrectAnswerPhrase', 'change', (value) => {
+      this.presetConfig.audio.play_correct_answer_phrase = document.getElementById('audioPlayCorrectAnswerPhrase').checked;
+    });
+
     this.addRangeListener('audioQuestionGap', (value) => {
       this.presetConfig.audio.question_gap = parseFloat(value);
     }, 'audioQuestionGapVal', (v) => v + 's');
@@ -1592,7 +1606,7 @@ class DesignerUI {
     // Dropdown toggle
     const dropdownBtn = document.getElementById('saveDropdownBtn');
     const dropdownMenu = document.getElementById('saveDropdownMenu');
-    
+
     if (dropdownBtn && dropdownMenu) {
       dropdownBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -1631,15 +1645,15 @@ class DesignerUI {
     const saveAsModalClose = document.getElementById('saveAsModalClose');
     const saveAsCancelBtn = document.getElementById('saveAsCancelBtn');
     const saveAsForm = document.getElementById('saveAsForm');
-    
+
     if (saveAsModalClose) {
       saveAsModalClose.addEventListener('click', () => this.hideSaveAsModal());
     }
-    
+
     if (saveAsCancelBtn) {
       saveAsCancelBtn.addEventListener('click', () => this.hideSaveAsModal());
     }
-    
+
     if (saveAsForm) {
       saveAsForm.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -1651,15 +1665,15 @@ class DesignerUI {
     const deleteModalClose = document.getElementById('deleteModalClose');
     const deleteCancelBtn = document.getElementById('deleteCancelBtn');
     const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-    
+
     if (deleteModalClose) {
       deleteModalClose.addEventListener('click', () => this.hideDeleteModal());
     }
-    
+
     if (deleteCancelBtn) {
       deleteCancelBtn.addEventListener('click', () => this.hideDeleteModal());
     }
-    
+
     if (confirmDeleteBtn) {
       confirmDeleteBtn.addEventListener('click', () => this.deletePreset());
     }
@@ -1814,7 +1828,7 @@ class DesignerUI {
 
     selects.forEach(({ id, type, config, urlKey }) => {
       const selectEl = document.getElementById(id);
-      
+
       // Initialize custom select
       this.initCustomSelect(selectEl, config, urlKey);
 
@@ -2028,15 +2042,15 @@ class DesignerUI {
   setCustomSelectValue(selectEl, value) {
     const valueDisplay = selectEl.querySelector('.custom-select-value');
     const optionsContainer = selectEl.querySelector('.custom-select-options');
-    
+
     // Find matching option
     const options = selectEl.customSelectData?.allOptions || [];
     const match = options.find(opt => opt.value === value);
-    
+
     if (match) {
       valueDisplay.textContent = match.text;
       valueDisplay.classList.remove('placeholder');
-      
+
       // Update selected state
       optionsContainer.querySelectorAll('.custom-select-option').forEach(opt => {
         if (opt.dataset.value === value) {
@@ -2231,7 +2245,7 @@ class DesignerUI {
       colorGroup.style.display = 'none';
       urlGroup.style.display = 'block';
       fitGroup.style.display = 'block';
-      
+
       // Update media dropdown for new type
       this.populateMediaSelect('bgMedia', bgType);
     }
@@ -2295,7 +2309,7 @@ class DesignerUI {
       qBgColorGroup.style.display = 'none';
       qBgUrlGroup.style.display = 'block';
       qBgFitGroup.style.display = 'block';
-      
+
       // Update media dropdown for new type
       this.populateMediaSelect('qBgMedia', qBgType);
     }
@@ -2340,14 +2354,14 @@ class DesignerUI {
       bottom: value,
       left: value
     };
-    
+
     // Update all sliders
     document.getElementById('qMarginAll').value = value;
     document.getElementById('qMarginTop').value = value;
     document.getElementById('qMarginRight').value = value;
     document.getElementById('qMarginBottom').value = value;
     document.getElementById('qMarginLeft').value = value;
-    
+
     // Update all displays
     document.getElementById('qMarginAllVal').textContent = value + '%';
     document.getElementById('qMarginTopVal').textContent = value + '%';
@@ -2373,7 +2387,7 @@ class DesignerUI {
   toggleOptionsLabelSpacing() {
     const labelStyle = document.getElementById('optLabelStyle').value;
     const spacingGroup = document.getElementById('optLabelSpacingGroup');
-    
+
     if (labelStyle === 'none') {
       spacingGroup.style.display = 'none';
     } else {
@@ -2389,14 +2403,14 @@ class DesignerUI {
       bottom: value,
       left: value
     };
-    
+
     // Update all sliders
     document.getElementById('optMarginAll').value = value;
     document.getElementById('optMarginTop').value = value;
     document.getElementById('optMarginRight').value = value;
     document.getElementById('optMarginBottom').value = value;
     document.getElementById('optMarginLeft').value = value;
-    
+
     // Update all displays
     document.getElementById('optMarginAllVal').textContent = value + '%';
     document.getElementById('optMarginTopVal').textContent = value + '%';
@@ -2416,7 +2430,7 @@ class DesignerUI {
     } else {
       optBgColorGroup.style.display = 'none';
       optBgUrlGroup.style.display = 'block';
-      
+
       // Update media dropdown for new type
       this.populateMediaSelect('optBgMedia', optBgType);
     }
@@ -2431,7 +2445,7 @@ class DesignerUI {
     } else {
       optCorrectBgColorGroup.style.display = 'none';
       optCorrectBgUrlGroup.style.display = 'block';
-      
+
       // Update media dropdown for new type
       this.populateMediaSelect('optCorrectBgMedia', optCorrectBgType);
     }
@@ -2448,7 +2462,7 @@ class DesignerUI {
     } else {
       timerBgColorGroup.style.display = 'none';
       timerBgUrlGroup.style.display = 'block';
-      
+
       // Update media dropdown for new type
       this.populateMediaSelect('timerBgMedia', timerBgType);
     }
@@ -2458,7 +2472,7 @@ class DesignerUI {
     // DEBOUNCED RENDERING APPROACH
     // Wait for user to finish making changes before rendering
     // This eliminates race conditions and trailing borders
-    
+
     // Cancel any pending update
     if (this.updateTimeout) {
       clearTimeout(this.updateTimeout);
@@ -2511,29 +2525,29 @@ class DesignerUI {
         if (this.isRendering) {
           return;
         }
-        
+
         this.isRendering = true;
-        
+
         // Update renderer's config reference
         this.renderer.config = this.presetConfig;
-        
+
         // Update canvas size if changed
-        if (this.canvas.width !== this.presetConfig.canvas.width || 
+        if (this.canvas.width !== this.presetConfig.canvas.width ||
             this.canvas.height !== this.presetConfig.canvas.height) {
           this.canvas.width = this.presetConfig.canvas.width;
           this.canvas.height = this.presetConfig.canvas.height;
         }
-        
+
         // Only preload assets if media/fonts changed (expensive operation)
         // For style changes (colors, positions, sizes), just re-render
         const needsAssetReload = this.checkIfAssetsChanged();
         if (needsAssetReload) {
           await this.renderer.preloadAssets();
         }
-        
+
         // IMPORTANT: renderFrame will handle canvas clearing internally via clearCanvas()
         // Don't clear here - let the renderer handle it to prevent double-clearing
-        
+
         // Re-render the canvas immediately
         // If not playing animation, use static preview mode
         if (!this.renderer.isPlaying) {
@@ -2543,7 +2557,7 @@ class DesignerUI {
           const currentTime = this.renderer.getCurrentTime();
           this.renderer.renderFrame(currentTime);
         }
-        
+
         this.updateLastUpdated();
         this.isRendering = false;
       } else {
@@ -2561,22 +2575,22 @@ class DesignerUI {
   checkIfAssetsChanged() {
     // Check if background images, fonts, or media changed
     // This avoids expensive preloadAssets() calls for style-only changes
-    
+
     if (!this.lastConfig) {
       this.lastConfig = JSON.parse(JSON.stringify(this.presetConfig));
       return true;
     }
-    
+
     const current = this.presetConfig;
     const last = this.lastConfig;
-    
+
     // Check for asset-related changes (use correct property paths)
     const overlayUrls = (current.overlays || []).map((overlay) => overlay?.image_url || '');
     const lastOverlayUrls = (last.overlays || []).map((overlay) => overlay?.image_url || '');
     const overlayAssetsChanged = overlayUrls.length !== lastOverlayUrls.length ||
       overlayUrls.some((url, idx) => url !== lastOverlayUrls[idx]);
 
-    const assetsChanged = 
+    const assetsChanged =
       current.canvas.background_url !== last.canvas.background_url ||
       current.canvas.intro?.url !== last.canvas.intro?.url ||
       current.canvas.outro?.url !== last.canvas.outro?.url ||
@@ -2591,10 +2605,10 @@ class DesignerUI {
       current.options.font_family !== last.options.font_family ||
       current.timer.font_family !== last.timer.font_family ||
       current.explanation?.font_family !== last.explanation?.font_family;
-    
+
     // Update lastConfig
     this.lastConfig = JSON.parse(JSON.stringify(current));
-    
+
     return assetsChanged;
   }
 
@@ -2739,12 +2753,12 @@ class DesignerUI {
   showSaveAsModal() {
     const modal = document.getElementById('saveAsModal');
     const nameInput = document.getElementById('copyPresetName');
-    
+
     if (!modal || !nameInput) return;
-    
+
     // Suggest a name
     nameInput.value = `${this.currentPresetName || 'Preset'} (Copy)`;
-    
+
     modal.style.display = 'flex';
     setTimeout(() => {
       nameInput.focus();
@@ -2763,7 +2777,7 @@ class DesignerUI {
   async savePresetAsCopy() {
     const nameInput = document.getElementById('copyPresetName');
     const name = nameInput.value.trim();
-    
+
     if (!name) {
       this.updateStatus('Please enter a name for the copy', 'error');
       return;
@@ -2783,26 +2797,26 @@ class DesignerUI {
       if (!response.ok) throw new Error('Failed to save copy');
 
       const newPreset = await response.json();
-      
+
       // Reload all presets
       await this.loadAllPresets();
-      
+
       // Update preset selector
       const selectEl = document.getElementById('presetSelector');
       if (selectEl) {
         this.filterPresetOptions(selectEl, '');
       }
-      
+
       // Load the new copy
       await this.loadPresetById(newPreset.id);
-      
+
       // Update selector display
       const valueDisplay = document.querySelector('#presetSelector .custom-select-value');
       if (valueDisplay) {
         valueDisplay.textContent = name;
         valueDisplay.classList.remove('placeholder');
       }
-      
+
       this.hideSaveAsModal();
       this.updateStatus('✓ Copy saved successfully!', 'success');
       setTimeout(() => this.updateStatus('Ready', 'success'), 2000);
@@ -2820,9 +2834,9 @@ class DesignerUI {
 
     const modal = document.getElementById('deleteModal');
     const nameDisplay = document.getElementById('deletePresetNameDisplay');
-    
+
     if (!modal || !nameDisplay) return;
-    
+
     nameDisplay.textContent = this.currentPresetName;
     modal.style.display = 'flex';
   }
@@ -2848,31 +2862,31 @@ class DesignerUI {
       if (!response.ok) throw new Error('Failed to delete preset');
 
       this.hideDeleteModal();
-      
+
       // Reload all presets
       await this.loadAllPresets();
-      
+
       if (this.allPresets.length === 0) {
         this.updateStatus('No presets available', 'error');
         return;
       }
-      
+
       // Update preset selector
       const selectEl = document.getElementById('presetSelector');
       if (selectEl) {
         this.filterPresetOptions(selectEl, '');
       }
-      
+
       // Load the first preset
       await this.loadPresetById(this.allPresets[0].id);
-      
+
       // Update selector display
       const valueDisplay = document.querySelector('#presetSelector .custom-select-value');
       if (valueDisplay) {
         valueDisplay.textContent = this.allPresets[0].name;
         valueDisplay.classList.remove('placeholder');
       }
-      
+
       this.updateStatus('✓ Preset deleted successfully!', 'success');
       setTimeout(() => this.updateStatus('Ready', 'success'), 2000);
     } catch (error) {
@@ -2886,11 +2900,11 @@ class DesignerUI {
     const colorGroup = document.getElementById('explBgColorGroup');
     const imageGroup = document.getElementById('explBgImageGroup');
     const imageFitGroup = document.getElementById('explBgImageFitGroup');
-    
+
     if (colorGroup) colorGroup.style.display = bgType === 'color' ? 'block' : 'none';
     if (imageGroup) imageGroup.style.display = bgType === 'image' ? 'block' : 'none';
     if (imageFitGroup) imageFitGroup.style.display = bgType === 'image' ? 'block' : 'none';
-    
+
     // Populate image dropdown if needed
     if (bgType === 'image' && this.mediaLibrary) {
       this.populateMediaSelect('explBgImage', 'image');
@@ -2904,14 +2918,14 @@ class DesignerUI {
     const heightGroup = document.getElementById('explImageHeightGroup');
     const fitGroup = document.getElementById('explImageFitGroup');
     const posGroup = document.getElementById('explImagePositionGroup');
-    
+
     const display = enabled ? 'block' : 'none';
     if (selectGroup) selectGroup.style.display = display;
     if (widthGroup) widthGroup.style.display = display;
     if (heightGroup) heightGroup.style.display = display;
     if (fitGroup) fitGroup.style.display = display;
     if (posGroup) posGroup.style.display = display;
-    
+
     // Populate image dropdown if needed
     if (enabled && this.mediaLibrary) {
       this.populateMediaSelect('explImage', 'image');
@@ -3141,7 +3155,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function initNumberInputButtons() {
   let pressTimer = null;
   let intervalTimer = null;
-  
+
   const updateValue = (input, action) => {
     if (!input) return;
 
@@ -3161,7 +3175,7 @@ function initNumberInputButtons() {
     value = parseFloat(value.toFixed(decimals));
 
     input.value = value;
-    
+
     // Trigger change event to update the preview
     input.dispatchEvent(new Event('input', { bubbles: true }));
   };

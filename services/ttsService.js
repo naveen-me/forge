@@ -58,6 +58,7 @@ export class TTSService {
     // Pre-populate edge voice catalog from hardcoded list so auto-populate works instantly
     this.db.edge_voice_catalog = this.db.edge_voice_catalog || { provider: 'edge', voices: EDGE_VOICES, updated_at: new Date().toISOString() };
     this.ensureIndianEdgeVoicesEnabled();
+    this.syncLanguagePhrases();
 
     // Best-effort: if a client is available and we don't have a cached voice catalog yet,
     // fetch it once at startup (async) so the UI doesn't show an empty dropdown.
@@ -711,6 +712,22 @@ export class TTSService {
   }
   
   /**
+   * Sync existing language phrases with defaults to pick up new phrases
+   */
+  syncLanguagePhrases() {
+    if (!Array.isArray(this.db.language_phrases)) return;
+    this.db.language_phrases.forEach(lp => {
+      const defaults = this.getDefaultPhrases(lp.language);
+      lp.phrases = lp.phrases || {};
+      for (const [key, text] of Object.entries(defaults)) {
+        if (!lp.phrases[key]) {
+          lp.phrases[key] = text;
+        }
+      }
+    });
+  }
+
+  /**
    * Get default phrases for a language
    */
   getDefaultPhrases(language) {
@@ -733,15 +750,16 @@ export class TTSService {
       option_1: "Option 1",
       option_2: "Option 2",
       option_3: "Option 3",
-      option_4: "Option 4"
+      option_4: "Option 4",
+      correct_answer_is: "The correct answer is"
     };
     
     const translations = {
-      bengali: { first_question: "প্রথম প্রশ্ন", next_question: "পরবর্তী প্রশ্ন", last_question: "শেষ প্রশ্ন", option_a: "বিকল্প এ", option_b: "বিকল্প বি", option_c: "বিকল্প সি", option_d: "বিকল্প ডি", option_1: "বিকল্প ১", option_2: "বিকল্প ২", option_3: "বিকল্প ৩", option_4: "বিকল্প ৪" },
-      hindi: { first_question: "पहला प्रश्न", next_question: "अगला सवाल", last_question: "अंतिम प्रश्न", option_a: "विकल्प A", option_b: "विकल्प B", option_c: "विकल्प C", option_d: "विकल्प D", option_1: "विकल्प १", option_2: "विकल्प २", option_3: "विकल्प ३", option_4: "विकल्प ४" },
-      kannada: { first_question: "ಮೊದಲ ಪ್ರಶ್ನೆ", next_question: "ಮುಂದಿನ ಪ್ರಶ್ನೆ", last_question: "ಕೊನೆಯ ಪ್ರಶ್ನೆ", option_a: "ಆಯ್ಕೆ A", option_b: "ಆಯ್ಕೆ B", option_c: "ಆಯ್ಕೆ C", option_d: "ಆಯ್ಕೆ D", option_1: "ಆಯ್ಕೆ ೧", option_2: "ಆಯ್ಕೆ ೨", option_3: "ಆಯ್ಕೆ ೩", option_4: "ಆಯ್ಕೆ ೪" },
-      tamil: { first_question: "முதல் கேள்வி", next_question: "அடுத்த கேள்வி", last_question: "கடைசி கேள்வி", option_a: "விருப்பம் A", option_b: "விருப்பம் B", option_c: "விருப்பம் C", option_d: "விருப்பம் D", option_1: "விருப்பம் ௧", option_2: "விருப்பம் ௨", option_3: "விருப்பம் ௩", option_4: "விருப்பம் ௪" },
-      telugu: { first_question: "మొదటి ప్రశ్న", next_question: "తదుపరి ప్రశ్న", last_question: "చివరి ప్రశ్న", option_a: "ఎంపిక A", option_b: "ఎంపిక B", option_c: "ఎంపిక C", option_d: "ఎంపిక D", option_1: "ఎంపిక ౧", option_2: "ఎంపిక ౨", option_3: "ఎంపిక ౩", option_4: "ఎంపిక ౪" }
+      bengali: { first_question: "প্রথম প্রশ্ন", next_question: "পরবর্তী প্রশ্ন", last_question: "শেষ প্রশ্ন", option_a: "বিকল্প এ", option_b: "বিকল্প বি", option_c: "বিকল্প সি", option_d: "বিকল্প ডি", option_1: "বিকল্প ১", option_2: "বিকল্প ২", option_3: "বিকল্প ৩", option_4: "বিকল্প ৪", correct_answer_is: "সঠিক উত্তর হল" },
+      hindi: { first_question: "पहला प्रश्न", next_question: "अगला सवाल", last_question: "अंतिम प्रश्न", option_a: "विकल्प A", option_b: "विकल्प B", option_c: "विकल्प C", option_d: "विकल्प D", option_1: "विकल्प १", option_2: "विकल्प २", option_3: "विकल्प ३", option_4: "विकल्प ४", correct_answer_is: "सही उत्तर है" },
+      kannada: { first_question: "ಮೊದಲ ಪ್ರಶ್ನೆ", next_question: "ಮುಂದಿನ ಪ್ರಶ್ನೆ", last_question: "ಕೊನೆಯ ಪ್ರಶ್ನೆ", option_a: "ಆಯ್ಕೆ A", option_b: "ಆಯ್ಕೆ B", option_c: "ಆಯ್ಕೆ C", option_d: "ಆಯ್ಕೆ D", option_1: "ಆಯ್ಕೆ ೧", option_2: "ಆಯ್ಕೆ ೨", option_3: "ಆಯ್ಕೆ ೩", option_4: "ಆಯ್ಕೆ ೪", correct_answer_is: "ಸರಿಯಾದ ಉತ್ತರ" },
+      tamil: { first_question: "முதல் கேள்வி", next_question: "அடுத்த கேள்வி", last_question: "கடைசி கேள்வி", option_a: "விருப்பம் A", option_b: "விருப்பம் B", option_c: "விருப்பம் C", option_d: "விருப்பம் D", option_1: "விருப்பம் ௧", option_2: "விருப்பம் ௨", option_3: "விருப்பம் ௩", option_4: "விருப்பம் ௪", correct_answer_is: "சரியான பதில்" },
+      telugu: { first_question: "మొదటి ప్రశ్న", next_question: "తదుపరి ప్రశ్న", last_question: "చివరి ప్రశ్న", option_a: "ఎంపిక A", option_b: "ఎంపిక B", option_c: "ఎంపిక C", option_d: "ఎంపిక D", option_1: "ఎంపిక ౧", option_2: "ఎంపిక ౨", option_3: "ఎంపిక ౩", option_4: "ఎంపిక ౪", correct_answer_is: "సరైన సమాధానం" }
     };
     
     return translations[phraseLanguage] || defaultPhrases;
