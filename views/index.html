@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Quiz Video System - Management Portal</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+  <link rel="stylesheet" href="/css/tts.css">
+  <link rel="stylesheet" href="/css/hierarchy.css">
+</head>
+<body>
+  <!-- App Container -->
+  <div id="app">
+    
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <button id="toggleSidebar" class="toggle-btn" aria-label="Toggle navigation">
+          <span class="icon icon-menu"></span>
+        </button>
+        <h1 class="app-title">Quiz Video System</h1>
+      </div>
+      <div class="header-right" style="display:flex; gap: 10px; align-items:center;">
+        <span class="user-info">Admin</span>
+        <button id="logoutBtn" class="btn btn-secondary" style="padding: 6px 10px;">Logout</button>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+      
+      <!-- Sidebar Navigation -->
+      <aside id="sidebar" class="sidebar">
+        <nav class="nav-menu">
+          
+          <!-- Dashboard -->
+          <div class="nav-section">
+            <a href="/" class="nav-item active" data-route="/">
+              <span class="nav-icon">📊</span>
+              <span class="nav-label">Dashboard</span>
+            </a>
+          </div>
+
+          <!-- Tools -->
+          <div class="nav-section">
+            <div class="nav-section-title">Tools</div>
+            <a href="/designer" class="nav-item" data-external="true">
+              <span class="nav-icon">🎨</span>
+              <span class="nav-label">Designer</span>
+            </a>
+            <a href="/videos" class="nav-item" data-route="/videos">
+              <span class="nav-icon">🎬</span>
+              <span class="nav-label">Video Generator</span>
+            </a>
+            <a href="/tts" class="nav-item" data-route="/tts">
+              <span class="nav-icon">🔊</span>
+              <span class="nav-label">Text-to-Speech</span>
+            </a>
+          </div>
+
+          <!-- Data Management -->
+          <div class="nav-section">
+            <div class="nav-section-title">Data Management</div>
+            <a href="/hierarchy" class="nav-item" data-route="/hierarchy">
+              <span class="nav-icon">📚</span>
+              <span class="nav-label">Data Management</span>
+            </a>
+          </div>
+
+          <!-- Media Management -->
+          <div class="nav-section">
+            <div class="nav-section-title">Media</div>
+            <a href="/media" class="nav-item" data-route="/media">
+              <span class="nav-icon">🖼️</span>
+              <span class="nav-label">Media Library</span>
+            </a>
+            <a href="/fonts" class="nav-item" data-route="/fonts">
+              <span class="nav-icon">🔤</span>
+              <span class="nav-label">Fonts</span>
+            </a>
+          </div>
+
+        </nav>
+      </aside>
+
+      <!-- Content Area -->
+      <main id="content" class="content">
+        <div class="loading">
+          <div class="spinner"></div>
+          <p>Loading...</p>
+        </div>
+      </main>
+
+    </div>
+
+  </div>
+
+  <!-- Load App Router -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

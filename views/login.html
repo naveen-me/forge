@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Login - Quiz Video System</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <style>
+    /* Reset and base styles */
+    * { box-sizing: border-box; }
+    body { 
+      background: #f3f4f6; 
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      color: #111827;
+    }
+    
+    .login-wrap { 
+      min-height: 100vh; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      padding: 20px; 
+    }
+    
+    .login-card { 
+      width: 100%; 
+      max-width: 420px; 
+      background: #ffffff; 
+      border: 1px solid #e5e7eb; 
+      border-radius: 16px; 
+      padding: 28px; 
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+    }
+    
+    .login-card h1 { 
+      margin: 0 0 8px; 
+      font-size: 24px; 
+      color: #111827; 
+    }
+    
+    .login-card p { 
+      margin: 0 0 20px; 
+      color: #6b7280; 
+      font-size: 14px; 
+      line-height: 1.6;
+    }
+    
+    .login-card label { 
+      display: block; 
+      margin: 16px 0 8px; 
+      color: #374151; 
+      font-size: 14px; 
+      font-weight: 600;
+    }
+    
+    .login-card input { 
+      width: 100%; 
+      padding: 12px 14px; 
+      border-radius: 10px; 
+      border: 1px solid #d1d5db; 
+      background: #ffffff; 
+      color: #111827; 
+      font-size: 16px; /* Prevents iOS zoom on focus */
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    
+    .login-card input:focus {
+      outline: none;
+      border-color: #4CAF50;
+      box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.15);
+    }
+    
+    .login-actions { 
+      margin-top: 20px; 
+      display: flex; 
+      gap: 12px; 
+      align-items: center; 
+      flex-wrap: wrap;
+    }
+    
+    .login-actions button { 
+      padding: 12px 20px; 
+      border-radius: 10px; 
+      border: 0; 
+      background: #4CAF50; 
+      color: white; 
+      cursor: pointer; 
+      font-size: 16px;
+      font-weight: 600;
+      transition: background 0.2s, transform 0.2s;
+      flex: 1;
+      min-width: 120px;
+    }
+    
+    .login-actions button:hover {
+      background: #45a049;
+    }
+    
+    .login-actions button:active {
+      transform: scale(0.98);
+    }
+    
+    .login-actions a {
+      color: #6b7280; 
+      font-size: 14px;
+      text-decoration: none;
+      padding: 8px;
+      transition: color 0.2s;
+    }
+    
+    .login-actions a:hover {
+      color: #111827;
+    }
+    
+    .error { 
+      display: none; 
+      margin-top: 16px; 
+      padding: 12px 14px; 
+      border-radius: 10px; 
+      border: 1px solid rgba(239, 68, 68, 0.4); 
+      background: rgba(239, 68, 68, 0.08); 
+      color: #b91c1c; 
+      font-size: 14px; 
+      line-height: 1.5;
+    }
+    
+    /* Mobile optimizations */
+    @media (max-width: 480px) {
+      .login-card {
+        padding: 20px 16px;
+      }
+      
+      .login-card h1 {
+        font-size: 20px;
+      }
+      
+      .login-card p {
+        font-size: 13px;
+      }
+      
+      .login-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      
+      .login-actions button {
+        width: 100%;
+      }
+      
+      .login-actions a {
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-wrap">
+    <div class="login-card">
+      <h1>Admin Login</h1>
+      <p>Enter the admin credentials to access the portal</p>
+
+      <form id="loginForm">
+        <label for="username">Username</label>
+        <input id="username" name="username" autocomplete="username" required />
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required />
+
+        <div class="login-actions">
+          <button type="submit">Login</button>
+          <a href="/" style="color:#6b7280; font-size: 13px;">Back</a>
+        </div>
+
+        <div id="error" class="error"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('loginForm');
+    const err = document.getElementById('error');
+
+    function showError(msg) {
+      err.textContent = msg;
+      err.style.display = 'block';
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      err.style.display = 'none';
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data?.error || 'Login failed');
+        }
+
+        const next = new URLSearchParams(location.search).get('next') || '/';
+        location.href = next;
+      } catch (e) {
+        showError(e.message);
+      }
+    });
+  </script>
+</body>
+</html>

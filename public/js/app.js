@@ -1,0 +1,431 @@
+/**
+ * Quiz Video System - Main Application Router
+ * Handles client-side routing and component loading
+ */
+
+class App {
+  constructor() {
+    this.currentRoute = null;
+    this.components = {};
+    this.contentEl = document.getElementById('content');
+    
+    this.init();
+  }
+  
+  init() {
+    // Setup sidebar toggle
+    this.setupSidebarToggle();
+
+    // Setup logout button if present
+    this.setupLogout();
+    
+    // Setup navigation
+    this.setupNavigation();
+    
+    // Register routes
+    this.registerRoutes();
+    
+    // Handle initial route
+    this.handleRoute(window.location.pathname);
+    
+    // Listen for browser back/forward
+    window.addEventListener('popstate', () => {
+      this.handleRoute(window.location.pathname);
+    });
+  }
+  
+  setupSidebarToggle() {
+    const toggleBtn = document.getElementById('toggleSidebar');
+    const sidebar = document.getElementById('sidebar');
+
+    const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
+
+    const closeMobileSidebarOnOutsideClick = (e) => {
+      if (!sidebar.classList.contains('active')) return;
+      const clickedInsideSidebar = sidebar.contains(e.target);
+      const clickedToggle = toggleBtn.contains(e.target);
+      if (!clickedInsideSidebar && !clickedToggle) {
+        sidebar.classList.remove('active');
+      }
+    };
+
+    toggleBtn.addEventListener('click', () => {
+      if (isMobile()) {
+        sidebar.classList.toggle('active');
+        return;
+      }
+      sidebar.classList.toggle('collapsed');
+    });
+
+    // Close on outside click (mobile)
+    document.addEventListener('click', closeMobileSidebarOnOutsideClick);
+
+    // If resizing from mobile -> desktop, reset mobile state
+    window.addEventListener('resize', () => {
+      if (!isMobile()) {
+        sidebar.classList.remove('active');
+      }
+    });
+  }
+  
+  setupLogout() {
+    const btn = document.getElementById('logoutBtn');
+    if (!btn) return;
+    btn.addEventListener('click', async () => {
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+      } catch (e) {
+        // ignore
+      }
+      window.location.href = '/login';
+    });
+  }
+
+  setupNavigation() {
+    const navItems = document.querySelectorAll('.nav-item');
+    
+    navItems.forEach(item => {
+      item.addEventListener('click', (e) => {
+        // Check if this is an external link (full page navigation)
+        const isExternal = item.getAttribute('data-external') === 'true';
+        
+        if (isExternal) {
+          // Allow default behavior for external links (full page load)
+          return;
+        }
+        
+        e.preventDefault();
+        const route = item.getAttribute('data-route');
+        this.navigate(route);
+      });
+    });
+  }
+  
+  registerRoutes() {
+    this.routes = {
+      '/': this.loadDashboard.bind(this),
+      '/designer': this.loadDesigner.bind(this),
+      '/videos': this.loadVideos.bind(this),
+      '/tts': this.loadTTS.bind(this),
+      '/hierarchy': this.loadHierarchy.bind(this),
+      '/questions': this.loadQuestions.bind(this),
+      '/media': this.loadMediaLibrary.bind(this),
+      '/fonts': this.loadFonts.bind(this)
+    };
+  }
+  
+  navigate(path) {
+    // Update browser history
+    window.history.pushState({}, '', path);
+    
+    // Handle route
+    this.handleRoute(path);
+  }
+  
+  handleRoute(path) {
+    // Update active nav item
+    this.updateActiveNav(path);
+    
+    // Get route handler
+    const handler = this.routes[path];
+    
+    if (handler) {
+      this.currentRoute = path;
+      handler();
+    } else {
+      this.show404();
+    }
+  }
+  
+  updateActiveNav(path) {
+    const navItems = document.querySelectorAll('.nav-item');
+    
+    navItems.forEach(item => {
+      const route = item.getAttribute('data-route');
+      if (route === path) {
+        item.classList.add('active');
+      } else {
+        item.classList.remove('active');
+      }
+    });
+  }
+  
+  showLoading() {
+    this.contentEl.innerHTML = `
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Loading...</p>
+      </div>
+    `;
+  }
+  
+  show404() {
+    this.contentEl.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-state-icon">🚫</div>
+        <h2 class="empty-state-title">Page Not Found</h2>
+        <p class="empty-state-description">The page you're looking for doesn't exist.</p>
+        <button class="btn btn-primary mt-20" onclick="app.navigate('/')">
+          Go to Dashboard
+        </button>
+      </div>
+    `;
+  }
+  
+  // ============================================
+  // Route Handlers
+  // ============================================
+  
+  async loadDashboard() {
+    this.showLoading();
+    
+    try {
+      // Fetch stats
+      const [presetsRes, questionsRes, videosRes] = await Promise.all([
+        fetch('/api/presets'),
+        fetch('/api/questions?limit=1'),
+        fetch('/api/videos/list')
+      ]);
+      
+      const presets = await presetsRes.json();
+      const questions = await questionsRes.json();
+      const videos = await videosRes.json();
+      
+      // Get total question count from health
+      const healthRes = await fetch('/api/health');
+      const health = await healthRes.json();
+      
+      this.contentEl.innerHTML = `
+        <div class="content-header">
+          <h1 class="content-title">Dashboard</h1>
+          <p class="content-description">Welcome to the Quiz Video System</p>
+        </div>
+        
+        <div class="grid grid-4">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">📂 Presets</span>
+            </div>
+            <div class="card-body">
+              <h2 style="font-size: 36px; color: #4CAF50; margin-bottom: 10px;">${presets.length}</h2>
+              <p style="color: #999;">Total presets</p>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">❓ Questions</span>
+            </div>
+            <div class="card-body">
+              <h2 style="font-size: 36px; color: #2196F3; margin-bottom: 10px;">${health.database.questions}</h2>
+              <p style="color: #999;">Total questions</p>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🎬 Videos</span>
+            </div>
+            <div class="card-body">
+              <h2 style="font-size: 36px; color: #ff9800; margin-bottom: 10px;">${videos.length}</h2>
+              <p style="color: #999;">Generated videos</p>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">📚 Topics</span>
+            </div>
+            <div class="card-body">
+              <h2 style="font-size: 36px; color: #9c27b0; margin-bottom: 10px;">${health.database.topics || 0}</h2>
+              <p style="color: #999;">Total topics</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="grid grid-2 mt-30">
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">🚀 Quick Actions</span>
+            </div>
+            <div class="card-body">
+              <button class="btn btn-primary mb-10" onclick="window.location.href='/designer'" style="width: 100%;">
+                🎨 Open Designer
+              </button>
+              <button class="btn btn-secondary mb-10" onclick="app.navigate('/videos')" style="width: 100%;">
+                🎬 Generate Video
+              </button>
+              <button class="btn btn-primary mb-10" onclick="app.navigate('/questions')" style="width: 100%;">
+                ❓ Manage Questions
+              </button>
+            </div>
+          </div>
+          
+          <div class="card">
+            <div class="card-header">
+              <span class="card-title">ℹ️ System Info</span>
+            </div>
+            <div class="card-body">
+              <p style="margin-bottom: 10px;"><strong>Server Status:</strong> <span class="badge badge-success">Online</span></p>
+              <p style="margin-bottom: 10px;"><strong>Version:</strong> 2.0.0</p>
+              <p style="margin-bottom: 10px;"><strong>Features:</strong> Media Library, Data Management, SPA</p>
+            </div>
+          </div>
+        </div>
+      `;
+      
+    } catch (error) {
+      console.error('Error loading dashboard:', error);
+      this.contentEl.innerHTML = `
+        <div class="alert alert-error">
+          <strong>Error:</strong> Failed to load dashboard data.
+        </div>
+      `;
+    }
+  }
+  
+  async loadDesigner() {
+    this.showLoading();
+    
+    // Import designer component
+    if (!this.components.designer) {
+      const module = await import('/js/components/designer.js');
+      this.components.designer = new module.DesignerComponent(this.contentEl);
+    }
+    
+    this.components.designer.render();
+  }
+  
+  async loadTTS() {
+    this.showLoading();
+    
+    try {
+      // Import TTS component
+      if (!this.components.tts) {
+        const module = await import('/js/components/tts.js');
+        this.components.tts = new module.TTSComponent();
+      }
+      
+      // Initialize + render TTS component after it loads languages/profiles
+      await this.components.tts.init(this.contentEl);
+      
+    } catch (error) {
+      console.error('Error loading TTS component:', error);
+      this.contentEl.innerHTML = `
+        <div class="alert alert-error">
+          <h3>Error Loading TTS Component</h3>
+          <p>${error.message}</p>
+        </div>
+      `;
+    }
+  }
+
+  async loadHierarchy() {
+    this.showLoading();
+    
+    try {
+      // Import hierarchy component
+      if (!this.components.hierarchy) {
+        const module = await import('/js/components/hierarchy.js');
+        this.components.hierarchy = new module.HierarchyComponent(this.contentEl);
+        window.hierarchyComponent = this.components.hierarchy;
+      }
+      
+      await this.components.hierarchy.render();
+    } catch (error) {
+      console.error('Error loading hierarchy component:', error);
+      this.contentEl.innerHTML = `
+        <div class="alert alert-error">
+          <strong>Error:</strong> Failed to load hierarchical view. ${error.message}
+        </div>
+      `;
+    }
+  }
+  
+  async loadVideos() {
+    this.showLoading();
+    
+    try {
+      // Import videos component
+      if (!this.components.videos) {
+        const module = await import('/js/components/videos.js');
+        this.components.videos = new module.VideosComponent(this.contentEl);
+      }
+      
+      await this.components.videos.render();
+    } catch (error) {
+      console.error('Error loading videos component:', error);
+      this.contentEl.innerHTML = `
+        <div class="alert alert-error">
+          <strong>Error:</strong> Failed to load video generator component. ${error.message}
+        </div>
+      `;
+    }
+  }
+  
+  async loadQuestions() {
+    this.showLoading();
+    
+    try {
+      // Import questions component
+      if (!this.components.questions) {
+        const module = await import('/js/components/questions.js');
+        this.components.questions = new module.QuestionsComponent(this.contentEl);
+        window.questionsComponent = this.components.questions;
+      }
+      
+      await this.components.questions.render();
+    } catch (error) {
+      console.error('Error loading questions component:', error);
+      this.contentEl.innerHTML = `
+        <div class="alert alert-error">
+          <strong>Error:</strong> Failed to load questions component. ${error.message}
+        </div>
+      `;
+    }
+  }
+  
+  async loadMediaLibrary() {
+    this.showLoading();
+    
+    // Import media component
+    if (!this.components.media) {
+      const module = await import('/js/components/media.js');
+      this.components.media = new module.MediaComponent(this.contentEl);
+      // Expose globally for pagination
+      window.mediaComponent = this.components.media;
+    }
+    
+    this.components.media.render();
+  }
+  
+  async loadFonts() {
+    this.showLoading();
+    
+    try {
+      // Import fonts component
+      if (!this.components.fonts) {
+        const FontsManager = (await import('/js/components/fonts.js')).default;
+        this.components.fonts = new FontsManager();
+      }
+      
+      await this.components.fonts.init();
+    } catch (error) {
+      console.error('Error loading fonts component:', error);
+      this.contentEl.innerHTML = `
+        <div class="alert alert-error">
+          <strong>Error:</strong> Failed to load fonts component. ${error.message}
+        </div>
+      `;
+    }
+  }
+}
+
+// Initialize app when DOM is ready
+let app;
+document.addEventListener('DOMContentLoaded', () => {
+  app = new App();
+});
+
+// Export for use in components
+window.app = app;

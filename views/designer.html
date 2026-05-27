@@ -1,0 +1,1279 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Quiz Video Designer - Quiz Video System</title>
+  <link rel="stylesheet" href="/css/app.css">
+  <link rel="stylesheet" href="/css/designer.css">
+</head>
+<body>
+  <!-- App Container -->
+  <div id="app">
+    
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <button id="toggleSidebar" class="toggle-btn" aria-label="Toggle navigation">
+          <span class="icon icon-menu"></span>
+        </button>
+        <h1 class="app-title">Quiz Video System</h1>
+      </div>
+      <div class="header-right" style="display:flex; gap: 10px; align-items:center;">
+        <span class="user-info">Admin</span>
+        <button id="logoutBtn" class="btn btn-secondary" style="padding: 6px 10px;">Logout</button>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+      
+      <!-- Sidebar Navigation -->
+      <aside id="sidebar" class="sidebar">
+        <nav class="nav-menu">
+          
+          <!-- Dashboard -->
+          <div class="nav-section">
+            <a href="/" class="nav-item">
+              <span class="nav-icon">📊</span>
+              <span class="nav-label">Dashboard</span>
+            </a>
+          </div>
+
+          <!-- Tools -->
+          <div class="nav-section">
+            <div class="nav-section-title">Tools</div>
+            <a href="/designer" class="nav-item active">
+              <span class="nav-icon">🎨</span>
+              <span class="nav-label">Designer</span>
+            </a>
+            <a href="/videos" class="nav-item">
+              <span class="nav-icon">🎬</span>
+              <span class="nav-label">Video Generator</span>
+            </a>
+            <a href="/tts" class="nav-item">
+              <span class="nav-icon">🔊</span>
+              <span class="nav-label">Text-to-Speech</span>
+            </a>
+          </div>
+
+          <!-- Data Management -->
+          <div class="nav-section">
+            <div class="nav-section-title">Data Management</div>
+            <a href="/hierarchy" class="nav-item">
+              <span class="nav-icon">📚</span>
+              <span class="nav-label">Data Management</span>
+            </a>
+          </div>
+
+          <!-- Media Management -->
+          <div class="nav-section">
+            <div class="nav-section-title">Media</div>
+            <a href="/media" class="nav-item">
+              <span class="nav-icon">🖼️</span>
+              <span class="nav-label">Media Library</span>
+            </a>
+            <a href="/fonts" class="nav-item">
+              <span class="nav-icon">🔤</span>
+              <span class="nav-label">Fonts</span>
+            </a>
+          </div>
+
+        </nav>
+      </aside>
+
+      <!-- Content Area -->
+      <main id="content" class="content designer-content">
+        <div class="main-container designer-main">
+      <!-- Property Panel (Left Side) -->
+      <aside class="property-panel">
+        <div class="tabs-container">
+          <button class="tab-nav-arrow" id="tabNavLeft" aria-label="Scroll tabs left">&#8249;</button>
+          <div class="panel-tabs tabs">
+            <button class="tab-btn active" data-tab="canvas">Canvas</button>
+            <button class="tab-btn" data-tab="question">Question</button>
+            <button class="tab-btn" data-tab="options">Options</button>
+            <button class="tab-btn" data-tab="timer">Timer</button>
+            <button class="tab-btn" data-tab="explanation">Explanation</button>
+            <button class="tab-btn" data-tab="overlays">Overlays</button>
+            <button class="tab-btn" data-tab="audio">Audio Narration</button>
+          </div>
+          <button class="tab-nav-arrow" id="tabNavRight" aria-label="Scroll tabs right">&#8250;</button>
+        </div>
+
+        <!-- Canvas Properties -->
+        <div class="tab-content active" id="tab-canvas">
+          <h3>Canvas Settings</h3>
+
+          <div class="form-group">
+            <label>Canvas Size</label>
+            <div class="custom-select-wrapper">
+              <div class="custom-select" id="canvasSizeSelect" data-placeholder="Select size...">
+                <div class="custom-select-trigger">
+                  <span class="custom-select-value">Select size...</span>
+                  <span class="custom-select-arrow">&#9662;</span>
+                </div>
+                <div class="custom-select-dropdown">
+                  <input type="text" class="custom-select-search" placeholder="Search sizes...">
+                  <div class="custom-select-options"></div>
+                </div>
+              </div>
+            </div>
+            <select id="canvasSize" hidden>
+              <option value="1920:1080">1920x1080 (YouTube - Full HD)</option>
+              <option value="1280:720">1280x720 (YouTube - HD)</option>
+              <option value="2560:1440">2560x1440 (YouTube - 2K)</option>
+              <option value="3840:2160">3840x2160 (YouTube - 4K)</option>
+              <option value="1080:1920">1080x1920 (YouTube Shorts - Vertical)</option>
+              <option value="1080:1350">1080x1350 (Instagram Post)</option>
+              <option value="1080:1080">1080x1080 (Square)</option>
+              <option value="custom">Custom Size...</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="customSizeGroup" style="display: none;">
+            <label>Custom Width</label>
+            <input type="number" id="customWidth" min="100" max="7680" value="1920" placeholder="Width (px)">
+          </div>
+
+          <div class="form-group" id="customHeightGroup" style="display: none;">
+            <label>Custom Height</label>
+            <input type="number" id="customHeight" min="100" max="4320" value="1080" placeholder="Height (px)">
+          </div>
+
+          <div class="form-group">
+            <label>Background Type</label>
+            <div class="custom-select-wrapper">
+              <div class="custom-select" id="bgTypeSelect" data-placeholder="Select background type...">
+                <div class="custom-select-trigger">
+                  <span class="custom-select-value">Select background type...</span>
+                  <span class="custom-select-arrow">&#9662;</span>
+                </div>
+                <div class="custom-select-dropdown">
+                  <input type="text" class="custom-select-search" placeholder="Search background types...">
+                  <div class="custom-select-options"></div>
+                </div>
+              </div>
+            </div>
+            <select id="bgType" hidden>
+              <option value="color">Color</option>
+              <option value="image">Image</option>
+              <option value="video">Video</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="bgColorGroup">
+            <label>Background Color</label>
+            <input type="color" id="bgColor" value="#1a1a1a">
+          </div>
+
+          <div class="form-group" id="bgUrlGroup" style="display: none;">
+            <label>Background Media</label>
+            <div class="custom-select-wrapper">
+              <div class="custom-select" id="bgMedia" data-placeholder="Select media...">
+                <div class="custom-select-trigger">
+                  <span class="custom-select-value">Select media...</span>
+                  <span class="custom-select-arrow">&#9662;</span>
+                </div>
+                <div class="custom-select-dropdown">
+                  <input type="text" class="custom-select-search" placeholder="Search media...">
+                  <div class="custom-select-options"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group" id="bgFitGroup" style="display: none;">
+            <label>Background Fit</label>
+            <div class="custom-select-wrapper">
+              <div class="custom-select" id="bgFitSelect" data-placeholder="Select fit...">
+                <div class="custom-select-trigger">
+                  <span class="custom-select-value">Select fit...</span>
+                  <span class="custom-select-arrow">&#9662;</span>
+                </div>
+                <div class="custom-select-dropdown">
+                  <input type="text" class="custom-select-search" placeholder="Search fit...">
+                  <div class="custom-select-options"></div>
+                </div>
+              </div>
+            </div>
+            <select id="bgFit" hidden>
+              <option value="cover">Cover</option>
+              <option value="contain">Contain</option>
+              <option value="fill">Fill</option>
+              <option value="none">None</option>
+              <option value="repeat">Repeat</option>
+              <option value="repeat-x">Repeat X</option>
+              <option value="repeat-y">Repeat Y</option>
+            </select>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid #333; margin: 15px 0;">
+
+          <h4 style="margin: 0 0 10px; color: #ddd;">Intro</h4>
+          <div class="form-group">
+            <label>Intro Type</label>
+            <div class="custom-select-wrapper">
+              <div class="custom-select" id="introTypeSelect" data-placeholder="Select intro type...">
+                <div class="custom-select-trigger">
+                  <span class="custom-select-value">Select intro type...</span>
+                  <span class="custom-select-arrow">&#9662;</span>
+                </div>
+                <div class="custom-select-dropdown">
+                  <input type="text" class="custom-select-search" placeholder="Search intro types...">
+                  <div class="custom-select-options"></div>
+                </div>
+              </div>
+            </div>
+            <select id="introType" hidden>
+              <option value="none">None</option>
+              <option value="image">Image</option>
+              <option value="video">Video</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="introMediaGroup" style="display: none;">
+            <label>Intro Media</label>
+            <div class="custom-select-wrapper">
+              <div class="custom-select" id="introMedia" data-placeholder="Select media...">
+                <div class="custom-select-trigger">
+                  <span class="custom-select-value">Select media...</span>
+                  <span class="custom-select-arrow">&#9662;</span>
+                </div>
+                <div class="custom-select-dropdown">
+                  <input type="text" class="custom-select-search" placeholder="Search media...">
+                  <div class="custom-select-options"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group" id="introDurationGroup" style="display: none;">
+            <label>Intro Image Duration: <span id="introDurationVal">3s</span></label>
+            <div class="number-input-group">
+              <button type="button" class="number-input-btn" data-input="introDuration" data-action="decrement">&minus;</button>
+              <input type="number" id="introDuration" min="1" max="20" value="3" step="1">
+              <button type="button" class="number-input-btn" data-input="introDuration" data-action="increment">+</button>
+            </div>
+            <small style="color: #888; font-size: 11px;">Used only when Intro Type = Image</small>
+          </div>
+
+          <div class="form-group" id="introFitGroup" style="display: none;">
+            <label>Intro Fit</label>
+            <div class="custom-select-wrapper">
+              <div class="custom-select" id="introFitSelect" data-placeholder="Select intro fit...">
+                <div class="custom-select-trigger">
+                  <span class="custom-select-value">Select intro fit...</span>
+                  <span class="custom-select-arrow">&#9662;</span>
+                </div>
+                <div class="custom-select-dropdown">
+                  <input type="text" class="custom-select-search" placeholder="Search intro fits...">
+                  <div class="custom-select-options"></div>
+                </div>
+              </div>
+            </div>
+            <select id="introFit" hidden>
+              <option value="cover">Cover</option>
+              <option value="contain">Contain</option>
+              <option value="fill">Fill</option>
+              <option value="none">None</option>
+            </select>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid #333; margin: 15px 0;">
+
+          <h4 style="margin: 0 0 10px; color: #ddd;">Outro</h4>
+          <div class="form-group">
+            <label>Outro Type</label>
+            <div class="custom-select-wrapper">
+              <div class="custom-select" id="outroTypeSelect" data-placeholder="Select outro type...">
+                <div class="custom-select-trigger">
+                  <span class="custom-select-value">Select outro type...</span>
+                  <span class="custom-select-arrow">&#9662;</span>
+                </div>
+                <div class="custom-select-dropdown">
+                  <input type="text" class="custom-select-search" placeholder="Search outro types...">
+                  <div class="custom-select-options"></div>
+                </div>
+              </div>
+            </div>
+            <select id="outroType" hidden>
+              <option value="none">None</option>
+              <option value="image">Image</option>
+              <option value="video">Video</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="outroMediaGroup" style="display: none;">
+            <label>Outro Media</label>
+            <div class="custom-select-wrapper">
+              <div class="custom-select" id="outroMedia" data-placeholder="Select media...">
+                <div class="custom-select-trigger">
+                  <span class="custom-select-value">Select media...</span>
+                  <span class="custom-select-arrow">&#9662;</span>
+                </div>
+                <div class="custom-select-dropdown">
+                  <input type="text" class="custom-select-search" placeholder="Search media...">
+                  <div class="custom-select-options"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group" id="outroDurationGroup" style="display: none;">
+            <label>Outro Image Duration: <span id="outroDurationVal">3s</span></label>
+            <div class="number-input-group">
+              <button type="button" class="number-input-btn" data-input="outroDuration" data-action="decrement">&minus;</button>
+              <input type="number" id="outroDuration" min="1" max="20" value="3" step="1">
+              <button type="button" class="number-input-btn" data-input="outroDuration" data-action="increment">+</button>
+            </div>
+            <small style="color: #888; font-size: 11px;">Used only when Outro Type = Image</small>
+          </div>
+
+          <div class="form-group" id="outroFitGroup" style="display: none;">
+            <label>Outro Fit</label>
+            <div class="custom-select-wrapper">
+              <div class="custom-select" id="outroFitSelect" data-placeholder="Select outro fit...">
+                <div class="custom-select-trigger">
+                  <span class="custom-select-value">Select outro fit...</span>
+                  <span class="custom-select-arrow">&#9662;</span>
+                </div>
+                <div class="custom-select-dropdown">
+                  <input type="text" class="custom-select-search" placeholder="Search outro fits...">
+                  <div class="custom-select-options"></div>
+                </div>
+              </div>
+            </div>
+            <select id="outroFit" hidden>
+              <option value="cover">Cover</option>
+              <option value="contain">Contain</option>
+              <option value="fill">Fill</option>
+              <option value="none">None</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Question Properties -->
+        <div class="tab-content" id="tab-question">
+          <h3>Question Settings</h3>
+
+          <div class="form-group">
+            <label>Font Family</label>
+            <div class="custom-select-wrapper">
+              <div class="custom-select" id="qFontFamilySelect" data-placeholder="Select font...">
+                <div class="custom-select-trigger">
+                  <span class="custom-select-value">Select font...</span>
+                  <span class="custom-select-arrow">&#9662;</span>
+                </div>
+                <div class="custom-select-dropdown">
+                  <input type="text" class="custom-select-search" placeholder="Search fonts...">
+                  <div class="custom-select-options"></div>
+                </div>
+              </div>
+            </div>
+            <select id="qFontFamily" hidden>
+              <option value="Arial">Arial</option>
+              <option value="Helvetica">Helvetica</option>
+              <option value="Times New Roman">Times New Roman</option>
+              <option value="Courier New">Courier New</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Verdana">Verdana</option>
+              <option value="'Segoe UI', Tahoma, sans-serif">Segoe UI</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Font Size: <span id="qFontSizeVal">48px</span></label>
+            <div class="number-input-group">
+              <button type="button" class="number-input-btn" data-input="qFontSize" data-action="decrement">&minus;</button>
+              <input type="number" id="qFontSize" min="20" max="100" value="48" step="1">
+              <button type="button" class="number-input-btn" data-input="qFontSize" data-action="increment">+</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Font Color</label>
+            <input type="color" id="qFontColor" value="#FFFFFF">
+          </div>
+
+          <div class="form-group">
+            <label>Position X: <span id="qPosXVal">100px</span></label>
+            <div class="number-input-group">
+              <button type="button" class="number-input-btn" data-input="qPosX" data-action="decrement">&minus;</button>
+              <input type="number" id="qPosX" min="0" max="1920" value="100" step="1">
+              <button type="button" class="number-input-btn" data-input="qPosX" data-action="increment">+</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Position Y: <span id="qPosYVal">150px</span></label>
+            <div class="number-input-group">
+              <button type="button" class="number-input-btn" data-input="qPosY" data-action="decrement">&minus;</button>
+              <input type="number" id="qPosY" min="0" max="1080" value="150" step="1">
+              <button type="button" class="number-input-btn" data-input="qPosY" data-action="increment">+</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Width: <span id="qWidthVal">1720px</span></label>
+            <div class="number-input-group">
+              <button type="button" class="number-input-btn" data-input="qWidth" data-action="decrement">&minus;</button>
+              <input type="number" id="qWidth" min="100" max="1920" value="1720" step="1">
+              <button type="button" class="number-input-btn" data-input="qWidth" data-action="increment">+</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Height: <span id="qHeightVal">Auto</span></label>
+            <div class="number-input-group">
+              <button type="button" class="number-input-btn" data-input="qHeight" data-action="decrement">&minus;</button>
+              <input type="number" id="qHeight" min="0" max="1080" value="0" step="10">
+              <button type="button" class="number-input-btn" data-input="qHeight" data-action="increment">+</button>
+            </div>
+            <small style="color: #888; font-size: 11px;">0 = Auto height</small>
+          </div>
+
+          <div class="form-group">
+            <label>Text Align</label>
+            <select id="qTextAlign">
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; justify-content: space-between;">
+              <span>Margin (Gap)</span>
+              <label style="display: flex; align-items: center; gap: 5px; font-weight: normal; font-size: 12px;">
+                <input type="checkbox" id="qMarginLink" style="width: auto; margin: 0;">
+                Link All
+              </label>
+            </label>
+            <select id="qMarginMode" style="margin-bottom: 10px;">
+              <option value="all">All Sides</option>
+              <option value="custom">Custom Sides</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="qMarginAllGroup">
+            <label>All Sides: <span id="qMarginAllVal">0%</span></label>
+            <div class="number-input-group">
+              <button type="button" class="number-input-btn" data-input="qMarginAll" data-action="decrement">&minus;</button>
+              <input type="number" id="qMarginAll" min="0" max="50" step="0.5" value="0">
+              <button type="button" class="number-input-btn" data-input="qMarginAll" data-action="increment">+</button>
+            </div>
+          </div>
+
+          <div id="qMarginCustomGroup" style="display: none;">
+            <div class="form-group">
+              <label>Top: <span id="qMarginTopVal">0%</span></label>
+              <div class="number-input-group">
+                <button type="button" class="number-input-btn" data-input="qMarginTop" data-action="decrement">&minus;</button>
+                <input type="number" id="qMarginTop" min="0" max="50" step="0.5" value="0">
+                <button type="button" class="number-input-btn" data-input="qMarginTop" data-action="increment">+</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Right: <span id="qMarginRightVal">0%</span></label>
+              <div class="number-input-group">
+                <button type="button" class="number-input-btn" data-input="qMarginRight" data-action="decrement">&minus;</button>
+                <input type="number" id="qMarginRight" min="0" max="50" step="0.5" value="0">
+                <button type="button" class="number-input-btn" data-input="qMarginRight" data-action="increment">+</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Bottom: <span id="qMarginBottomVal">0%</span></label>
+              <div class="number-input-group">
+                <button type="button" class="number-input-btn" data-input="qMarginBottom" data-action="decrement">&minus;</button>
+                <input type="number" id="qMarginBottom" min="0" max="50" step="0.5" value="0">
+                <button type="button" class="number-input-btn" data-input="qMarginBottom" data-action="increment">+</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Left: <span id="qMarginLeftVal">0%</span></label>
+              <div class="number-input-group">
+                <button type="button" class="number-input-btn" data-input="qMarginLeft" data-action="decrement">&minus;</button>
+                <input type="number" id="qMarginLeft" min="0" max="50" step="0.5" value="0">
+                <button type="button" class="number-input-btn" data-input="qMarginLeft" data-action="increment">+</button>
+              </div>
+            </div>
+          </div>
+
+          <small style="color: #888; font-size: 11px; display: block; margin-top: -10px; margin-bottom: 15px;">
+            Gap between text and edges - percentage of width/height
+          </small>
+
+          <div class="form-group">
+            <label>Background Type</label>
+            <select id="qBgType">
+              <option value="none">None</option>
+              <option value="color">Color</option>
+              <option value="image">Image</option>
+              <option value="video">Video</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="qBgColorGroup" style="display: none;">
+            <label>Background Color</label>
+            <input type="color" id="qBgColor" value="#000000">
+          </div>
+
+          <div class="form-group" id="qBgUrlGroup" style="display: none;">
+            <label>Background Media</label>
+            <div class="custom-select-wrapper">
+              <div class="custom-select" id="qBgMedia" data-placeholder="Select media...">
+                <div class="custom-select-trigger">
+                  <span class="custom-select-value">Select media...</span>
+                  <span class="custom-select-arrow">&#9662;</span>
+                </div>
+                <div class="custom-select-dropdown">
+                  <input type="text" class="custom-select-search" placeholder="Search media...">
+                  <div class="custom-select-options"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group" id="qBgFitGroup" style="display: none;">
+            <label>Background Fit</label>
+            <select id="qBgFit">
+              <option value="cover">Cover</option>
+              <option value="contain">Contain</option>
+              <option value="fill">Fill</option>
+              <option value="none">None</option>
+              <option value="repeat">Repeat</option>
+              <option value="repeat-x">Repeat X</option>
+              <option value="repeat-y">Repeat Y</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Border Radius: <span id="qBorderRadiusVal">0%</span></label>
+            <div class="number-input-group">
+              <button type="button" class="number-input-btn" data-input="qBorderRadius" data-action="decrement">&minus;</button>
+              <input type="number" id="qBorderRadius" min="0" max="50" step="0.5" value="0">
+              <button type="button" class="number-input-btn" data-input="qBorderRadius" data-action="increment">+</button>
+            </div>
+            <small style="color: #888; font-size: 11px;">Percentage of smallest dimension (width or height)</small>
+          </div>
+
+          <div class="form-group">
+            <label>Question Numbering</label>
+            <select id="qNumbering">
+              <option value="none">None</option>
+              <option value="auto">Auto (1, 2, 3...)</option>
+              <option value="manual">Manual Start Number</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="qStartNumberGroup" style="display: none;">
+            <label>Start Number: <span id="qStartNumberVal">1</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="qStartNumber" data-action="decrement">&minus;</button><input type="number" id="qStartNumber" min="1" max="100" value="1" step="1"><button type="button" class="number-input-btn" data-input="qStartNumber" data-action="increment">+</button></div>
+            <small style="color: #888; font-size: 11px;">Questions will number from this value</small>
+          </div>
+
+          <div class="form-group" id="qNumberGapGroup" style="display: none;">
+            <label>Number Gap: <span id="qNumberGapVal">2%</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="qNumberGap" data-action="decrement">&minus;</button><input type="number" id="qNumberGap" min="0" max="20" step="0.5" value="2"><button type="button" class="number-input-btn" data-input="qNumberGap" data-action="increment">+</button></div>
+            <small style="color: #888; font-size: 11px;">Space between number and question text (% of width)</small>
+          </div>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="qShowBorder" style="width: auto; margin: 0;">
+              Show Border in Preview
+            </label>
+            <small style="color: #888; font-size: 11px;">Border helps visualize question area (preview only)</small>
+          </div>
+        </div>
+
+        <!-- Options Properties -->
+        <div class="tab-content" id="tab-options">
+          <h3>Options Settings</h3>
+
+          <div class="form-group">
+            <label>Layout Format</label>
+            <select id="optLayout">
+              <option value="2x2">2x2 Grid</option>
+              <option value="1x4">1x4 Vertical</option>
+              <option value="4x1">4x1 Horizontal</option>
+              <option value="1x2x1">1-2-1 Custom</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Option Label Style</label>
+            <select id="optLabelStyle">
+              <option value="none">None</option>
+              <option value="alpha">Alphabetic (A, B, C, D)</option>
+              <option value="numeric">Numeric (1, 2, 3, 4)</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="optLabelSpacingGroup" style="display: none;">
+            <label>Label Spacing: <span id="optLabelSpacingVal">10px</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="optLabelSpacing" data-action="decrement">&minus;</button><input type="number" id="optLabelSpacing" min="0" max="50" value="10" step="1"><button type="button" class="number-input-btn" data-input="optLabelSpacing" data-action="increment">+</button></div>
+            <small style="color: #888; font-size: 11px;">Gap between label and option text</small>
+          </div>
+
+          <div class="form-group">
+            <label>Container Position X: <span id="optPosXVal">93px</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="optPosX" data-action="decrement">&minus;</button><input type="number" id="optPosX" min="0" max="1920" value="93" step="1"><button type="button" class="number-input-btn" data-input="optPosX" data-action="increment">+</button></div>
+          </div>
+
+          <div class="form-group">
+            <label>Container Position Y: <span id="optPosYVal">695px</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="optPosY" data-action="decrement">&minus;</button><input type="number" id="optPosY" min="0" max="1080" value="695" step="1"><button type="button" class="number-input-btn" data-input="optPosY" data-action="increment">+</button></div>
+          </div>
+
+          <div class="form-group">
+            <label>Option Width: <span id="optWidthVal">860px</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="optWidth" data-action="decrement">&minus;</button><input type="number" id="optWidth" min="200" max="1500" value="860" step="1"><button type="button" class="number-input-btn" data-input="optWidth" data-action="increment">+</button></div>
+          </div>
+
+          <div class="form-group">
+            <label>Option Height: <span id="optHeightVal">120px</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="optHeight" data-action="decrement">&minus;</button><input type="number" id="optHeight" min="50" max="300" value="120" step="1"><button type="button" class="number-input-btn" data-input="optHeight" data-action="increment">+</button></div>
+          </div>
+
+          <div class="form-group">
+            <label>Horizontal Spacing: <span id="optHSpacingVal">20px</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="optHSpacing" data-action="decrement">&minus;</button><input type="number" id="optHSpacing" min="0" max="100" value="20" step="1"><button type="button" class="number-input-btn" data-input="optHSpacing" data-action="increment">+</button></div>
+          </div>
+
+          <div class="form-group">
+            <label>Vertical Spacing: <span id="optVSpacingVal">20px</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="optVSpacing" data-action="decrement">&minus;</button><input type="number" id="optVSpacing" min="0" max="100" value="20" step="1"><button type="button" class="number-input-btn" data-input="optVSpacing" data-action="increment">+</button></div>
+          </div>
+
+          <div class="form-group">
+            <label>Border Radius: <span id="optBorderRadiusVal">0%</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="optBorderRadius" data-action="decrement">&minus;</button><input type="number" id="optBorderRadius" min="0" max="50" step="0.5" value="0"><button type="button" class="number-input-btn" data-input="optBorderRadius" data-action="increment">+</button></div>
+            <small style="color: #888; font-size: 11px;">Percentage of smallest dimension (width or height)</small>
+          </div>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; justify-content: space-between;">
+              <span>Margin (Gap)</span>
+              <label style="display: flex; align-items: center; gap: 5px; font-weight: normal; font-size: 12px;">
+                <input type="checkbox" id="optMarginLink" style="width: auto; margin: 0;">
+                Link All
+              </label>
+            </label>
+            <select id="optMarginMode" style="margin-bottom: 10px;">
+              <option value="all">All Sides</option>
+              <option value="custom">Custom Sides</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="optMarginAllGroup">
+            <label>All Sides: <span id="optMarginAllVal">0%</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="optMarginAll" data-action="decrement">&minus;</button><input type="number" id="optMarginAll" min="0" max="50" step="0.5" value="0"><button type="button" class="number-input-btn" data-input="optMarginAll" data-action="increment">+</button></div>
+          </div>
+
+          <div id="optMarginCustomGroup" style="display: none;">
+            <div class="form-group">
+              <label>Top: <span id="optMarginTopVal">0%</span></label>
+              <div class="number-input-group"><button type="button" class="number-input-btn" data-input="optMarginTop" data-action="decrement">&minus;</button><input type="number" id="optMarginTop" min="0" max="50" step="0.5" value="0"><button type="button" class="number-input-btn" data-input="optMarginTop" data-action="increment">+</button></div>
+            </div>
+            <div class="form-group">
+              <label>Right: <span id="optMarginRightVal">0%</span></label>
+              <div class="number-input-group"><button type="button" class="number-input-btn" data-input="optMarginRight" data-action="decrement">&minus;</button><input type="number" id="optMarginRight" min="0" max="50" step="0.5" value="0"><button type="button" class="number-input-btn" data-input="optMarginRight" data-action="increment">+</button></div>
+            </div>
+            <div class="form-group">
+              <label>Bottom: <span id="optMarginBottomVal">0%</span></label>
+              <div class="number-input-group"><button type="button" class="number-input-btn" data-input="optMarginBottom" data-action="decrement">&minus;</button><input type="number" id="optMarginBottom" min="0" max="50" step="0.5" value="0"><button type="button" class="number-input-btn" data-input="optMarginBottom" data-action="increment">+</button></div>
+            </div>
+            <div class="form-group">
+              <label>Left: <span id="optMarginLeftVal">0%</span></label>
+              <div class="number-input-group"><button type="button" class="number-input-btn" data-input="optMarginLeft" data-action="decrement">&minus;</button><input type="number" id="optMarginLeft" min="0" max="50" step="0.5" value="0"><button type="button" class="number-input-btn" data-input="optMarginLeft" data-action="increment">+</button></div>
+            </div>
+          </div>
+
+          <small style="color: #888; font-size: 11px; display: block; margin-top: -10px; margin-bottom: 15px;">
+            Gap between option text and edges - does NOT affect width/height
+          </small>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="optShowBorder" style="width: auto; margin: 0;">
+              Show Border in Preview
+            </label>
+            <small style="color: #888; font-size: 11px;">Border helps visualize option area (preview only)</small>
+          </div>
+
+          <div class="form-group">
+            <label>Font Family</label>
+            <div class="custom-select-wrapper">
+              <div class="custom-select" id="optFontFamilySelect" data-placeholder="Select font...">
+                <div class="custom-select-trigger">
+                  <span class="custom-select-value">Select font...</span>
+                  <span class="custom-select-arrow">&#9662;</span>
+                </div>
+                <div class="custom-select-dropdown">
+                  <input type="text" class="custom-select-search" placeholder="Search fonts...">
+                  <div class="custom-select-options"></div>
+                </div>
+              </div>
+            </div>
+            <select id="optFontFamily" hidden>
+              <option value="Arial">Arial</option>
+              <option value="Helvetica">Helvetica</option>
+              <option value="Times New Roman">Times New Roman</option>
+              <option value="Courier New">Courier New</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Verdana">Verdana</option>
+              <option value="'Segoe UI', Tahoma, sans-serif">Segoe UI</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Font Size: <span id="optFontSizeVal">50px</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="optFontSize" data-action="decrement">&minus;</button><input type="number" id="optFontSize" min="20" max="80" value="50" step="1"><button type="button" class="number-input-btn" data-input="optFontSize" data-action="increment">+</button></div>
+          </div>
+
+          <div class="form-group">
+            <label>Font Color</label>
+            <input type="color" id="optFontColor" value="#000000">
+          </div>
+
+          <div class="form-group">
+            <label>Background Type</label>
+            <select id="optBgType">
+              <option value="color">Color</option>
+              <option value="image">Image</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="optBgColorGroup">
+            <label>Background Color</label>
+            <input type="color" id="optBgColor" value="#EEEEEE">
+          </div>
+
+          <div class="form-group" id="optBgUrlGroup" style="display: none;">
+            <label>Background Media</label>
+            <div class="custom-select-wrapper">
+              <div class="custom-select" id="optBgMedia" data-placeholder="Select media...">
+                <div class="custom-select-trigger">
+                  <span class="custom-select-value">Select media...</span>
+                  <span class="custom-select-arrow">&#9662;</span>
+                </div>
+                <div class="custom-select-dropdown">
+                  <input type="text" class="custom-select-search" placeholder="Search media...">
+                  <div class="custom-select-options"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Correct Answer Font Color</label>
+            <input type="color" id="optCorrectFontColor" value="#FFFFFF">
+          </div>
+
+          <div class="form-group">
+            <label>Correct Answer Background Type</label>
+            <select id="optCorrectBgType">
+              <option value="color">Color</option>
+              <option value="image">Image</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="optCorrectBgColorGroup">
+            <label>Correct Answer Background Color</label>
+            <input type="color" id="optCorrectBgColor" value="#0aa052">
+          </div>
+
+          <div class="form-group" id="optCorrectBgUrlGroup" style="display: none;">
+            <label>Correct Answer Background Media</label>
+            <div class="custom-select-wrapper">
+              <div class="custom-select" id="optCorrectBgMedia" data-placeholder="Select media...">
+                <div class="custom-select-trigger">
+                  <span class="custom-select-value">Select media...</span>
+                  <span class="custom-select-arrow">&#9662;</span>
+                </div>
+                <div class="custom-select-dropdown">
+                  <input type="text" class="custom-select-search" placeholder="Search media...">
+                  <div class="custom-select-options"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timer Properties -->
+        <div class="tab-content" id="tab-timer">
+          <h3>Timer Settings</h3>
+
+          <div class="form-group">
+            <label>Duration: <span id="timerDurationVal">5 seconds</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="timerDuration" data-action="decrement">&minus;</button><input type="number" id="timerDuration" min="1" max="60" value="5" step="1"><button type="button" class="number-input-btn" data-input="timerDuration" data-action="increment">+</button></div>
+          </div>
+
+          <div class="form-group">
+            <label>Position X: <span id="timerPosXVal">893px</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="timerPosX" data-action="decrement">&minus;</button><input type="number" id="timerPosX" min="0" max="1920" value="893" step="1"><button type="button" class="number-input-btn" data-input="timerPosX" data-action="increment">+</button></div>
+          </div>
+
+          <div class="form-group">
+            <label>Position Y: <span id="timerPosYVal">801px</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="timerPosY" data-action="decrement">&minus;</button><input type="number" id="timerPosY" min="0" max="1080" value="801" step="1"><button type="button" class="number-input-btn" data-input="timerPosY" data-action="increment">+</button></div>
+          </div>
+
+          <div class="form-group">
+            <label>Width: <span id="timerWidthVal">150px</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="timerWidth" data-action="decrement">&minus;</button><input type="number" id="timerWidth" min="50" max="300" value="150" step="1"><button type="button" class="number-input-btn" data-input="timerWidth" data-action="increment">+</button></div>
+          </div>
+
+          <div class="form-group">
+            <label>Height: <span id="timerHeightVal">150px</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="timerHeight" data-action="decrement">&minus;</button><input type="number" id="timerHeight" min="50" max="300" value="150" step="1"><button type="button" class="number-input-btn" data-input="timerHeight" data-action="increment">+</button></div>
+          </div>
+
+          <div class="form-group">
+            <label>Font Size: <span id="timerFontSizeVal">61px</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="timerFontSize" data-action="decrement">&minus;</button><input type="number" id="timerFontSize" min="20" max="100" value="61" step="1"><button type="button" class="number-input-btn" data-input="timerFontSize" data-action="increment">+</button></div>
+          </div>
+
+          <div class="form-group">
+            <label>Font Color</label>
+            <input type="color" id="timerFontColor" value="#FFFFFF">
+          </div>
+
+          <div class="form-group">
+            <label>Background Type</label>
+            <select id="timerBgType">
+              <option value="color">Color</option>
+              <option value="image">Image</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="timerBgColorGroup">
+            <label>Background Color</label>
+            <input type="color" id="timerBgColor" value="#FFFFFF">
+          </div>
+
+          <div class="form-group" id="timerBgUrlGroup" style="display: none;">
+            <label>Background Media</label>
+            <div class="custom-select-wrapper">
+              <div class="custom-select" id="timerBgMedia" data-placeholder="Select media...">
+                <div class="custom-select-trigger">
+                  <span class="custom-select-value">Select media...</span>
+                  <span class="custom-select-arrow">&#9662;</span>
+                </div>
+                <div class="custom-select-dropdown">
+                  <input type="text" class="custom-select-search" placeholder="Search media...">
+                  <div class="custom-select-options"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Border Radius: <span id="timerBorderRadiusVal">12px</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="timerBorderRadius" data-action="decrement">&minus;</button><input type="number" id="timerBorderRadius" min="0" max="100" value="12" step="1"><button type="button" class="number-input-btn" data-input="timerBorderRadius" data-action="increment">+</button></div>
+          </div>
+        </div>
+
+        <!-- Explanation Properties -->
+        <div class="tab-content" id="tab-explanation">
+          <h3>Explanation Settings</h3>
+          <p style="color: #888; font-size: 13px; margin-bottom: 20px;">
+            Configure explanation screen that appears before showing the correct answer.
+          </p>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="explEnabled" style="width: auto; margin: 0;">
+              <span>Enable Explanation Screen</span>
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label>Duration (seconds): <span id="explDurationVal">3.0</span>s</label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="explDuration" data-action="decrement">&minus;</button><input type="number" id="explDuration" min="1" max="10" step="0.5" value="3"><button type="button" class="number-input-btn" data-input="explDuration" data-action="increment">+</button></div>
+          </div>
+
+          <h4 style="color: #ddd; margin: 20px 0 10px; border-bottom: 1px solid #444; padding-bottom: 5px;">Background</h4>
+
+          <div class="form-group">
+            <label>Background Type</label>
+            <select id="explBgType">
+              <option value="none">None (Transparent)</option>
+              <option value="color">Solid Color</option>
+              <option value="image">Image</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="explBgColorGroup" style="display: none;">
+            <label>Background Color</label>
+            <input type="color" id="explBgColor" value="#ffffff">
+          </div>
+
+          <div class="form-group" id="explBgImageGroup" style="display: none;">
+            <label>Background Image</label>
+            <select id="explBgImage">
+              <option value="">Select an image...</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="explBgImageFitGroup" style="display: none;">
+            <label>Image Fit</label>
+            <select id="explBgImageFit">
+              <option value="cover">Cover (fill entire area)</option>
+              <option value="contain">Contain (fit inside)</option>
+              <option value="fill">Fill (stretch)</option>
+            </select>
+          </div>
+
+          <h4 style="color: #ddd; margin: 20px 0 10px; border-bottom: 1px solid #444; padding-bottom: 5px;">Text</h4>
+
+          <div class="form-group">
+            <label>Font Family</label>
+            <div class="custom-select-wrapper">
+              <div class="custom-select" id="explFontFamilySelect" data-placeholder="Select font...">
+                <div class="custom-select-trigger">
+                  <span class="custom-select-value">Select font...</span>
+                  <span class="custom-select-arrow">&#9662;</span>
+                </div>
+                <div class="custom-select-dropdown">
+                  <input type="text" class="custom-select-search" placeholder="Search fonts...">
+                  <div class="custom-select-options"></div>
+                </div>
+              </div>
+            </div>
+            <select id="explFontFamily" hidden>
+              <option value="Arial">Arial</option>
+              <option value="Helvetica">Helvetica</option>
+              <option value="Times New Roman">Times New Roman</option>
+              <option value="Courier New">Courier New</option>
+              <option value="Georgia">Georgia</option>
+              <option value="Verdana">Verdana</option>
+              <option value="'Segoe UI', Tahoma, sans-serif">Segoe UI</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Font Size: <span id="explFontSizeVal">36px</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="explFontSize" data-action="decrement">&minus;</button><input type="number" id="explFontSize" min="16" max="80" value="36" step="1"><button type="button" class="number-input-btn" data-input="explFontSize" data-action="increment">+</button></div>
+          </div>
+
+          <div class="form-group">
+            <label>Font Color</label>
+            <input type="color" id="explFontColor" value="#000000">
+          </div>
+
+          <div class="form-group">
+            <label>Text Align</label>
+            <select id="explTextAlign">
+              <option value="left">Left</option>
+              <option value="center">Center</option>
+              <option value="right">Right</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Width: <span id="explWidthVal">1200px</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="explWidth" data-action="decrement">&minus;</button><input type="number" id="explWidth" min="200" max="1920" value="1200" step="1"><button type="button" class="number-input-btn" data-input="explWidth" data-action="increment">+</button></div>
+          </div>
+
+          <div class="form-group">
+            <label>Height: <span id="explHeightVal">0px</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="explHeight" data-action="decrement">&minus;</button><input type="number" id="explHeight" min="0" max="1080" value="0" step="10"><button type="button" class="number-input-btn" data-input="explHeight" data-action="increment">+</button></div>
+            <small style="color: #888; font-size: 11px;">0 = Auto height</small>
+          </div>
+
+          <h4 style="color: #ddd; margin: 20px 0 10px; border-bottom: 1px solid #444; padding-bottom: 5px;">Explanation Image</h4>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="explImageEnabled" style="width: auto; margin: 0;">
+              <span>Show Explanation Image</span>
+            </label>
+          </div>
+
+          <div class="form-group" id="explImageSelectGroup" style="display: none;">
+            <label>Image</label>
+            <select id="explImage">
+              <option value="">Select an image...</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="explImageWidthGroup" style="display: none;">
+            <label>Image Width: <span id="explImageWidthVal">400px</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="explImageWidth" data-action="decrement">&minus;</button><input type="number" id="explImageWidth" min="100" max="1000" value="400" step="1"><button type="button" class="number-input-btn" data-input="explImageWidth" data-action="increment">+</button></div>
+          </div>
+
+          <div class="form-group" id="explImageHeightGroup" style="display: none;">
+            <label>Image Height: <span id="explImageHeightVal">300px</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="explImageHeight" data-action="decrement">&minus;</button><input type="number" id="explImageHeight" min="100" max="800" value="300" step="1"><button type="button" class="number-input-btn" data-input="explImageHeight" data-action="increment">+</button></div>
+          </div>
+
+          <div class="form-group" id="explImageFitGroup" style="display: none;">
+            <label>Image Fit Mode</label>
+            <select id="explImageFit">
+              <option value="cover">Cover (fill area, may crop)</option>
+              <option value="contain">Contain (fit inside, preserve aspect)</option>
+              <option value="fill">Fill (stretch to fit)</option>
+            </select>
+          </div>
+
+          <div class="form-group" id="explImagePositionGroup" style="display: none;">
+            <label>Image Position</label>
+            <select id="explImagePosition">
+              <option value="top">Top</option>
+              <option value="center">Center</option>
+              <option value="bottom">Bottom</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Overlays Properties -->
+        <div class="tab-content" id="tab-overlays">
+          <h3>Overlay Images</h3>
+          <p style="color: #888; font-size: 13px; margin-bottom: 20px;">
+            Add image overlays shown during the question, options, and timer phases (not during intro/outro).
+          </p>
+
+          <div class="form-group">
+            <button class="btn" type="button" id="addOverlayBtn">Add Overlay</button>
+          </div>
+
+          <div id="overlayList" class="overlay-list"></div>
+        </div>
+
+        <!-- Audio Narration Properties -->
+        <div class="tab-content" id="tab-audio">
+          <h3>Audio Narration Settings</h3>
+          <p style="color: #888; font-size: 13px; margin-bottom: 20px;">
+            Configure which TTS audio phrases to play during video generation.
+          </p>
+
+          <h4 style="color: #ddd; margin: 20px 0 10px;">Navigation Phrases</h4>
+          
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="audioPlayFirstQuestion" style="width: auto; margin: 0;" checked>
+              Play "First Question" Audio
+            </label>
+            <small style="color: #888; font-size: 11px;">Play TTS audio announcing the first question</small>
+          </div>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="audioPlayNextQuestion" style="width: auto; margin: 0;" checked>
+              Play "Next Question" Audio
+            </label>
+            <small style="color: #888; font-size: 11px;">Play TTS audio when moving to next questions</small>
+          </div>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="audioPlayLastQuestion" style="width: auto; margin: 0;" checked>
+              Play "Last Question" Audio
+            </label>
+            <small style="color: #888; font-size: 11px;">Play TTS audio announcing the last question</small>
+          </div>
+
+          <h4 style="color: #ddd; margin: 20px 0 10px;">Option Phrases</h4>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="audioPlayOptions" style="width: auto; margin: 0;" checked>
+              Play Option Labels (A, B, C, D or 1, 2, 3, 4)
+            </label>
+            <small style="color: #888; font-size: 11px;">Play TTS audio for each option label</small>
+          </div>
+
+          <h4 style="color: #ddd; margin: 20px 0 10px;">Timing Settings</h4>
+
+          <div class="form-group">
+            <label>Gap Between Questions: <span id="audioQuestionGapVal">1.0s</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="audioQuestionGap" data-action="decrement">&minus;</button><input type="number" id="audioQuestionGap" min="0" max="5" step="0.1" value="1"><button type="button" class="number-input-btn" data-input="audioQuestionGap" data-action="increment">+</button></div>
+            <small style="color: #888; font-size: 11px;">Pause duration between consecutive questions (in seconds)</small>
+          </div>
+
+          <div class="form-group">
+            <label>Option Reveal Mode</label>
+            <select id="audioOptionRevealMode">
+              <option value="all">All at Once</option>
+              <option value="sequential">One After Another</option>
+            </select>
+            <small style="color: #888; font-size: 11px;">How options appear on screen</small>
+          </div>
+
+          <div class="form-group" id="audioOptionDelayGroup" style="display: none;">
+            <label>Delay Between Options: <span id="audioOptionDelayVal">0.5s</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="audioOptionDelay" data-action="decrement">&minus;</button><input type="number" id="audioOptionDelay" min="0" max="3" step="0.1" value="0.5"><button type="button" class="number-input-btn" data-input="audioOptionDelay" data-action="increment">+</button></div>
+            <small style="color: #888; font-size: 11px;">Pause between revealing each option (in seconds)</small>
+          </div>
+
+          <div class="form-group">
+            <label>Question-to-Options Gap: <span id="audioQToOptionsGapVal">0.5s</span></label>
+            <div class="number-input-group"><button type="button" class="number-input-btn" data-input="audioQToOptionsGap" data-action="decrement">&minus;</button><input type="number" id="audioQToOptionsGap" min="0" max="3" step="0.1" value="0.5"><button type="button" class="number-input-btn" data-input="audioQToOptionsGap" data-action="increment">+</button></div>
+            <small style="color: #888; font-size: 11px;">Pause between question and first option (in seconds)</small>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Preview Panel (Right Side) -->
+      <main class="preview-panel">
+        <div class="preview-header">
+          <div class="preview-header-left">
+            <div class="custom-select-wrapper preset-selector-wrapper" style="min-width: 220px;">
+              <div class="custom-select" id="presetSelector" data-placeholder="Select preset...">
+                <div class="custom-select-trigger">
+                  <span class="custom-select-value">Select preset...</span>
+                  <span class="custom-select-arrow">&#9662;</span>
+                </div>
+                <div class="custom-select-dropdown">
+                  <input type="text" class="custom-select-search" placeholder="Search presets...">
+                  <div class="custom-select-options"></div>
+                </div>
+              </div>
+            </div>
+            <div class="save-preset-group">
+              <button id="saveBtn" class="btn btn-primary btn-icon" aria-label="Save Preset">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              </button>
+              <button id="saveDropdownBtn" class="btn btn-secondary dropdown-toggle btn-icon" aria-label="More save options">&#8964;</button>
+              <div id="saveDropdownMenu" class="dropdown-menu">
+                <a href="#" id="saveAsCopyBtn" class="dropdown-item">Save As Copy</a>
+                <a href="#" id="deletePresetBtn" class="dropdown-item dropdown-item-danger">Delete Preset</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="preview-info">
+          <div class="info-item">
+            <span class="info-label">Status:</span>
+            <span class="info-value" id="statusText">Loading...</span>
+            <div id="fontWarnings" class="status-warning"></div>
+          |
+            <span class="info-label">Canvas:</span>
+            <span class="info-value" id="canvasInfo">1920x1080</span>
+          </div>
+          <div class="preview-controls">
+            <button id="playBtn" class="btn-preview-control" title="Play" aria-label="Play">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+            <button id="pauseBtn" class="btn-preview-control" title="Pause" aria-label="Pause">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+            </button>
+            <button id="seekStartBtn" class="btn-preview-control" title="Go to Start" aria-label="Go to Start">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+            </button>
+            <button id="seekEndBtn" class="btn-preview-control" title="Go to End" aria-label="Go to End">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zm2.5-6 6-4.5v9L8.5 12zM16 6h2v12h-2z"/></svg>
+            </button>
+            <button id="fullscreenBtn" class="btn-preview-control" title="Fullscreen" aria-label="Toggle Fullscreen">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+            </button>
+            <span id="timeDisplay">0.00s</span>
+          </div>
+        </div>
+
+        <div class="canvas-container">
+          <canvas id="previewCanvas"></canvas>
+        </div>
+      </main>
+        </div>
+      </main>
+
+    </div>
+
+  </div>
+
+  <!-- Load Scripts -->
+  <script>
+    // Sidebar toggle functionality
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggleBtn = document.getElementById('toggleSidebar');
+      const sidebar = document.getElementById('sidebar');
+      
+      if (toggleBtn && sidebar) {
+        const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
+
+        const closeMobileSidebarOnOutsideClick = (e) => {
+          if (!sidebar.classList.contains('active')) return;
+          const clickedInsideSidebar = sidebar.contains(e.target);
+          const clickedToggle = toggleBtn.contains(e.target);
+          if (!clickedInsideSidebar && !clickedToggle) {
+            sidebar.classList.remove('active');
+          }
+        };
+
+        toggleBtn.addEventListener('click', () => {
+          if (isMobile()) {
+            sidebar.classList.toggle('active');
+            return;
+          }
+          sidebar.classList.toggle('collapsed');
+        });
+
+        document.addEventListener('click', closeMobileSidebarOnOutsideClick);
+        window.addEventListener('resize', () => {
+          if (!isMobile()) {
+            sidebar.classList.remove('active');
+          }
+        });
+      }
+    });
+  </script>
+  
+  <!-- Save As Copy Modal -->
+  <div id="saveAsModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Save As Copy</h3>
+        <button class="modal-close" id="saveAsModalClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="saveAsForm">
+          <div class="form-group">
+            <label for="copyPresetName">Preset Name</label>
+            <input 
+              type="text" 
+              id="copyPresetName" 
+              class="form-control" 
+              placeholder="Enter preset name"
+              required
+            >
+            <small style="color: #888;">Give your copy a unique name</small>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="btn btn-secondary" id="saveAsCancelBtn">Cancel</button>
+            <button type="submit" class="btn btn-primary">Save Copy</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="deleteModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Delete Preset</h3>
+        <button class="modal-close" id="deleteModalClose">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color: #ccc; margin-bottom: 20px;">
+          Are you sure you want to delete <strong id="deletePresetNameDisplay"></strong>?
+        </p>
+        <p style="color: #f44336; font-size: 14px;">
+          &#9888; This action cannot be undone.
+        </p>
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="deleteCancelBtn">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/designer.js"></script>
+</body>
+</html>
