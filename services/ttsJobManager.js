@@ -109,6 +109,8 @@ export class TTSJobManager {
   }
 
   _getQuestionOptionEntries(question, correctOnly = false) {
+    // Requirements: always generate audio for all options.
+    // We ignore the correctOnly flag to ensure all options are processed.
     if (Array.isArray(question?.options)) {
       return question.options
         .map((text, index) => ({
@@ -116,10 +118,10 @@ export class TTSJobManager {
           text,
           isCorrect: Number(question.correct_option) === index
         }))
-        .filter(option => option.text && (!correctOnly || option.isCorrect));
+        .filter(option => option.text);
     }
 
-    const keys = correctOnly ? [question?.correct_answer] : ['option_1', 'option_2', 'option_3', 'option_4'];
+    const keys = ['option_1', 'option_2', 'option_3', 'option_4'];
     return keys
       .filter(Boolean)
       .map(key => ({ key, text: question?.[key], isCorrect: key === question?.correct_answer }))

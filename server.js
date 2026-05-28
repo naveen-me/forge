@@ -185,7 +185,7 @@ import { TTSJobManager } from './services/ttsJobManager.js';
 // Import routes
 import presetsRouter from './routes/presets.js';
 import questionsRouter from './routes/questions.js';
-import videosRouter from './routes/videos.js';
+import videosRouter, { setupVideoQueueHandler } from './routes/videos.js';
 import mediaRouter from './routes/media.js';
 import topicsRouter from './routes/topics.js';
 import fontsRouter from './routes/fonts.js';
@@ -230,6 +230,9 @@ app.use('/api', (req, res, next) => {
 // Make db/persistence available to routes
 app.locals.db = db;
 app.locals.persistDb = persistDb;
+
+// Initialize video queue processing
+setupVideoQueueHandler(db);
 
 // API Routes
 app.use('/api/presets', presetsRouter);

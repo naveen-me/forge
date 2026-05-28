@@ -11,13 +11,17 @@ export class HierarchyComponent {
     this.topics = [];
     this.questions = [];
     this.selectedTopicId = null;
+    this.selectedSetId = null;
     this.formsHelper = new HierarchyForms(this);
   }
 
   async render() {
     try {
-      await this.loadTopics();
-      await this.loadQuestions();
+      await Promise.all([
+        this.loadTopics(),
+        this.loadQuestions(),
+        this.loadSets()
+      ]);
       this.renderContent();
     } catch (error) {
       console.error('Error rendering data management:', error);
@@ -41,20 +45,37 @@ export class HierarchyComponent {
 
     // Also load TTS cache to find playable audio
     try {
-        const ttsRes = await fetch('/api/tts/cache');
+        let url = '/api/tts/cache';
+        if (this.selectedSetId) {
+          url += `?set_id=${this.selectedSetId}`;
+        }
+        const ttsRes = await fetch(url);
         this.ttsCache = await ttsRes.json();
     } catch (e) {
         this.ttsCache = [];
     }
   }
 
+  async loadSets() {
+    try {
+      const response = await fetch('/api/tts/sets');
+      this.ttsSets = await response.json();
+    } catch (error) {
+      this.ttsSets = [];
+    }
+  }
+
   renderContent() {
     this.cleanupTopicSelect();
+    this.cleanupSetSelect();
     this.contentEl.innerHTML = `
       <div class="content-header">
         <div>
           <h1 class="content-title">Data Management</h1>
           <p class="content-description">Topics &rarr; Questions</p>
+        </div>
+        <div class="header-actions" style="display: flex; gap: 10px; align-items: center;" id="setFilterContainer">
+          <!-- Set filter rendered here -->
         </div>
       </div>
 
@@ -88,16 +109,60 @@ export class HierarchyComponent {
     `;
 
     this.attachEventListeners();
+    this.renderSetFilter();
     this.renderList();
   }
 
+  renderSetFilter() {
+      const container = document.getElementById('setFilterContainer');
+      if (!container) return;
+
+      this.cleanupSetSelect();
+
+      let sets = this.ttsSets || [];
+      if (this.selectedTopicId) {
+          sets = sets.filter(s => String(s.topic_id) === String(this.selectedTopicId));
+      }
+
+      container.innerHTML = `
+        <label class="form-label" style="margin:0; font-size: 0.9em; color: #666;">Audio Set Filter:</label>
+        <select id="hierarchySetFilter" class="form-control" style="width: 200px;">
+          <option value="">Default Audio</option>
+          ${sets.map(s => `<option value="${s.id}" ${this.selectedSetId === s.id ? 'selected' : ''}>${this.escapeHtml(s.name)}</option>`).join('')}
+        </select>
+      `;
+
+      const setFilter = document.getElementById('hierarchySetFilter');
+      if (setFilter) {
+          if (window.$ && window.$.fn?.select2) {
+              const $setSelect = window.$(setFilter);
+              $setSelect.select2({ width: '200px', placeholder: 'Default Audio' });
+              $setSelect.on('change', async (e) => {
+                  this.selectedSetId = e.target.value || null;
+                  await this.loadQuestions();
+                  this.renderList();
+              });
+              this.setSelect2Instance = $setSelect;
+          } else {
+              setFilter.addEventListener('change', async (e) => {
+                  this.selectedSetId = e.target.value || null;
+                  await this.loadQuestions();
+                  this.renderList();
+              });
+          }
+      }
+  }
+
   attachEventListeners() {
+
     const topicSelect = document.getElementById('topicSelect');
     if (topicSelect) {
-      const handleTopicChange = (value) => {
+      const handleTopicChange = async (value) => {
         this.selectedTopicId = value || null;
-        // Only update the question list and button state, not the entire page
+        this.selectedSetId = null; // Reset set filter when topic changes
         this.updateAddQuestionButton();
+        this.renderSetFilter(); // Refresh sets for new topic
+        await this.loadQuestions();
         this.renderList();
       };
 
@@ -317,6 +382,18 @@ export class HierarchyComponent {
     }
   }
 
+  cleanupSetSelect() {
+    if (!this.setSelect2Instance || !window.$?.fn?.select2) return;
+    try {
+      this.setSelect2Instance.off('change');
+      this.setSelect2Instance.select2('destroy');
+    } catch (error) {
+      console.warn('Failed to cleanup set select2 instance', error);
+    } finally {
+      this.setSelect2Instance = null;
+    }
+  }
+
   async deleteTopic(topicId) {
     if (!topicId) return;
     if (!confirm('Delete this topic and all its questions?')) return;
@@ -411,6 +488,11 @@ export class HierarchyComponent {
         icon.textContent = 'play_arrow';
         btn.classList.remove('playing');
     });
+  }
+
+  cleanup() {
+    this.cleanupTopicSelect();
+    this.cleanupSetSelect();
   }
 
   escapeHtml(text) {
