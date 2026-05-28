@@ -10,7 +10,7 @@
 <body>
   <!-- App Container -->
   <div id="app">
-    
+
     <!-- Header -->
     <header class="app-header">
       <div class="header-left">
@@ -27,11 +27,11 @@
 
     <!-- Main Container -->
     <div class="main-container">
-      
+
       <!-- Sidebar Navigation -->
       <aside id="sidebar" class="sidebar">
         <nav class="nav-menu">
-          
+
           <!-- Dashboard -->
           <div class="nav-section">
             <a href="/" class="nav-item">
@@ -1051,7 +1051,7 @@
           </p>
 
           <h4 style="color: #ddd; margin: 20px 0 10px;">Navigation Phrases</h4>
-          
+
           <div class="form-group">
             <label style="display: flex; align-items: center; gap: 8px;">
               <input type="checkbox" id="audioPlayFirstQuestion" style="width: auto; margin: 0;" checked>
@@ -1084,6 +1084,24 @@
               Play Option Labels (A, B, C, D or 1, 2, 3, 4)
             </label>
             <small style="color: #888; font-size: 11px;">Play TTS audio for each option label</small>
+          </div>
+
+          <h4 style="color: #ddd; margin: 20px 0 10px;">Correct Answer Phrases</h4>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="audioPlayCorrectAnswer" style="width: auto; margin: 0;" checked>
+              Play Correct Answer Audio
+            </label>
+            <small style="color: #888; font-size: 11px;">Play TTS audio for the correct answer after countdown</small>
+          </div>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 8px;">
+              <input type="checkbox" id="audioPlayCorrectAnswerPhrase" style="width: auto; margin: 0;" checked>
+              Play "The correct answer is" Phrase
+            </label>
+            <small style="color: #888; font-size: 11px;">Play "The correct answer is" before the answer</small>
           </div>
 
           <h4 style="color: #ddd; margin: 20px 0 10px;">Timing Settings</h4>
@@ -1192,7 +1210,7 @@
     document.addEventListener('DOMContentLoaded', () => {
       const toggleBtn = document.getElementById('toggleSidebar');
       const sidebar = document.getElementById('sidebar');
-      
+
       if (toggleBtn && sidebar) {
         const isMobile = () => window.matchMedia('(max-width: 768px)').matches;
 
@@ -1222,7 +1240,7 @@
       }
     });
   </script>
-  
+
   <!-- Save As Copy Modal -->
   <div id="saveAsModal" class="modal" style="display: none;">
     <div class="modal-content">
@@ -1234,10 +1252,10 @@
         <form id="saveAsForm">
           <div class="form-group">
             <label for="copyPresetName">Preset Name</label>
-            <input 
-              type="text" 
-              id="copyPresetName" 
-              class="form-control" 
+            <input
+              type="text"
+              id="copyPresetName"
+              class="form-control"
               placeholder="Enter preset name"
               required
             >
