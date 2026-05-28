@@ -209,36 +209,121 @@
   font-size: 20px;
 }
 
-/* Progress Area */
+/* Progress Area Revamp */
 .progress-area {
-  background: #f9fafb;
-  border: 2px solid #3b82f6;
-  border-radius: 8px;
-  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+  margin-top: 24px;
 }
 
-.progress-area h4 {
-  margin: 0 0 16px 0;
-  color: #111827;
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.progress-title {
   font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.progress-percentage {
+  font-size: 18px;
+  font-weight: 800;
+  color: #4f46e5;
+}
+
+.progress-bar-container {
+  height: 12px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  border: 1px solid #e2e8f0;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #4f46e5 0%, #818cf8 100%);
+  transition: width 0.3s ease;
 }
 
 .progress-log {
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  padding: 16px;
-  max-height: 300px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+  max-height: 200px;
   overflow-y: auto;
+  font-family: 'ui-monospace', 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+  font-size: 13px;
 }
 
 .progress-log p {
-  margin: 8px 0;
-  padding: 8px 12px;
-  background: #f9fafb;
-  border-radius: 4px;
-  font-size: 14px;
-  line-height: 1.5;
+  margin: 4px 0;
+  color: #475569;
+  display: flex;
+  gap: 8px;
+}
+
+.log-time {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.log-msg-success { color: #16a34a; }
+.log-msg-error { color: #dc2626; }
+.log-msg-info { color: #2563eb; }
+
+/* Sets and Cache Revamp */
+.tts-set-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.2s;
+}
+
+.tts-set-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.set-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.set-name {
+  font-weight: 700;
+  font-size: 15px;
+  color: #1e293b;
+}
+
+.set-meta {
+  font-size: 13px;
+  color: #64748b;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.set-actions {
+  display: flex;
+  gap: 8px;
 }
 
 /* Scrollbar Styling */
@@ -1607,17 +1692,17 @@ select.form-control {
   .phrase-item {
     padding: 10px;
   }
-  
+
   /* Profiles list */
   .profiles-list {
     grid-template-columns: 1fr;
     gap: 12px;
   }
-  
+
   .profile-card {
     padding: 12px;
   }
-  
+
   /* Cache items */
   .cache-item {
     flex-direction: column;
@@ -1625,16 +1710,16 @@ select.form-control {
     gap: 12px;
     padding: 12px;
   }
-  
+
   .cache-info {
     width: 100%;
   }
-  
+
   .cache-actions {
     width: 100%;
     justify-content: flex-start;
   }
-  
+
   /* Phrase items */
   .phrase-item {
     flex-direction: column;
@@ -1642,58 +1727,58 @@ select.form-control {
     gap: 12px;
     padding: 12px;
   }
-  
+
   .phrase-text {
     width: 100%;
   }
-  
+
   .phrase-actions {
     width: 100%;
     justify-content: flex-start;
   }
-  
+
   /* Settings panel */
   .settings-panel {
     padding: 16px;
   }
-  
+
   /* TTS questions list */
   .tts-question-card {
     padding: 12px;
   }
-  
+
   .tts-question-header {
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .tts-qselect-controls {
     width: 100%;
   }
-  
+
   /* Audio player */
   .audio-player {
     flex-direction: column;
     gap: 10px;
   }
-  
+
   .audio-controls {
     width: 100%;
   }
-  
+
   /* Form inputs */
   .tts-input,
   .tts-select,
   .tts-textarea {
     font-size: 16px; /* Prevents iOS zoom */
   }
-  
+
   /* Buttons */
   .tts-btn-group {
     flex-wrap: wrap;
     gap: 8px;
   }
-  
+
   .tts-btn {
     flex: 1;
     min-width: 100px;
@@ -1716,16 +1801,16 @@ select.form-control {
   .tabs-mobile {
     margin-bottom: 8px;
   }
-  
+
   .profile-card {
     padding: 10px;
   }
-  
+
   .cache-item,
   .phrase-item {
     padding: 10px;
   }
-  
+
   .tts-question-card {
     padding: 10px;
   }

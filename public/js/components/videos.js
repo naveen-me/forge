@@ -15,18 +15,18 @@ export class VideosComponent {
     this.selectedQuestionIds = new Set();
     this.batchSize = 0;
     this.videoName = '';
-    
+
     // Queue management
     this.queueStatus = { current: null, queue: [], history: [] };
     this.queuePollInterval = null;
-    
+
     // Video list filters
     this.searchQuery = '';
     this.currentPage = 1;
     this.itemsPerPage = 12;
     this.sortBy = 'date';
     this.sortOrder = 'desc';
-    
+
     // Select2 instances for cleanup
     this.presetSelect2 = null;
     this.topicSelect2 = null;
@@ -35,7 +35,10 @@ export class VideosComponent {
   async render() {
     this.container.innerHTML = `
       <div class="content-header">
-        <h1 class="content-title">🎬 Video Generator</h1>
+        <div>
+          <h1 class="content-title">Video Generator</h1>
+          <p class="content-description">Create and manage quiz videos</p>
+        </div>
       </div>
 
       <div class="card mb-20">
@@ -129,9 +132,9 @@ export class VideosComponent {
               <option value="name-desc">Name Z-A</option>
             </select>
           </div>
-          
+
           <div id="videoList"></div>
-          
+
           <!-- Pagination -->
           <div id="videoPagination" class="pagination-container"></div>
         </div>
@@ -218,7 +221,7 @@ export class VideosComponent {
     select.disabled = false;
     select.innerHTML = '<option value="">Select preset...</option>' +
       this.presets.map(p => `<option value="${p.id}">${p.name || 'Unnamed Preset'}</option>`).join('');
-    
+
     // Initialize Select2 if available
     this.initializeSelect2();
   }
@@ -228,7 +231,7 @@ export class VideosComponent {
     if (!select) return;
     select.innerHTML = '<option value="">Select topic...</option>' +
       this.topics.map(t => `<option value="${t.id}">${this.escapeHtml(t.name)}</option>`).join('');
-    
+
     // Initialize Select2 if available
     this.initializeSelect2();
   }
@@ -242,7 +245,7 @@ export class VideosComponent {
     // Initialize Preset Select2
     if (presetSelect && !this.presetSelect2) {
       const $presetSelect = window.$(presetSelect);
-      
+
       // Destroy existing instance if any
       if ($presetSelect.hasClass('select2-hidden-accessible')) {
         $presetSelect.select2('destroy');
@@ -267,7 +270,7 @@ export class VideosComponent {
     // Initialize Topic Select2
     if (topicSelect && !this.topicSelect2) {
       const $topicSelect = window.$(topicSelect);
-      
+
       // Destroy existing instance if any
       if ($topicSelect.hasClass('select2-hidden-accessible')) {
         $topicSelect.select2('destroy');
@@ -383,17 +386,23 @@ export class VideosComponent {
 
     list.innerHTML = topicQuestions.map(q => `
       <div class="question-checkbox-item">
-        <label style="display: flex; align-items: flex-start; gap: 10px; cursor: pointer; padding: 12px; border-radius: 6px; background: #f5f5f5; margin-bottom: 8px; transition: background 0.2s; border: 1px solid #e0e0e0;">
-          <input type="checkbox" 
-                 class="question-checkbox" 
-                 data-question-id="${q.id}" 
+        <label style="display: flex; align-items: flex-start; gap: 14px; cursor: pointer; padding: 16px; border-radius: 12px; background: #ffffff; margin-bottom: 10px; transition: all 0.2s; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.04);">
+          <input type="checkbox"
+                 class="question-checkbox"
+                 data-question-id="${q.id}"
                  ${this.selectedQuestionIds.has(q.id) ? 'checked' : ''}
-                 style="margin-top: 4px;">
-          <div style="flex: 1;">
-            <div style="color: #333; font-weight: 500; margin-bottom: 4px;">${this.escapeHtml(q.question || q.question_text || 'Untitled Question')}</div>
-            <div style="color: #666; font-size: 0.85em;">
-              ${Array.isArray(q.options) ? q.options.length : 0} options • 
-              Correct Answer: Option ${q.correct_option !== undefined && q.correct_option !== null ? (parseInt(q.correct_option) + 1) : 'N/A'}
+                 style="margin-top: 4px; width: 20px; height: 20px; accent-color: #4f46e5; flex-shrink: 0;">
+          <div style="flex: 1; min-width: 0;">
+            <div style="color: #1e293b; font-weight: 700; margin-bottom: 6px; font-size: 15px; line-height: 1.4;">${this.escapeHtml(q.question || q.question_text || 'Untitled Question')}</div>
+            <div style="color: #64748b; font-size: 12px; display: flex; gap: 16px; align-items: center;">
+              <span style="display: flex; align-items: center; gap: 4px;">
+                <span class="material-symbols-outlined" style="font-size: 14px;">list</span>
+                <strong>${Array.isArray(q.options) ? q.options.length : 0}</strong> options
+              </span>
+              <span style="display: flex; align-items: center; gap: 4px;">
+                <span class="material-symbols-outlined" style="font-size: 14px; color: #22c55e;">check_circle</span>
+                Correct: <strong>Option ${q.correct_option !== undefined && q.correct_option !== null ? (parseInt(q.correct_option) + 1) : 'N/A'}</strong>
+              </span>
             </div>
           </div>
         </label>
@@ -454,7 +463,7 @@ export class VideosComponent {
 
   async addToQueue() {
     const questionIds = Array.from(this.selectedQuestionIds);
-    
+
     if (!this.selectedPreset || questionIds.length === 0) {
       alert('Please select a preset and at least one question');
       return;
@@ -507,7 +516,7 @@ export class VideosComponent {
     try {
       const res = await fetch('/api/videos/queue/status');
       this.queueStatus = await res.json();
-      
+
       // Debug logging
       if (this.queueStatus.current) {
         console.log('Queue status:', {
@@ -518,9 +527,9 @@ export class VideosComponent {
           status: this.queueStatus.current.status
         });
       }
-      
+
       this.renderQueueStatus();
-      
+
       // Refresh video list if there are completed jobs
       if (this.queueStatus.history.some(j => j.status === 'completed')) {
         await this.loadVideos();
@@ -534,7 +543,7 @@ export class VideosComponent {
   renderQueueStatus() {
     const card = document.getElementById('queueStatusCard');
     const content = document.getElementById('queueStatusContent');
-    
+
     if (!card || !content) return;
 
     const { current, queue } = this.queueStatus;
@@ -552,19 +561,24 @@ export class VideosComponent {
     // Current job
     if (current) {
       html += `
-        <div class="queue-job current-job">
-          <div class="queue-job-header">
-            <div>
-              <span class="badge" style="background: #4CAF50;">⏳ Processing</span>
-              <strong style="margin-left: 10px;">${this.escapeHtml(current.customName || `Job ${current.id}`)}</strong>
+        <div class="queue-job current-job" style="border-left: 4px solid #4f46e5; background: #f5f3ff; border-radius: 12px; padding: 20px; margin-bottom: 16px; border: 1px solid #e2e8f0; border-left-width: 4px;">
+          <div class="queue-job-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span class="material-symbols-outlined" style="color: #4f46e5; animation: spin 2s linear infinite;">sync</span>
+              <strong style="font-size: 16px; color: #1e293b;">${this.escapeHtml(current.customName || `Job ${current.id}`)}</strong>
             </div>
-            <button class="btn btn-small btn-danger" onclick="window.videosComponent.cancelJob('${current.id}')">Cancel</button>
+            <button class="icon-btn danger" onclick="window.videosComponent.cancelJob('${current.id}')" title="Cancel Generation">
+              <span class="material-symbols-outlined">close</span>
+            </button>
           </div>
           <div class="queue-job-progress">
-            <div class="progress-bar-container">
-              <div class="progress-bar" style="width: ${current.progress || 0}%"></div>
+            <div class="progress-bar-container" style="height: 12px; background: #e2e8f0; border-radius: 6px; overflow: hidden; margin-bottom: 10px; border: none; box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);">
+              <div class="progress-bar" style="width: ${current.progress || 0}%; background: linear-gradient(90deg, #4f46e5, #818cf8); height: 100%; transition: width 0.4s ease;"></div>
             </div>
-            <span class="progress-text">${current.completedBatches || 0} / ${current.totalBatches || 0} batches (${current.progress || 0}%)</span>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-size: 13px; color: #64748b; font-weight: 600;">Batch ${current.completedBatches || 0} of ${current.totalBatches || 0}</span>
+              <span style="font-size: 15px; color: #4f46e5; font-weight: 800;">${current.progress || 0}%</span>
+            </div>
           </div>
         </div>
       `;
@@ -572,19 +586,26 @@ export class VideosComponent {
 
     // Queued jobs
     if (queue.length > 0) {
-      html += `<div style="margin-top: 15px;"><strong>Queued (${queue.length})</strong></div>`;
+      html += `<div style="margin: 20px 0 12px; font-size: 13px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;">
+        <span class="material-symbols-outlined" style="font-size: 18px;">list_alt</span>
+        Next in Queue (${queue.length})
+      </div>`;
       queue.forEach((job, index) => {
         html += `
-          <div class="queue-job queued-job">
-            <div class="queue-job-header">
-              <div>
-                <span class="badge" style="background: #666;">⏱ Queue #${index + 1}</span>
-                <span style="margin-left: 10px;">${this.escapeHtml(job.customName || `Job ${job.id}`)}</span>
+          <div class="queue-job queued-job" style="padding: 16px; border: 1px solid #e2e8f0; background: #fff; margin-bottom: 10px; border-left: 4px solid #94a3b8; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+            <div class="queue-job-header" style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="material-symbols-outlined" style="color: #94a3b8; font-size: 20px;">schedule</span>
+                <span style="font-size: 14px; font-weight: 700; color: #334155;">${this.escapeHtml(job.customName || `Job ${job.id}`)}</span>
               </div>
-              <button class="btn btn-small btn-secondary" onclick="window.videosComponent.cancelJob('${job.id}')">Remove</button>
+              <button class="icon-btn" onclick="window.videosComponent.cancelJob('${job.id}')" title="Remove from Queue">
+                <span class="material-symbols-outlined">delete</span>
+              </button>
             </div>
-            <div style="color: #666; font-size: 0.9em; margin-top: 5px;">
-              ${job.questionIds?.length || 0} questions • ${job.totalBatches} batch${job.totalBatches !== 1 ? 'es' : ''}
+            <div style="color: #94a3b8; font-size: 12px; margin-top: 6px; padding-left: 30px; display: flex; gap: 12px;">
+              <span><strong>${job.questionIds?.length || 0}</strong> questions</span>
+              <span>&bull;</span>
+              <span><strong>${job.totalBatches}</strong> batch${job.totalBatches !== 1 ? 'es' : ''}</span>
             </div>
           </div>
         `;
@@ -619,12 +640,12 @@ export class VideosComponent {
     if (!Array.isArray(this.videos)) {
       return [];
     }
-    
+
     let filtered = [...this.videos]; // Create a copy
 
     // Search filter
     if (this.searchQuery) {
-      filtered = filtered.filter(v => 
+      filtered = filtered.filter(v =>
         v.filename && v.filename.toLowerCase().includes(this.searchQuery.toLowerCase())
       );
     }
@@ -653,7 +674,7 @@ export class VideosComponent {
   renderVideoList() {
     const container = document.getElementById('videoList');
     const paginationContainer = document.getElementById('videoPagination');
-    
+
     if (!container) return;
 
     if (!Array.isArray(this.videos) || this.videos.length === 0) {
@@ -677,14 +698,29 @@ export class VideosComponent {
     const pageVideos = filteredVideos.slice(startIndex, endIndex);
 
     container.innerHTML = `
-      <div class="video-grid">
+      <div class="video-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
         ${pageVideos.map(v => `
-          <div class="video-card">
-            <div class="video-name">${this.escapeHtml(v.filename)}</div>
-            <div class="video-meta">${new Date(v.created).toLocaleString()}</div>
-            <div class="video-actions">
-              <a href="/generated-videos/${v.filename}" target="_blank" class="btn btn-secondary btn-small">Open</a>
-              <button class="btn btn-small btn-danger" onclick="window.videosComponent.deleteVideo('${v.filename}')">Delete</button>
+          <div class="video-card" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06); transition: all 0.2s ease;">
+            <div style="display: flex; align-items: flex-start; gap: 16px; margin-bottom: 16px;">
+              <div style="width: 56px; height: 56px; border-radius: 12px; background: #eef2ff; display: flex; align-items: center; justify-content: center; color: #4f46e5; flex-shrink: 0;">
+                <span class="material-symbols-outlined" style="font-size: 32px;">movie</span>
+              </div>
+              <div style="flex: 1; min-width: 0;">
+                <div class="video-name" style="font-weight: 800; color: #1e293b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-bottom: 4px; font-size: 16px;">${this.escapeHtml(v.filename)}</div>
+                <div class="video-meta" style="font-size: 13px; color: #64748b; display: flex; align-items: center; gap: 6px;">
+                  <span class="material-symbols-outlined" style="font-size: 14px;">calendar_today</span>
+                  ${new Date(v.created).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })}
+                </div>
+              </div>
+            </div>
+            <div class="video-actions" style="display: flex; gap: 10px; padding-top: 16px; border-top: 1px solid #f1f5f9;">
+              <a href="/generated-videos/${v.filename}" target="_blank" class="btn btn-secondary btn-small" style="flex: 1; justify-content: center; border-radius: 8px;">
+                <span class="material-symbols-outlined" style="font-size: 18px;">visibility</span>
+                View Video
+              </a>
+              <button class="icon-btn danger" onclick="window.videosComponent.deleteVideo('${v.filename}')" title="Delete Video" style="width: 36px; height: 36px; border-radius: 8px;">
+                <span class="material-symbols-outlined">delete</span>
+              </button>
             </div>
           </div>
         `).join('')}
@@ -712,7 +748,7 @@ export class VideosComponent {
 
     // Previous button
     html += `
-      <button class="pagination-btn ${this.currentPage === 1 ? 'disabled' : ''}" 
+      <button class="pagination-btn ${this.currentPage === 1 ? 'disabled' : ''}"
               onclick="window.videosComponent.goToPage(${this.currentPage - 1})"
               ${this.currentPage === 1 ? 'disabled' : ''}>
         ‹ Prev
@@ -730,7 +766,7 @@ export class VideosComponent {
     // Page numbers
     for (let i = startPage; i <= endPage; i++) {
       html += `
-        <button class="pagination-btn ${i === this.currentPage ? 'active' : ''}" 
+        <button class="pagination-btn ${i === this.currentPage ? 'active' : ''}"
                 onclick="window.videosComponent.goToPage(${i})">
           ${i}
         </button>
@@ -747,7 +783,7 @@ export class VideosComponent {
 
     // Next button
     html += `
-      <button class="pagination-btn ${this.currentPage === totalPages ? 'disabled' : ''}" 
+      <button class="pagination-btn ${this.currentPage === totalPages ? 'disabled' : ''}"
               onclick="window.videosComponent.goToPage(${this.currentPage + 1})"
               ${this.currentPage === totalPages ? 'disabled' : ''}>
         Next ›
@@ -761,9 +797,9 @@ export class VideosComponent {
   goToPage(page) {
     const filteredVideos = this.getFilteredAndSortedVideos();
     const totalPages = Math.ceil(filteredVideos.length / this.itemsPerPage);
-    
+
     if (page < 1 || page > totalPages) return;
-    
+
     this.currentPage = page;
     this.renderVideoList();
   }

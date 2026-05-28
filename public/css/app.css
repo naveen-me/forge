@@ -148,8 +148,8 @@ body {
 
 .nav-item.active {
   background: #f1efe6;
-  color: #0f7a2e;
-  border-left-color: #4CAF50;
+  color: #166534;
+  border-left-color: #22c55e;
 }
 
 .nav-icon {
@@ -330,12 +330,12 @@ body {
 }
 
 .btn-secondary {
-  background: #2196F3;
+  background: #6366f1;
   color: white;
 }
 
 .btn-secondary:hover {
-  background: #0b7dda;
+  background: #4f46e5;
 }
 
 .btn-danger {
@@ -801,24 +801,24 @@ input[type="color"] {
     font-size: 22px;
     padding: 6px 8px;
   }
-  
+
   .app-title {
     font-size: 16px;
   }
-  
+
   .header-right {
     gap: 8px !important;
   }
-  
+
   .user-info {
     display: none; /* Hide on small screens */
   }
-  
+
   #logoutBtn {
     padding: 8px 12px !important;
     font-size: 14px;
   }
-  
+
   /* Sidebar - slide-in from left */
 }
 
@@ -833,11 +833,11 @@ input[type="color"] {
     transition: transform 0.3s ease;
     box-shadow: 2px 0 8px rgba(0,0,0,0.2);
   }
-  
+
   .sidebar.active {
     transform: translateX(0);
   }
-  
+
   /* Overlay for sidebar */
   .sidebar.active::before {
     content: '';
@@ -849,15 +849,15 @@ input[type="color"] {
     background: #ffffff;
     z-index: -1;
   }
-  
-  
+
+
   .content {
     padding: 16px;
     width: 100%;
     /* Add extra padding for Android navigation bar on tablets */
     padding-bottom: calc(16px + env(safe-area-inset-bottom, 20px));
   }
-  
+
   /* Content header */
   .content-header {
     flex-direction: column;
@@ -866,21 +866,21 @@ input[type="color"] {
     margin-bottom: 20px;
     padding-bottom: 16px;
   }
-  
+
   .content-title {
     font-size: 22px;
   }
-  
+
   .content-description {
     font-size: 13px;
   }
-  
+
   /* Buttons */
   .btn {
     padding: 10px 16px;
     font-size: 14px;
   }
-  
+
   .btn-group {
     flex-wrap: wrap;
     gap: 8px;
@@ -890,44 +890,44 @@ input[type="color"] {
     width: 100%;
     justify-content: center;
   }
-  
+
   /* Forms */
   .form-group {
     margin-bottom: 16px;
   }
-  
+
   .form-label {
     font-size: 14px;
     margin-bottom: 6px;
   }
-  
+
   .form-input,
   .form-select,
   .form-textarea {
     font-size: 16px; /* Prevents iOS zoom */
     padding: 10px 12px;
   }
-  
+
   /* Tables - make scrollable */
   .table-container {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
   }
-  
+
   table {
     min-width: 600px; /* Force horizontal scroll for wide tables */
   }
-  
+
   /* Cards/Grid */
   .card-grid {
     grid-template-columns: 1fr;
     gap: 16px;
   }
-  
+
   .card {
     padding: 16px;
   }
-  
+
   /* Modals */
   .modal-content {
     width: calc(100% - 32px);
@@ -936,31 +936,31 @@ input[type="color"] {
     max-height: calc(100vh - 32px);
     overflow-y: auto;
   }
-  
+
   .modal-header {
     padding: 16px;
   }
-  
+
   .modal-body {
     padding: 16px;
   }
-  
+
   .modal-footer {
     padding: 16px;
     flex-direction: column-reverse;
     gap: 8px;
   }
-  
+
   .modal-footer .btn {
     width: 100%;
   }
-  
+
   /* Search bar */
   .search-bar {
     flex-direction: column;
     gap: 12px;
   }
-  
+
   .search-input {
     width: 100%;
   }
@@ -971,31 +971,31 @@ input[type="color"] {
   .app-header {
     padding: 10px 12px;
   }
-  
+
   .app-title {
     font-size: 14px;
   }
-  
+
   .content {
     padding: 12px;
     /* Add extra padding for Android navigation bar on mobile */
     padding-bottom: calc(12px + env(safe-area-inset-bottom, 20px));
   }
-  
+
   .content-title {
     font-size: 20px;
   }
-  
+
   .btn {
     padding: 8px 12px;
     font-size: 13px;
   }
-  
+
   .modal-content {
     width: calc(100% - 16px);
     margin: 8px;
   }
-  
+
   /* Hide non-essential table columns on very small screens */
   .table-hide-mobile {
     display: none;
@@ -1007,7 +1007,7 @@ input[type="color"] {
   .sidebar {
     width: 220px;
   }
-  
+
   .content {
     padding: 12px 16px;
     /* Add extra padding for Android navigation bar on landscape mobile */

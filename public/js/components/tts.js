@@ -397,9 +397,7 @@ class TTSComponent {
 
             <div class="generate-action">
               <button class="btn btn-primary btn-large" id="ttsGenerateBtn" disabled>
-                <span class="btn-icon">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3zm5.3 10a5.3 5.3 0 0 1-10.6 0H5a7 7 0 0 0 6 6.92V21h2v-3.08A7 7 0 0 0 19 11h-1.7z"/></svg>
-                </span>
+                <span class="material-symbols-outlined">mic</span>
                 Generate TTS Audio
               </button>
             </div>
@@ -407,8 +405,17 @@ class TTSComponent {
 
           <!-- Progress Display -->
           <div id="ttsProgressArea" class="progress-area" style="display:none;">
-            <h4>Generation Progress</h4>
-            <div id="ttsProgressContent"></div>
+            <div class="progress-header">
+              <div class="progress-title">
+                <span class="material-symbols-outlined">sync</span>
+                Generation in Progress...
+              </div>
+              <div id="ttsProgressPercent" class="progress-percentage">0%</div>
+            </div>
+            <div class="progress-bar-container">
+              <div id="ttsProgressBar" class="progress-bar-fill" style="width: 0%"></div>
+            </div>
+            <div id="ttsProgressLog" class="progress-log"></div>
           </div>
 
         </div>
@@ -421,40 +428,17 @@ class TTSComponent {
   }
 
   renderCacheTab() {
-    if (!this.cacheData || this.cacheData.length === 0) {
-      return `
-        <div class="tts-panel">
-          <div class="cache-header">
-            <h3>TTS Cache Management</h3>
-            <button class="btn btn-secondary" id="refreshCacheBtn">Refresh</button>
-          </div>
-          <div class="cache-stats" style="margin: 20px 0; padding: 16px; background: #f5f5f5; border-radius: 8px;">
-            <h4>Cache Statistics</h4>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 12px;">
-              <div>
-                <strong>Total Entries:</strong> ${this.cacheStats?.total || 0}
-              </div>
-              <div>
-                <strong>Total Duration:</strong> ${(this.cacheStats?.total_duration || 0).toFixed(2)}s
-              </div>
-              <div>
-                <strong>Disk Usage:</strong> ${this.formatBytes(this.cacheStats?.disk_usage || 0)}
-              </div>
-            </div>
-          </div>
-          <p style="text-align: center; color: #888; padding: 40px;">No cache entries found. Generate some TTS to see them here.</p>
-        </div>
-      `;
-    }
+    const provider = this.credentialsStatus?.provider || 'google';
 
-    // Group cache by topic, keeping only default versions
+    // Group cache by topic, keeping only default versions (unless filtered by set)
     const byTopic = {};
     const orphanedEntries = [];
     
-    this.cacheData.forEach(entry => {
-      // Only include default versions
-      if (!entry.is_default) return;
-      
+    const filteredCache = this.selectedCacheSetId
+        ? this.cacheData.filter(e => e.set_id === this.selectedCacheSetId)
+        : this.cacheData.filter(e => e.is_default);
+
+    filteredCache.forEach(entry => {
       const topicId = entry.meta?.topic_id;
       
       if (topicId) {
@@ -474,31 +458,43 @@ class TTSComponent {
 
     return `
       <div class="tts-panel">
-        <div class="cache-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-          <h3>TTS Cache Management</h3>
-          <button class="btn btn-secondary" id="refreshCacheBtn">Refresh</button>
-        </div>
-
-        <div class="cache-stats" style="margin: 20px 0; padding: 16px; background: #f5f5f5; border-radius: 8px;">
-          <h4>Cache Statistics</h4>
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-top: 12px;">
-            <div>
-              <strong>Total Entries:</strong> ${this.cacheStats?.total || 0}
-            </div>
-            <div>
-              <strong>Total Duration:</strong> ${(this.cacheStats?.total_duration || 0).toFixed(2)}s
-            </div>
-            <div>
-              <strong>Disk Usage:</strong> ${this.formatBytes(this.cacheStats?.disk_usage || 0)}
-            </div>
+        <div class="cache-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+          <h3 style="margin:0;">TTS Cache Management</h3>
+          <div style="display: flex; gap: 12px;">
+            <select id="cacheSetFilter" class="form-control" style="width: 250px;">
+                <option value="">All Default Audio</option>
+                ${(this.sets || []).map(s => `<option value="${s.id}" ${this.selectedCacheSetId === s.id ? 'selected' : ''}>Set: ${this.escapeHtml(s.name)}</option>`).join('')}
+            </select>
+            <button class="btn btn-secondary btn-small" id="refreshCacheBtn">
+                <span class="material-symbols-outlined" style="font-size: 18px;">refresh</span>
+                Refresh
+            </button>
           </div>
         </div>
 
-        <div id="cacheEntries" style="margin-top: 20px;">
+        <div class="cache-stats" style="margin-bottom: 24px; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; gap: 32px; flex-wrap: wrap;">
+          <div>
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Total Entries</div>
+            <div style="font-size: 20px; font-weight: 800; color: #1e293b;">${this.cacheStats?.total || 0}</div>
+          </div>
+          <div>
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Audio Length</div>
+            <div style="font-size: 20px; font-weight: 800; color: #1e293b;">${(this.cacheStats?.total_duration || 0).toFixed(1)}s</div>
+          </div>
+          <div>
+            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Disk Usage</div>
+            <div style="font-size: 20px; font-weight: 800; color: #1e293b;">${this.formatBytes(this.cacheStats?.disk_usage || 0)}</div>
+          </div>
+        </div>
+
+        <div id="cacheEntries">
           ${Object.values(byTopic).map(topic => this.renderTopicCacheGroup(topic)).join('')}
           ${orphanedEntries.length > 0 ? this.renderOrphanedCacheGroup(orphanedEntries) : ''}
           ${Object.values(byTopic).length === 0 && orphanedEntries.length === 0 ? `
-            <p style="text-align: center; color: #888; padding: 40px;">No default cache entries found. Generate some TTS audio to see entries here.</p>
+            <div class="empty-state">
+                <span class="material-symbols-outlined" style="font-size: 48px; color: #cbd5e1;">library_music</span>
+                <p>No audio files found. ${this.selectedCacheSetId ? 'Try another set or ' : ''}generate some TTS audio first.</p>
+            </div>
           ` : ''}
         </div>
       </div>
@@ -591,26 +587,63 @@ class TTSComponent {
     const profileName = this.profiles?.find(p => p.id === entry.profile_id)?.name || entry.profile_id;
     
     return `
-      <div class="cache-entry" style="display: flex; align-items: center; gap: 12px; padding: 12px; background: #f9fafb; border-radius: 6px; border-left: 3px solid #10b981;">
+      <div class="cache-entry" style="display: flex; align-items: center; gap: 12px; padding: 12px; background: #f9fafb; border-radius: 8px; border-left: 4px solid #10b981; transition: transform 0.1s;">
         <div style="flex: 1; min-width: 0;">
-          <div style="font-size: 0.9em; font-weight: 500; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          <div style="font-size: 0.9em; font-weight: 600; color: #1e293b; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
             ${this.escapeHtml(entry.text.substring(0, 80))}${entry.text.length > 80 ? '...' : ''}
           </div>
-          <div style="font-size: 0.8em; color: #6b7280;">
-            ${entry.language} &bull; ${this.escapeHtml(profileName)} &bull; ${entry.duration?.toFixed(2)}s
+          <div style="font-size: 0.75em; color: #64748b; display: flex; gap: 8px;">
+            <span>${entry.language}</span>
+            <span>&bull;</span>
+            <span>${this.escapeHtml(profileName)}</span>
+            <span>&bull;</span>
+            <span>${entry.duration?.toFixed(2)}s</span>
           </div>
         </div>
         
         <div style="display: flex; gap: 6px; flex-shrink: 0;">
-          <button class="btn btn-small btn-secondary tts-icon-btn" onclick="ttsComponent.playAudio('${entry.audio_url}')" title="Play audio">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          <button class="play-btn-small" onclick="ttsComponent.playAudioInline(this, '${entry.audio_url}')" title="Play audio">
+            <span class="material-symbols-outlined">play_arrow</span>
           </button>
-          <button class="btn btn-small btn-danger tts-icon-btn" onclick="ttsComponent.deleteVersion('${entry.id}')" title="Delete">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+          <button class="icon-btn danger" onclick="ttsComponent.deleteVersion('${entry.id}')" title="Delete">
+            <span class="material-symbols-outlined">delete</span>
           </button>
         </div>
       </div>
     `;
+  }
+
+  playAudioInline(btn, url) {
+    if (this.currentAudio) {
+        this.currentAudio.pause();
+        if (this.currentBtn) {
+            this.currentBtn.querySelector('.material-symbols-outlined').textContent = 'play_arrow';
+        }
+    }
+
+    if (this.currentAudioUrl === url) {
+        this.currentAudioUrl = null;
+        return;
+    }
+
+    const icon = btn.querySelector('.material-symbols-outlined');
+    icon.textContent = 'pause';
+
+    this.currentAudio = new Audio(url);
+    this.currentAudioUrl = url;
+    this.currentBtn = btn;
+
+    this.currentAudio.onended = () => {
+        icon.textContent = 'play_arrow';
+        this.currentAudio = null;
+        this.currentAudioUrl = null;
+        this.currentBtn = null;
+    };
+
+    this.currentAudio.play().catch(e => {
+        console.error('Audio play failed:', e);
+        icon.textContent = 'play_arrow';
+    });
   }
 
   formatBytes(bytes) {
@@ -1231,43 +1264,38 @@ class TTSComponent {
     const sets = this.sets || [];
     return `
       <div class="tts-panel">
-        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
           <h3 style="margin: 0;">TTS Generation Sets</h3>
-          <button class="btn btn-secondary btn-small" id="refreshSetsBtn">Refresh</button>
+          <button class="btn btn-secondary btn-small" id="refreshSetsBtn">
+            <span class="material-symbols-outlined" style="font-size: 18px;">refresh</span>
+            Refresh
+          </button>
         </div>
-        <div class="sets-table-container">
+
+        <div class="sets-grid">
           ${sets.length === 0 ? `
-            <div style="text-align: center; padding: 40px; color: #666; background: #f9fafb; border-radius: 8px; border: 1px dashed #d1d5db;">
-              No generation sets found. Use the <strong>Generate</strong> tab and provide a name to create one.
+            <div class="empty-state">
+              <span class="material-symbols-outlined" style="font-size: 48px; color: #cbd5e1;">folder_open</span>
+              <p>No generation sets found. Use the <strong>Generate</strong> tab and provide a name to create one.</p>
             </div>
-          ` : `
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Provider</th>
-                  <th>Voice</th>
-                  <th>Items</th>
-                  <th>Created</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${sets.map(set => `
-                  <tr>
-                    <td><strong>${this.escapeHtml(set.name)}</strong></td>
-                    <td><span class="badge" style="background: ${set.provider === 'edge' ? '#0ea5e9' : '#4caf50'};">${set.provider}</span></td>
-                    <td class="text-muted" style="font-size: 0.85em;">${this.escapeHtml(set.voice_name || 'N/A')}</td>
-                    <td>${set.item_count || 0}</td>
-                    <td>${new Date(set.created_at).toLocaleString()}</td>
-                    <td>
-                      <button class="btn btn-danger btn-small" onclick="window.ttsComponent.deleteSet('${set.id}')">Delete</button>
-                    </td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
-          `}
+          ` : sets.map(set => `
+            <div class="tts-set-card">
+              <div class="set-info">
+                <div class="set-name">${this.escapeHtml(set.name)}</div>
+                <div class="set-meta">
+                  <span class="badge" style="background: ${set.provider === 'edge' ? '#e0f2fe' : '#dcfce7'}; color: ${set.provider === 'edge' ? '#0369a1' : '#166534'};">${set.provider.toUpperCase()}</span>
+                  <span><strong>${set.item_count || 0}</strong> audio files</span>
+                  <span>${new Date(set.created_at).toLocaleDateString()}</span>
+                </div>
+                <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Voice: ${this.escapeHtml(set.voice_name || 'N/A')}</div>
+              </div>
+              <div class="set-actions">
+                <button class="icon-btn danger" onclick="window.ttsComponent.deleteSet('${set.id}')" title="Delete Set">
+                  <span class="material-symbols-outlined">delete</span>
+                </button>
+              </div>
+            </div>
+          `).join('')}
         </div>
       </div>
     `;
@@ -1295,12 +1323,24 @@ class TTSComponent {
       refreshBtn.addEventListener('click', async () => {
         await this.loadCache();
         await this.loadCacheStats();
-        const tabContent = document.getElementById('tab-cache');
-        if (tabContent) {
-          tabContent.innerHTML = this.renderCacheTab();
-          this.attachCacheEventListeners();
-        }
+        this.refreshCacheTab();
       });
+    }
+
+    const setFilter = document.getElementById('cacheSetFilter');
+    if (setFilter) {
+        setFilter.addEventListener('change', (e) => {
+            this.selectedCacheSetId = e.target.value || null;
+            this.refreshCacheTab();
+        });
+    }
+  }
+
+  refreshCacheTab() {
+    const tabContent = document.getElementById('tab-cache');
+    if (tabContent && tabContent.classList.contains('active')) {
+      tabContent.innerHTML = this.renderCacheTab();
+      this.attachCacheEventListeners();
     }
   }
 
@@ -1527,12 +1567,9 @@ class TTSComponent {
       return;
     }
 
-    // Determine if the selected value is an enabled voice name or a legacy profile id
     const enabledVoice = this.enabledVoices.find(v => v.name === selectedValue);
     const selectedProfile = enabledVoice ? null : (this.profiles || []).find(p => p.id === selectedValue);
 
-    // For enabled voices: derive language from languageCodes[0], voiceName = voice.name
-    // For legacy profiles: use profile.language and profile id
     const profileId = enabledVoice ? null : selectedValue;
     const voiceName = enabledVoice ? enabledVoice.name : (selectedProfile?.voiceName || null);
     const language = enabledVoice
@@ -1544,37 +1581,44 @@ class TTSComponent {
     
     // Show progress area
     const progressArea = document.getElementById('ttsProgressArea');
-    const progressContent = document.getElementById('ttsProgressContent');
-    if (progressArea && progressContent) {
-      progressArea.style.display = 'block';
-      progressContent.innerHTML = '<div class="progress-log"><p>&#9654; Starting TTS generation...</p></div>';
-    }
+    const progressLog = document.getElementById('ttsProgressLog');
+    const progressBar = document.getElementById('ttsProgressBar');
+    const progressPercent = document.getElementById('ttsProgressPercent');
+
+    if (progressArea) progressArea.style.display = 'block';
+    if (progressLog) progressLog.innerHTML = '';
     
+    const addLog = (msg, type = 'info') => {
+        const p = document.createElement('p');
+        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        p.innerHTML = `<span class="log-time">[${time}]</span> <span class="log-msg-${type}">${msg}</span>`;
+        progressLog.appendChild(p);
+        progressLog.scrollTop = progressLog.scrollHeight;
+    };
+
+    const updateProgress = (pct) => {
+        progressBar.style.width = `${pct}%`;
+        progressPercent.textContent = `${Math.round(pct)}%`;
+    };
+
     try {
       this.isGenerating = true;
       const generateBtn = document.getElementById('ttsGenerateBtn');
-      if (generateBtn) {
-        generateBtn.disabled = true;
-        generateBtn.innerHTML = '<span class="btn-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;animation:spin 1s linear infinite"><path d="M12 4V2A10 10 0 0 0 2 12h2a8 8 0 0 1 8-8z"/></svg></span> Generating...';
-      }
+      if (generateBtn) generateBtn.disabled = true;
       
-      let response;
+      addLog('Initializing generation...', 'info');
+      updateProgress(5);
+
       let result;
 
-      // If setName is provided, use the Jobs API for better set management
       if (setName) {
-        if (progressContent) progressContent.innerHTML += `<p>&#9654; Creating new TTS Set: "${this.escapeHtml(setName)}"...</p>`;
-        
-        response = await fetch('/api/tts/jobs', {
+        addLog(`Creating TTS Set: "${setName}"...`, 'info');
+        const response = await fetch('/api/tts/jobs', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            language,
-            voiceName,
-            profileId,
-            provider: enabledVoice?.provider,
-            setName,
-            questionIds,
+            language, voiceName, profileId, provider: enabledVoice?.provider,
+            setName, questionIds,
             generateQuestions: mode === 'all' || mode === 'questions' || mode === 'qa_with_correct',
             generateOptions: mode === 'all' || mode === 'correct_only' || mode === 'qa_with_correct',
             generateCorrectOnly: mode === 'correct_only' || mode === 'qa_with_correct'
@@ -1582,121 +1626,46 @@ class TTSComponent {
         });
 
         if (!response.ok) throw new Error('Failed to start TTS job');
-        const jobResult = await response.json();
-        
-        if (progressContent) progressContent.innerHTML += `<p>&#10003; Job started! Background processing initialized.</p><p>You can view progress in the <strong>Sets</strong> tab.</p>`;
-        
-        // Finalize UI
-        setTimeout(() => { if (progressArea) progressArea.style.display = 'none'; }, 3000);
-        return;
-      }
-      
-      if (mode === 'all') {
-        // Generate questions and all options separately
-        if (progressContent) {
-          progressContent.innerHTML += '<p>&#9654; Generating audio for questions...</p>';
-        }
-        
-        response = await fetch('/api/tts/generate/bulk', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'questions', questionIds, language, profileId, voiceName, provider: enabledVoice?.provider })
-        });
-        
-        if (!response.ok) throw new Error('Failed to generate question TTS');
-        const questionResult = await response.json();
-        
-        if (progressContent) {
-          progressContent.innerHTML += `<p>&#10003; Questions: ${questionResult.results?.success || 0} generated, ${questionResult.results?.cached || 0} cached</p>`;
-          progressContent.innerHTML += '<p>&#9654; Generating audio for all options...</p>';
-        }
-        
-        response = await fetch('/api/tts/generate/bulk', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'options', questionIds, language, profileId, voiceName, provider: enabledVoice?.provider, correctOnly: false })
-        });
-        
-        if (!response.ok) throw new Error('Failed to generate options TTS');
-        const optionsResult = await response.json();
-        
-        if (progressContent) {
-          progressContent.innerHTML += `<p>&#10003; Options: ${optionsResult.results?.success || 0} generated, ${optionsResult.results?.cached || 0} cached</p>`;
-        }
-        
-        result = {
-          results: {
-            total: (questionResult.results?.total || 0) + (optionsResult.results?.total || 0),
-            success: (questionResult.results?.success || 0) + (optionsResult.results?.success || 0),
-            cached: (questionResult.results?.cached || 0) + (optionsResult.results?.cached || 0),
-            failed: (questionResult.results?.failed || 0) + (optionsResult.results?.failed || 0)
-          }
-        };
+        updateProgress(100);
+        addLog('Job started successfully! It will process in the background.', 'success');
       } else {
-        const modeNames = {
-          'qa_with_correct': 'questions and correct answers',
-          'questions': 'questions only',
-          'correct_only': 'correct answers only'
-        };
-        
-        if (progressContent) {
-          progressContent.innerHTML += `<p>&#9654; Generating audio for ${modeNames[mode] || mode}...</p>`;
-        }
-        
-        response = await fetch('/api/tts/generate/bulk', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: mode, questionIds, language, profileId, voiceName, provider: enabledVoice?.provider })
-        });
-        
-        if (!response.ok) throw new Error('Failed to generate TTS');
-        result = await response.json();
-        
-        if (progressContent) {
-          progressContent.innerHTML += `<p>&#10003; Generated: ${result.results?.success || 0}, Cached: ${result.results?.cached || 0}</p>`;
-        }
+          // Sequential steps for better progress tracking if no set name
+          const types = [];
+          if (mode === 'all' || mode === 'questions' || mode === 'qa_with_correct') types.push('questions');
+          if (mode === 'all') types.push('options');
+          if (mode === 'qa_with_correct' || mode === 'correct_only') types.push('correct_only');
+
+          let totalSuccess = 0, totalCached = 0;
+
+          for (let i = 0; i < types.length; i++) {
+              const type = types[i];
+              addLog(`Generating ${type}...`, 'info');
+
+              const res = await fetch('/api/tts/generate/bulk', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type, questionIds, language, profileId, voiceName, provider: enabledVoice?.provider })
+              });
+
+              if (!res.ok) throw new Error(`Failed to generate ${type}`);
+              const data = await res.json();
+              totalSuccess += data.results?.success || 0;
+              totalCached += data.results?.cached || 0;
+
+              updateProgress(10 + ((i + 1) / types.length) * 90);
+              addLog(`Finished ${type}: ${data.results?.success} new, ${data.results?.cached} cached.`, 'success');
+          }
+          addLog('Generation complete!', 'success');
       }
       
-      // Show completion message
-      if (progressContent) {
-        progressContent.innerHTML += `
-          <div style="margin-top: 16px; padding: 12px; background: #d1fae5; border-radius: 6px; border-left: 4px solid #10b981;">
-            <strong>&#10003; Generation Complete!</strong><br>
-            Total: ${result.results?.total || 0} | 
-            Success: ${result.results?.success || 0} | 
-            Cached: ${result.results?.cached || 0} | 
-            Failed: ${result.results?.failed || 0}
-          </div>
-        `;
-      }
-      
-      // Refresh cache stats
       await this.loadCacheStats();
-      
-      // Auto-hide progress after 5 seconds
-      setTimeout(() => {
-        if (progressArea) progressArea.style.display = 'none';
-      }, 5000);
+      setTimeout(() => { if (progressArea) progressArea.style.display = 'none'; }, 5000);
       
     } catch (error) {
-      console.error('Error generating TTS:', error);
-      
-      if (progressContent) {
-        progressContent.innerHTML += `
-          <div style="margin-top: 16px; padding: 12px; background: #fee2e2; border-radius: 6px; border-left: 4px solid #ef4444;">
-            <strong>&#10007; Error:</strong> ${this.escapeHtml(error.message)}
-          </div>
-        `;
-      } else {
-        alert('Error generating TTS: ' + error.message);
-      }
+      addLog(`Error: ${error.message}`, 'error');
     } finally {
       this.isGenerating = false;
-      const generateBtn = document.getElementById('ttsGenerateBtn');
-      if (generateBtn) {
-        generateBtn.disabled = false;
-        this.updateGenerateButton();
-      }
+      this.updateGenerateButton();
     }
   }
 
