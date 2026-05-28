@@ -117,22 +117,16 @@ export class VideoGenerator {
 
         let optionsDur = 0;
         const opts = q.tts_audio.options || [];
-        if (audioConfig.play_options !== false) {
-            if (animConfig.options_display_mode === 'one_by_one') {
-                for (let i = 0; i < opts.length; i++) {
-                    optionsDur += Number(animConfig.option_reveal_delay || 0.5);
-                    optionsDur += await this.getAudioDurationSeconds(opts[i]);
-                }
-            } else {
-                for (let i = 0; i < opts.length; i++) {
-                    optionsDur += await this.getAudioDurationSeconds(opts[i]);
-                }
+
+        // Force audio generation/timing for all options as per requirement
+        if (animConfig.options_display_mode === 'one_by_one') {
+            for (let i = 0; i < opts.length; i++) {
+                optionsDur += Number(animConfig.option_reveal_delay || 0.5);
+                optionsDur += await this.getAudioDurationSeconds(opts[i]);
             }
         } else {
-            if (animConfig.options_display_mode === 'one_by_one') {
-                optionsDur = opts.length * Number(animConfig.option_reveal_delay || 0.5);
-            } else {
-                optionsDur = Number(animConfig.transition_duration || 0.3);
+            for (let i = 0; i < opts.length; i++) {
+                optionsDur += await this.getAudioDurationSeconds(opts[i]);
             }
         }
 
@@ -642,7 +636,7 @@ export class VideoGenerator {
       // Start animation
       renderer.startAnimation();
 
-      // Optional: play TTS (Designer option)
+      // TTS playback (Question + All Options always generated now)
       const ttsEnabled = !!(presetConfig?.animation?.tts_enabled);
       const audioConfig = presetConfig?.audio || {};
 
@@ -651,23 +645,20 @@ export class VideoGenerator {
           // Question audio first
           await renderer.playTTSForQuestion();
 
-          // Speak options if enabled
-          if (audioConfig.play_options !== false) {
-              // If options are shown one-by-one, speak each option as it appears.
-              if (presetConfig?.animation?.options_display_mode === 'one_by_one') {
-                const delay = Number(presetConfig?.animation?.option_reveal_delay || 0.5);
-                const optionsCount = question?.options?.length || 0;
-                for (let i = 0; i < optionsCount; i++) {
-                  await new Promise(r => setTimeout(r, Math.max(0, delay) * 1000));
-                  await renderer.playTTSForOption(i);
-                }
-              } else {
-                // All-at-once: speak options sequentially immediately after question.
-                const optionsCount = question?.options?.length || 0;
-                for (let i = 0; i < optionsCount; i++) {
-                  await renderer.playTTSForOption(i);
-                }
-              }
+          // If options are shown one-by-one, speak each option as it appears.
+          if (presetConfig?.animation?.options_display_mode === 'one_by_one') {
+            const delay = Number(presetConfig?.animation?.option_reveal_delay || 0.5);
+            const optionsCount = question?.options?.length || 0;
+            for (let i = 0; i < optionsCount; i++) {
+              await new Promise(r => setTimeout(r, Math.max(0, delay) * 1000));
+              await renderer.playTTSForOption(i);
+            }
+          } else {
+            // All-at-once: speak options sequentially immediately after question.
+            const optionsCount = question?.options?.length || 0;
+            for (let i = 0; i < optionsCount; i++) {
+              await renderer.playTTSForOption(i);
+            }
           }
 
           // Wait for timer to finish (approximate sync with animation)
@@ -810,40 +801,32 @@ export class VideoGenerator {
       const qRevealDur = Math.max(Number(anim.question_display_duration || 2), qDur + 0.5);
       t = cursor + qRevealDur;
 
-      // 2. Options audio
+      // 2. Options audio (Always generate for all options now)
       const opts = Array.isArray(q?.tts_audio?.options) ? q.tts_audio.options : [];
       const optionsCount = Math.min(opts.length, q?.options?.length || opts.length);
 
       let optionsDur = 0;
-      if (audioCfg.play_options !== false) {
-          if (optionsMode === 'one_by_one') {
-            for (let i = 0; i < optionsCount; i++) {
-              t += optionRevealDelay;
-              const oAudio = opts[i];
-              if (oAudio) {
-                segments.push({ url: oAudio, startSeconds: t });
-                const od = await this.getAudioDurationSeconds(oAudio);
-                t += od;
-              }
-            }
-          } else {
-            for (let i = 0; i < optionsCount; i++) {
-              const oAudio = opts[i];
-              if (oAudio) {
-                segments.push({ url: oAudio, startSeconds: t });
-                const od = await this.getAudioDurationSeconds(oAudio);
-                t += od;
-              }
-            }
+      if (optionsMode === 'one_by_one') {
+        for (let i = 0; i < optionsCount; i++) {
+          t += optionRevealDelay;
+          const oAudio = opts[i];
+          if (oAudio) {
+            segments.push({ url: oAudio, startSeconds: t });
+            const od = await this.getAudioDurationSeconds(oAudio);
+            t += od;
           }
-          optionsDur = t - (cursor + qRevealDur);
+        }
       } else {
-          if (optionsMode === 'one_by_one') {
-              optionsDur = optionsCount * optionRevealDelay;
-          } else {
-              optionsDur = Number(anim.transition_duration || 0.3);
+        for (let i = 0; i < optionsCount; i++) {
+          const oAudio = opts[i];
+          if (oAudio) {
+            segments.push({ url: oAudio, startSeconds: t });
+            const od = await this.getAudioDurationSeconds(oAudio);
+            t += od;
           }
+        }
       }
+      optionsDur = t - (cursor + qRevealDur);
 
       // 3. Timer (just visual, but we need to know when it ends)
       t = cursor + qRevealDur + optionsDur + timerDuration;

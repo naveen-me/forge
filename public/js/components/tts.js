@@ -10,6 +10,10 @@ class TTSComponent {
     this.selectedQuestionIds = new Set();
     this.isGenerating = false;
     this.profileSelect2Instance = null;
+    this.topicSelect2Instance = null;
+    this.activeJobs = [];
+    this.currentSetId = null;
+    this.selectedSetEntries = new Set();
     // Voice Profiles picker state
     this.enabledVoices = [];        // voices saved by user (shown in dropdowns)
     this.allVoices = [];            // full voice catalog
@@ -23,6 +27,8 @@ class TTSComponent {
   async init(contentEl = null) {
     this.contentEl = contentEl || document.getElementById('content');
     window.ttsComponent = this; // Make accessible globally for onclick handlers
+
+    this.startJobPolling();
 
     await this.checkTTSStatus();
     await this.loadVoices();
@@ -251,7 +257,6 @@ class TTSComponent {
         <div class="tabs">
           <button class="tab-btn active" data-tab="generate">Generate</button>
           <button class="tab-btn" data-tab="sets">Sets</button>
-          <button class="tab-btn" data-tab="cache">Cache</button>
           <button class="tab-btn" data-tab="phrases">Language Phrases</button>
           <button class="tab-btn" data-tab="voice-profiles">Voice Profiles</button>
           <button class="tab-btn" data-tab="settings">Settings</button>
@@ -262,14 +267,7 @@ class TTSComponent {
         </div>
 
         <div class="tab-content" id="tab-sets">
-          <div class="tts-panel">
-            <h3>TTS Generation Sets</h3>
-            <div id="ttsSetsList">Loading sets...</div>
-          </div>
-        </div>
-
-        <div class="tab-content" id="tab-cache">
-          ${this.renderCacheTab()}
+          ${this.renderSetsTab()}
         </div>
 
         <div class="tab-content" id="tab-phrases">
@@ -299,7 +297,7 @@ class TTSComponent {
               <h3 class="step-title">Select Topic</h3>
             </div>
             <div class="form-group">
-              <select id="ttsTopicSelect" class="form-control">
+              <select id="ttsTopicSelect" class="form-control" style="width: 100%;">
                 <option value="">Choose a topic...</option>
                 ${this.topics.map(t => `<option value="${t.id}">${this.escapeHtml(t.name)} (${this.getQuestionsCount(t.id)} questions)</option>`).join('')}
               </select>
@@ -324,43 +322,6 @@ class TTSComponent {
             <div class="step-header">
               <span class="step-number">3</span>
               <h3 class="step-title">TTS Configuration</h3>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">
-                <span>Generate Audio For</span>
-                <span class="label-hint">Choose what content to generate</span>
-              </label>
-              <div class="tts-mode-options">
-                <label class="mode-option">
-                  <input type="radio" name="ttsGenerationMode" value="qa_with_correct" checked>
-                  <div class="mode-content">
-                    <strong>Questions + Correct Answers</strong>
-                    <span>Generate audio for all questions and only the correct answer for each</span>
-                  </div>
-                </label>
-                <label class="mode-option">
-                  <input type="radio" name="ttsGenerationMode" value="all">
-                  <div class="mode-content">
-                    <strong>Questions + All Options</strong>
-                    <span>Generate audio for questions and all answer options</span>
-                  </div>
-                </label>
-                <label class="mode-option">
-                  <input type="radio" name="ttsGenerationMode" value="questions">
-                  <div class="mode-content">
-                    <strong>Questions Only</strong>
-                    <span>Generate audio only for the questions</span>
-                  </div>
-                </label>
-                <label class="mode-option">
-                  <input type="radio" name="ttsGenerationMode" value="correct_only">
-                  <div class="mode-content">
-                    <strong>Correct Answers Only</strong>
-                    <span>Generate audio only for correct answers</span>
-                  </div>
-                </label>
-              </div>
             </div>
 
             <div class="form-group">
@@ -657,48 +618,18 @@ class TTSComponent {
   renderPhrasesTab() {
     return `
       <div class="tts-panel">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-          <h3>Language Phrases Management</h3>
-          <button class="btn btn-secondary" id="refreshPhrasesBtn">Refresh</button>
-        </div>
-
-        <div class="alert alert-info" style="margin-bottom: 20px;">
-          <strong>About Language Phrases</strong>
-          <p style="margin-top: 8px;">Language phrases are standard text snippets used in videos like "Correct!", "Wrong!", "Time's up!", etc. You can customize these phrases for each language and generate TTS for them.</p>
-        </div>
-
+        <h3>Language Phrases</h3>
         <div class="form-group">
-          <label class="form-label">Language</label>
-          <select id="phrasesLanguageSelect" class="form-control">
-            ${this.renderLanguageOptions()}
-          </select>
-        </div>
-
-        <div id="phrasesContent" style="margin-top: 20px;">
-          <p style="text-align: center; color: #888;">Select a language to view and edit phrases</p>
-        </div>          <div id="phrasesActions" style="display: none; margin-top: 20px; padding-top: 20px; border-top: 2px solid #ddd;">
-          <div class="form-group">
-            <label class="form-label">Voice Profile for Generation</label>
-            <select id="phrasesProfileSelect" class="form-control">
-              <option value="">Select profile...</option>
-              ${this.getVoicesForCurrentProvider().map(v => {
-                  const lang = (v.languageCodes || []).join(', ');
-                  return `<option value="${this.escapeHtml(v.name)}">${this.escapeHtml(v.name)} (${lang})</option>`;
-                }).join('')
-              }
+            <select id="phrasesLanguageSelect" class="form-control">
+                <option value="">Select Language...</option>
+                ${this.renderLanguageOptions()}
             </select>
-            <small style="color:#666; font-size:0.85em; margin-top:4px; display:block;">
-              ${this.getVoicesForCurrentProvider().length > 0
-                ? `${this.getVoicesForCurrentProvider().length} voice${this.getVoicesForCurrentProvider().length !== 1 ? 's' : ''} from Voice Profiles tab`
-                : 'No voices selected. Go to the <strong>Voice Profiles</strong> tab to add voices to this dropdown.'
-              }
-            </small>
-          </div>
-          <div style="display: flex; gap: 12px;">
-            <button class="btn btn-primary" id="generatePhrasesBtn">Generate TTS for All Phrases</button>
-            <button class="btn btn-secondary" id="savePhrasesBtn">Save Changes</button>
-          </div>
         </div>
+        <div id="phrasesProfileArea" style="display:none; margin-bottom:20px;">
+            <label>Voice Profile for Phrases</label>
+            <select id="phrasesProfileSelect" class="form-control"></select>
+        </div>
+        <div id="phrasesContent"></div>
       </div>
     `;
   }
@@ -1261,39 +1192,20 @@ class TTSComponent {
   }
 
   renderSetsTab() {
+    if (this.currentSetId) return this.renderSetDetails(this.currentSetId);
     const sets = this.sets || [];
     return `
       <div class="tts-panel">
         <div class="panel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
           <h3 style="margin: 0;">TTS Generation Sets</h3>
-          <button class="btn btn-secondary btn-small" id="refreshSetsBtn">
-            <span class="material-symbols-outlined" style="font-size: 18px;">refresh</span>
-            Refresh
-          </button>
+          <button class="btn btn-secondary btn-small" onclick="ttsComponent.loadSets().then(() => ttsComponent.refreshSetsTab())">Refresh</button>
         </div>
-
-        <div class="sets-grid">
-          ${sets.length === 0 ? `
-            <div class="empty-state">
-              <span class="material-symbols-outlined" style="font-size: 48px; color: #cbd5e1;">folder_open</span>
-              <p>No generation sets found. Use the <strong>Generate</strong> tab and provide a name to create one.</p>
-            </div>
-          ` : sets.map(set => `
-            <div class="tts-set-card">
-              <div class="set-info">
-                <div class="set-name">${this.escapeHtml(set.name)}</div>
-                <div class="set-meta">
-                  <span class="badge" style="background: ${set.provider === 'edge' ? '#e0f2fe' : '#dcfce7'}; color: ${set.provider === 'edge' ? '#0369a1' : '#166534'};">${set.provider.toUpperCase()}</span>
-                  <span><strong>${set.item_count || 0}</strong> audio files</span>
-                  <span>${new Date(set.created_at).toLocaleDateString()}</span>
-                </div>
-                <div style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Voice: ${this.escapeHtml(set.voice_name || 'N/A')}</div>
-              </div>
-              <div class="set-actions">
-                <button class="icon-btn danger" onclick="window.ttsComponent.deleteSet('${set.id}')" title="Delete Set">
-                  <span class="material-symbols-outlined">delete</span>
-                </button>
-              </div>
+        <div class="sets-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
+          ${sets.length === 0 ? '<p>No sets found.</p>' : sets.map(set => `
+            <div class="tts-set-card" onclick="ttsComponent.openSet('${set.id}')" style="cursor: pointer; background: white; border: 1px solid #ddd; padding: 16px; border-radius: 8px;">
+              <div class="set-name" style="font-weight:bold;">${this.escapeHtml(set.name)}</div>
+              <div style="font-size: 12px; color: #666;">${set.item_count} files &middot; ${set.provider}</div>
+              <button class="btn btn-danger btn-small" style="margin-top:10px;" onclick="event.stopPropagation(); ttsComponent.deleteSet('${set.id}')">Delete</button>
             </div>
           `).join('')}
         </div>
@@ -1301,14 +1213,70 @@ class TTSComponent {
     `;
   }
 
+  async openSet(setId) {
+      this.currentSetId = setId;
+      this.selectedSetEntries = new Set();
+      await this.loadCache({ set_id: setId });
+      this.refreshSetsTab();
+  }
+
+  renderSetDetails(setId) {
+      const set = this.sets.find(s => s.id === setId);
+      const entries = this.cacheData || [];
+      return `
+        <div class="tts-panel">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:20px;">
+                <button class="btn btn-secondary" onclick="ttsComponent.currentSetId=null; ttsComponent.refreshSetsTab()">Back</button>
+                <h3>Set: ${this.escapeHtml(set?.name)}</h3>
+                <button class="btn btn-danger" id="delSelBtn" ${this.selectedSetEntries.size === 0 ? 'disabled' : ''} onclick="ttsComponent.deleteSelectedEntries()">Delete Selected (${this.selectedSetEntries.size})</button>
+            </div>
+            <div class="set-entries-list">
+                ${entries.map(e => `
+                    <div style="display:flex; align-items:center; gap:10px; padding:10px; border-bottom:1px solid #eee;">
+                        <input type="checkbox" onchange="ttsComponent.toggleEntrySelection('${e.id}')" ${this.selectedSetEntries.has(e.id) ? 'checked' : ''}>
+                        <div style="flex:1;">${this.escapeHtml(e.text)}</div>
+                        <button class="play-btn-small" onclick="ttsComponent.playAudioInline(this, '${e.audio_url}')">Play</button>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+      `;
+  }
+
+  toggleEntrySelection(id) {
+      if (this.selectedSetEntries.has(id)) this.selectedSetEntries.delete(id);
+      else this.selectedSetEntries.add(id);
+      this.refreshSetsTab();
+  }
+
+  async deleteSelectedEntries() {
+      if (!confirm('Delete selected?')) return;
+      await fetch('/api/tts/cache', {
+          method: 'DELETE',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ ids: Array.from(this.selectedSetEntries) })
+      });
+      this.selectedSetEntries.clear();
+      await this.loadCache({ set_id: this.currentSetId });
+      this.refreshSetsTab();
+  }
+
+  refreshSetsTab() {
+      const el = document.getElementById('tab-sets');
+      if (el) el.innerHTML = this.renderSetsTab();
+  }
+
   attachGenerateEventListeners() {
     const topicSelect = document.getElementById('ttsTopicSelect');
     if (topicSelect) {
-      topicSelect.addEventListener('change', (e) => {
-        this.selectedTopicId = e.target.value || null;
-        this.selectedQuestionIds.clear();
-        this.renderQuestionSelection();
-      });
+        const $ts = window.$(topicSelect);
+        $ts.select2({ width: '100%' });
+        $ts.on('change', (e) => {
+            this.selectedTopicId = e.target.value;
+            this.selectedQuestionIds.clear();
+            this.renderQuestionSelection();
+        });
+        this.topicSelect2Instance = $ts;
     }
 
     const generateBtn = document.getElementById('ttsGenerateBtn');
@@ -1559,7 +1527,6 @@ class TTSComponent {
   async generateTTS() {
     if (this.selectedQuestionIds.size === 0) return;
     
-    const mode = document.querySelector('input[name="ttsGenerationMode"]:checked')?.value || 'qa_with_correct';
     const selectedValue = document.getElementById('ttsProfileSelect')?.value;
     
     if (!selectedValue) {
@@ -1611,52 +1578,23 @@ class TTSComponent {
 
       let result;
 
-      if (setName) {
-        addLog(`Creating TTS Set: "${setName}"...`, 'info');
-        const response = await fetch('/api/tts/jobs', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            language, voiceName, profileId, provider: enabledVoice?.provider,
-            setName, questionIds,
-            generateQuestions: mode === 'all' || mode === 'questions' || mode === 'qa_with_correct',
-            generateOptions: mode === 'all' || mode === 'correct_only' || mode === 'qa_with_correct',
-            generateCorrectOnly: mode === 'correct_only' || mode === 'qa_with_correct'
-          })
-        });
+      addLog(`Creating TTS Set: "${setName || 'Default'}"...`, 'info');
+      const response = await fetch('/api/tts/jobs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          language, voiceName, profileId, provider: enabledVoice?.provider,
+          setName: setName || `Set_${Date.now()}`, questionIds,
+          generateQuestions: true,
+          generateOptions: true,
+          generateCorrectOnly: false
+        })
+      });
 
-        if (!response.ok) throw new Error('Failed to start TTS job');
-        updateProgress(100);
-        addLog('Job started successfully! It will process in the background.', 'success');
-      } else {
-          // Sequential steps for better progress tracking if no set name
-          const types = [];
-          if (mode === 'all' || mode === 'questions' || mode === 'qa_with_correct') types.push('questions');
-          if (mode === 'all') types.push('options');
-          if (mode === 'qa_with_correct' || mode === 'correct_only') types.push('correct_only');
-
-          let totalSuccess = 0, totalCached = 0;
-
-          for (let i = 0; i < types.length; i++) {
-              const type = types[i];
-              addLog(`Generating ${type}...`, 'info');
-
-              const res = await fetch('/api/tts/generate/bulk', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type, questionIds, language, profileId, voiceName, provider: enabledVoice?.provider })
-              });
-
-              if (!res.ok) throw new Error(`Failed to generate ${type}`);
-              const data = await res.json();
-              totalSuccess += data.results?.success || 0;
-              totalCached += data.results?.cached || 0;
-
-              updateProgress(10 + ((i + 1) / types.length) * 90);
-              addLog(`Finished ${type}: ${data.results?.success} new, ${data.results?.cached} cached.`, 'success');
-          }
-          addLog('Generation complete!', 'success');
-      }
+      if (!response.ok) throw new Error('Failed to start TTS job');
+      updateProgress(10);
+      addLog('Job started successfully! It will process in the background.', 'success');
+      this.startJobPolling();
       
       await this.loadCacheStats();
       setTimeout(() => { if (progressArea) progressArea.style.display = 'none'; }, 5000);
@@ -1734,53 +1672,64 @@ class TTSComponent {
     }
   }
 
-  // Phrases methods
-  async loadPhrases(language) {
-    try {
-      const response = await fetch(`/api/tts/phrases/${language}`);
-      const data = await response.json();
-      this.currentPhrases = data;
+  async loadPhrases(lang) {
+      const res = await fetch(`/api/tts/phrases/${lang}`);
+      const data = await res.json();
+      const cacheRes = await fetch('/api/tts/cache?category=phrases');
+      const cache = await cacheRes.json();
       
       const content = document.getElementById('phrasesContent');
-      const actions = document.getElementById('phrasesActions');
-      const profileSelect = document.getElementById('phrasesProfileSelect');
-      
-      if (content) {
-        const phrases = data.phrases || {};
-        const phraseKeys = Object.keys(phrases);
-        
-        if (phraseKeys.length === 0) {
-          content.innerHTML = '<p style="text-align: center; color: #888;">No phrases found for this language.</p>';
-        } else {
-          content.innerHTML = `
-            <div style="display: grid; gap: 12px;">
-              ${phraseKeys.map(key => `
-                <div class="form-group">
-                  <label class="form-label">${this.escapeHtml(key)}</label>
-                  <input type="text" class="form-control" data-phrase-key="${key}" value="${this.escapeHtml(phrases[key])}" />
+      const profileArea = document.getElementById('phrasesProfileArea');
+      if (profileArea) profileArea.style.display = 'block';
+
+      const voices = this.getVoicesForCurrentProvider().filter(v => (v.languageCodes || []).includes(lang));
+      const pSelect = document.getElementById('phrasesProfileSelect');
+      if (pSelect) {
+          pSelect.innerHTML = voices.map(v => `<option value="${v.name}">${v.name}</option>`).join('');
+      }
+
+      content.innerHTML = Object.entries(data.phrases || {}).map(([key, text]) => {
+          const audio = cache.find(c => c.text === text && c.language === lang);
+          return `
+            <div style="display:flex; align-items:center; gap:10px; padding:10px; background:#f9fafb; margin-bottom:8px; border-radius:8px;">
+                <div style="flex:1;"><strong>${key}:</strong> ${this.escapeHtml(text)}</div>
+                <div id="phrase-actions-${key}" style="display:flex; gap:5px; align-items:center;">
+                    ${audio ? `
+                        <button class="play-btn-small" onclick="ttsComponent.playAudioInline(this, '${audio.audio_url}')">Play</button>
+                        <button class="icon-btn danger" onclick="ttsComponent.deletePhraseAudio('${audio.id}', '${lang}')">Delete</button>
+                    ` : `
+                        <div class="circular-progress" id="progress-${key}" style="display:none;"></div>
+                        <button class="icon-btn" onclick="ttsComponent.regeneratePhrase('${key}', '${lang}')">Generate</button>
+                    `}
                 </div>
-              `).join('')}
             </div>
           `;
-        }
-      }
+      }).join('');
+  }
+
+  async regeneratePhrase(key, lang) {
+      const voice = document.getElementById('phrasesProfileSelect').value;
+      if (!voice) return alert('Select voice');
+      const progress = document.getElementById(`progress-${key}`);
+      if (progress) progress.style.display = 'inline-block';
       
-      if (actions) {
-        actions.style.display = 'block';
-      }
-      
-      // Populate profile select from persisted enabled voices first, with legacy profiles as fallback.
-      if (profileSelect) {
-        const matchingVoices = this.getVoicesForCurrentProvider().filter(v => (v.languageCodes || []).includes(language));
-        const matchingProfiles = (this.profiles || []).filter(p => p.language === language);
-        profileSelect.innerHTML = '<option value="">Select profile...</option>' +
-          matchingVoices.map(v => `<option value="${this.escapeHtml(v.name)}">${this.escapeHtml(v.name)} (${this.escapeHtml((v.languageCodes || []).join(', '))})</option>`).join('') +
-          matchingProfiles.map(p => `<option value="${p.id}">${this.escapeHtml(p.name)}</option>`).join('');
-      }
-    } catch (error) {
-      console.error('Error loading phrases:', error);
-      alert('Error loading phrases');
-    }
+      const text = (await (await fetch(`/api/tts/phrases/${lang}`)).json()).phrases[key];
+
+      await fetch('/api/tts/generate', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ text, language: lang, voiceName: voice, category: 'phrases' })
+      });
+      await this.loadPhrases(lang);
+  }
+
+  async deletePhraseAudio(id, lang) {
+      await fetch('/api/tts/cache', {
+          method: 'DELETE',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ ids: [id] })
+      });
+      await this.loadPhrases(lang);
   }
 
   async savePhrases() {
@@ -2198,11 +2147,29 @@ class TTSComponent {
         this.profileSelect2Instance.off('change');
         this.profileSelect2Instance.select2('destroy');
       } catch (error) {
-        console.warn('Failed to cleanup select2 instance', error);
+        console.warn('Failed to cleanup profile select2 instance', error);
       } finally {
         this.profileSelect2Instance = null;
       }
     }
+    if (this.topicSelect2Instance && window.$?.fn?.select2) {
+      try {
+        this.topicSelect2Instance.off('change');
+        this.topicSelect2Instance.select2('destroy');
+      } catch (error) {
+        console.warn('Failed to cleanup topic select2 instance', error);
+      } finally {
+        this.topicSelect2Instance = null;
+      }
+    }
+  }
+
+  cleanup() {
+      if (this.jobPollInterval) {
+          clearInterval(this.jobPollInterval);
+          this.jobPollInterval = null;
+      }
+      this.cleanupSelect2();
   }
 
   populateProfileSelect(selectElement, voices) {
@@ -2227,6 +2194,34 @@ class TTSComponent {
   getVoicesForCurrentProvider() {
     const provider = this.credentialsStatus?.provider || 'google';
     return (this.enabledVoices || []).filter(v => (v.provider || 'google') === provider);
+  }
+
+  startJobPolling() {
+      if (this.jobPollInterval) clearInterval(this.jobPollInterval);
+      this.jobPollInterval = setInterval(async () => {
+          const res = await fetch('/api/tts/jobs');
+          if (!res.ok) return;
+          const jobs = await res.json();
+          this.activeJobs = jobs.filter(j => j.status === 'running' || j.status === 'queued');
+          this.updateProgressUI();
+      }, 1000);
+  }
+
+  updateProgressUI() {
+      const area = document.getElementById('ttsProgressArea');
+      if (!this.activeJobs.length) {
+          // If was active and now not, maybe hide after a delay
+          return;
+      }
+      area.style.display = 'block';
+      const job = this.activeJobs[0];
+      const progressBar = document.getElementById('ttsProgressBar');
+      const progressPercent = document.getElementById('ttsProgressPercent');
+      const progressLog = document.getElementById('ttsProgressLog');
+
+      if (progressBar) progressBar.style.width = `${job.progress.percentage}%`;
+      if (progressPercent) progressPercent.textContent = `${Math.round(job.progress.percentage)}%`;
+      if (progressLog) progressLog.innerHTML = `<p>Processing ${job.progress.completed_items} of ${job.progress.total_items} items...</p>`;
   }
 
   escapeHtml(text) {

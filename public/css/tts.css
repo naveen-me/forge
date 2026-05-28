@@ -1815,3 +1815,39 @@ select.form-control {
     padding: 10px;
   }
 }
+
+/* Circular Progress for individual items */
+.circular-progress {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.play-btn-small {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid #e2e8f0;
+    background: white;
+    color: #4f46e5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.play-btn-small:hover {
+    background: #eef2ff;
+    border-color: #4f46e5;
+}
+
+.play-btn-small.playing {
+    background: #4f46e5;
+    color: white;
+}

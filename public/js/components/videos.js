@@ -115,10 +115,26 @@ export class VideosComponent {
           <div id="queueStatusContent"></div>
         </div>
       </div>
+    `;
+
+    await this.loadData();
+    this.setupEventListeners();
+    this.startQueuePolling();
+    window.videosComponent = this;
+  }
+
+  async renderGeneratedVideosPage() {
+    this.container.innerHTML = `
+      <div class="content-header">
+        <div>
+          <h1 class="content-title">Generated Videos</h1>
+          <p class="content-description">Manage and view your generated quiz videos</p>
+        </div>
+      </div>
 
       <div class="card">
         <div class="card-header">
-          <span class="card-title">Generated Videos</span>
+          <span class="card-title">All Generated Videos</span>
           <button id="refreshVideosBtn" class="btn btn-small btn-secondary">🔄 Refresh</button>
         </div>
         <div class="card-body">
@@ -141,10 +157,38 @@ export class VideosComponent {
       </div>
     `;
 
-    await this.loadData();
-    this.setupEventListeners();
-    this.startQueuePolling();
-    window.videosComponent = this;
+    await this.loadVideos();
+    this.setupGeneratedVideosEventListeners();
+    this.renderVideoList();
+  }
+
+  setupGeneratedVideosEventListeners() {
+    const refreshBtn = document.getElementById('refreshVideosBtn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', async () => {
+        await this.loadVideos();
+        this.renderVideoList();
+      });
+    }
+
+    const searchInput = document.getElementById('videoSearchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', (e) => {
+        this.searchQuery = e.target.value.toLowerCase();
+        this.currentPage = 1;
+        this.renderVideoList();
+      });
+    }
+
+    const sortSelect = document.getElementById('videoSortSelect');
+    if (sortSelect) {
+      sortSelect.addEventListener('change', (e) => {
+        const [sortBy, sortOrder] = e.target.value.split('-');
+        this.sortBy = sortBy;
+        this.sortOrder = sortOrder;
+        this.renderVideoList();
+      });
+    }
   }
 
   async loadData() {
@@ -158,13 +202,11 @@ export class VideosComponent {
       const setsRes = await fetch('/api/tts/sets');
       this.ttsSets = await setsRes.json();
 
-      await this.loadVideos();
       await this.loadQuestions();
 
       this.renderPresetSelect();
       this.renderTopicSelect();
       this.renderTTSSetSelect();
-      this.renderVideoList();
     } catch (error) {
       console.error('Error loading data:', error);
       this.container.innerHTML += `
@@ -178,7 +220,13 @@ export class VideosComponent {
   renderTTSSetSelect() {
     const select = document.getElementById('ttsSetSelect');
     if (!select) return;
-    const sets = this.ttsSets || [];
+
+    // Filter sets by selected topic
+    let sets = this.ttsSets || [];
+    if (this.selectedTopicId) {
+        sets = sets.filter(s => String(s.topic_id) === String(this.selectedTopicId));
+    }
+
     select.innerHTML = '<option value="">Default (Auto-select)</option>' +
       sets.map(s => `<option value="${s.id}">${this.escapeHtml(s.name)} (${s.provider} &middot; ${s.item_count} items)</option>`).join('');
     this.initializeTTSSetSelect2();
@@ -287,6 +335,7 @@ export class VideosComponent {
       $topicSelect.on('change', (e) => {
         this.selectedTopicId = e.target.value || null;
         this.renderQuestionSelection();
+        this.renderTTSSetSelect(); // Re-filter sets when topic changes
         this.updateGenerateButton();
       });
 
