@@ -160,6 +160,7 @@ export class VideosComponent {
     await this.loadVideos();
     this.setupGeneratedVideosEventListeners();
     this.renderVideoList();
+    window.videosComponent = this; // Ensure globally accessible for delete
   }
 
   setupGeneratedVideosEventListeners() {

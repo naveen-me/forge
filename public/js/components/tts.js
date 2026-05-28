@@ -1527,6 +1527,9 @@ class TTSComponent {
   async generateTTS() {
     if (this.selectedQuestionIds.size === 0) return;
     
+    // Clear any previous completion state
+    this._ttsJobCompleted = false;
+
     const selectedValue = document.getElementById('ttsProfileSelect')?.value;
     
     if (!selectedValue) {
@@ -1593,11 +1596,10 @@ class TTSComponent {
 
       if (!response.ok) throw new Error('Failed to start TTS job');
       updateProgress(10);
-      addLog('Job started successfully! It will process in the background.', 'success');
+      addLog('Job started successfully! Background processing initiated.', 'success');
       this.startJobPolling();
       
       await this.loadCacheStats();
-      setTimeout(() => { if (progressArea) progressArea.style.display = 'none'; }, 5000);
       
     } catch (error) {
       addLog(`Error: ${error.message}`, 'error');
@@ -1695,11 +1697,17 @@ class TTSComponent {
                 <div style="flex:1;"><strong>${key}:</strong> ${this.escapeHtml(text)}</div>
                 <div id="phrase-actions-${key}" style="display:flex; gap:5px; align-items:center;">
                     ${audio ? `
-                        <button class="play-btn-small" onclick="ttsComponent.playAudioInline(this, '${audio.audio_url}')">Play</button>
-                        <button class="icon-btn danger" onclick="ttsComponent.deletePhraseAudio('${audio.id}', '${lang}')">Delete</button>
+                        <button class="play-btn-small" onclick="ttsComponent.playAudioInline(this, '${audio.audio_url}')" title="Play">
+                            <span class="material-symbols-outlined">play_arrow</span>
+                        </button>
+                        <button class="icon-btn danger" onclick="ttsComponent.deletePhraseAudio('${audio.id}', '${lang}')" title="Delete">
+                            <span class="material-symbols-outlined">delete</span>
+                        </button>
                     ` : `
                         <div class="circular-progress" id="progress-${key}" style="display:none;"></div>
-                        <button class="icon-btn" onclick="ttsComponent.regeneratePhrase('${key}', '${lang}')">Generate</button>
+                        <button class="icon-btn" onclick="ttsComponent.regeneratePhrase('${key}', '${lang}')" title="Generate">
+                            <span class="material-symbols-outlined">refresh</span>
+                        </button>
                     `}
                 </div>
             </div>
@@ -2209,19 +2217,49 @@ class TTSComponent {
 
   updateProgressUI() {
       const area = document.getElementById('ttsProgressArea');
+      if (!area) return;
+
       if (!this.activeJobs.length) {
-          // If was active and now not, maybe hide after a delay
+          // If a job was just completed, show completion message before hiding
+          if (this._ttsJobCompleted === false && this._lastJobStatus === 'running') {
+              this._ttsJobCompleted = true;
+              const progressLog = document.getElementById('ttsProgressLog');
+              if (progressLog) {
+                  const p = document.createElement('p');
+                  p.innerHTML = `<span class="log-msg-success">✅ All items processed successfully!</span>`;
+                  progressLog.appendChild(p);
+              }
+              const progressBar = document.getElementById('ttsProgressBar');
+              if (progressBar) progressBar.style.width = '100%';
+              const progressPercent = document.getElementById('ttsProgressPercent');
+              if (progressPercent) progressPercent.textContent = '100%';
+
+              setTimeout(() => {
+                  if (!this.activeJobs.length) area.style.display = 'none';
+              }, 5000);
+          }
+          this._lastJobStatus = null;
           return;
       }
+
       area.style.display = 'block';
       const job = this.activeJobs[0];
+      this._lastJobStatus = job.status;
+      this._ttsJobCompleted = false;
+
       const progressBar = document.getElementById('ttsProgressBar');
       const progressPercent = document.getElementById('ttsProgressPercent');
       const progressLog = document.getElementById('ttsProgressLog');
 
       if (progressBar) progressBar.style.width = `${job.progress.percentage}%`;
       if (progressPercent) progressPercent.textContent = `${Math.round(job.progress.percentage)}%`;
-      if (progressLog) progressLog.innerHTML = `<p>Processing ${job.progress.completed_items} of ${job.progress.total_items} items...</p>`;
+      if (progressLog) {
+          progressLog.innerHTML = `
+            <p><strong>Status:</strong> ${job.status.toUpperCase()}</p>
+            <p>Processing ${job.progress.completed_items} of ${job.progress.total_items} items...</p>
+            ${job.progress.current_item ? `<p style="font-size:0.85em; color:#666;">Current: ${job.progress.current_item.category} - ${job.progress.current_item.text?.substring(0, 30)}...</p>` : ''}
+          `;
+      }
   }
 
   escapeHtml(text) {

@@ -150,20 +150,22 @@ router.get('/list', (req, res) => {
  */
 router.delete('/:filename', async (req, res) => {
   try {
+    const { db } = req.app.locals;
+    if (!videoGenerator || videoGenerator.db !== db) {
+      videoGenerator = new VideoGenerator(db);
+    }
     const { filename } = req.params;
-    const videosDir = path.join(__dirname, '../videos');
-    const videoPath = path.join(videosDir, filename);
     
     if (filename.includes('..') || filename.includes('/') || filename.includes('\\')) {
       return res.status(400).json({ error: 'Invalid filename' });
     }
     
-    if (!fs.existsSync(videoPath)) {
-      return res.status(404).json({ error: 'Video not found' });
+    const success = videoGenerator.deleteVideo(filename);
+    if (success) {
+      res.json({ success: true, message: 'Video deleted' });
+    } else {
+      res.status(404).json({ error: 'Video not found' });
     }
-    
-    fs.unlinkSync(videoPath);
-    res.json({ success: true, message: 'Video deleted' });
   } catch (error) {
     console.error('Delete video error:', error);
     res.status(500).json({ error: error.message });

@@ -49,10 +49,16 @@ class App {
   setupSidebarToggle() {
     const toggleBtn = document.getElementById('toggleSidebar');
     const sidebar = document.getElementById('sidebar');
+    const app = document.getElementById('app');
 
     if (toggleBtn && sidebar) {
       toggleBtn.addEventListener('click', () => {
-        sidebar.classList.toggle('open');
+        if (window.innerWidth <= 768) {
+          sidebar.classList.toggle('open');
+        } else {
+          sidebar.classList.toggle('collapsed');
+          if (app) app.classList.toggle('sidebar-collapsed');
+        }
       });
     }
   }

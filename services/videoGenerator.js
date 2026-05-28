@@ -94,7 +94,12 @@ export class VideoGenerator {
       // 2. Load questions
       const setVoiceKey = setId ? (this.db.tts_sets.find(s => s.id === setId)?.voice_name || null) : null;
       const voiceKey = setVoiceKey || this.resolveVoiceKey({ preset, voiceName, profileId });
-      const questions = this.loadQuestions(questionIds, { voiceKey, setId, language });
+      const questions = this.loadQuestions(questionIds, {
+          voiceKey,
+          setId: setId || preset.config.audio?.phrase_set_id,
+          language,
+          numbering: preset.config.options?.numbering
+      });
       if (questions.length === 0) {
         throw new Error('No questions found');
       }
@@ -111,22 +116,44 @@ export class VideoGenerator {
       const timerDuration = preset.config.timer?.duration || 5;
 
       const perQuestionDurations = [];
-      for (const q of questions) {
+      for (let idx = 0; i < questions.length; i++) {
+        const q = questions[idx];
+        const isFirst = idx === 0;
+        const isLast = idx === questions.length - 1;
+
         // Calculate dynamic durations based on TTS audio if enabled
         const qDur = await this.getAudioDurationSeconds(q.tts_audio.question);
 
+        let navDur = 0;
+        if ((isFirst && audioConfig.play_first_question) ||
+            (isLast && audioConfig.play_last_question) ||
+            (!isFirst && !isLast && audioConfig.play_next_question)) {
+            navDur = await this.getAudioDurationSeconds(q.tts_audio.navigation);
+        }
+
         let optionsDur = 0;
         const opts = q.tts_audio.options || [];
+
+        const playOptionsAudio = audioConfig.play_options_audio !== false;
+        const playLabels = audioConfig.play_options;
 
         // Force audio generation/timing for all options as per requirement
         if (animConfig.options_display_mode === 'one_by_one') {
             for (let i = 0; i < opts.length; i++) {
                 optionsDur += Number(animConfig.option_reveal_delay || 0.5);
-                optionsDur += await this.getAudioDurationSeconds(opts[i]);
+                if (playLabels) {
+                    optionsDur += await this.getAudioDurationSeconds(opts[i].label);
+                }
+                if (playOptionsAudio) {
+                    optionsDur += await this.getAudioDurationSeconds(opts[i].text);
+                }
             }
         } else {
-            for (let i = 0; i < opts.length; i++) {
-                optionsDur += await this.getAudioDurationSeconds(opts[i]);
+            if (playLabels || playOptionsAudio) {
+                for (let i = 0; i < opts.length; i++) {
+                    if (playLabels) optionsDur += await this.getAudioDurationSeconds(opts[i].label);
+                    if (playOptionsAudio) optionsDur += await this.getAudioDurationSeconds(opts[i].text);
+                }
             }
         }
 
@@ -136,11 +163,14 @@ export class VideoGenerator {
             if (audioConfig.play_correct_answer_phrase !== false) {
                 correctAudioDur += await this.getAudioDurationSeconds(q.tts_audio.correct_phrase);
             }
-            correctAudioDur += await this.getAudioDurationSeconds(opts[q.correct_answer_index]);
+            if (playLabels) {
+                correctAudioDur += await this.getAudioDurationSeconds(opts[q.correct_answer_index].label);
+            }
+            correctAudioDur += await this.getAudioDurationSeconds(opts[q.correct_answer_index].text);
             answerRevealDur = Math.max(answerRevealDur, correctAudioDur + 1); // +1s buffer
         }
 
-        const qRevealDur = Math.max(Number(animConfig.question_display_duration || 2), qDur + 0.5);
+        const qRevealDur = Math.max(Number(animConfig.question_display_duration || 2), qDur + navDur + 0.5);
 
         const total = qRevealDur + optionsDur + timerDuration + answerRevealDur;
 
@@ -282,11 +312,13 @@ export class VideoGenerator {
   /**
    * Load questions from database
    */
-  loadQuestions(questionIds, { voiceKey, setId, language } = {}) {
+  loadQuestions(questionIds, { voiceKey, setId, language, numbering } = {}) {
 
     const questions = [];
+    const questionList = Array.isArray(questionIds) ? questionIds : [];
 
-    for (const id of questionIds) {
+    for (let idx = 0; idx < questionList.length; idx++) {
+      const id = questionList[idx];
       const q = this.db.questions.find(question => question.id === id);
       if (q) {
         const options = Array.isArray(q.options)
@@ -312,22 +344,39 @@ export class VideoGenerator {
         };
 
         // Find question TTS
-        let questionTTS = null;
-        questionTTS = findCachedEntry(q.question, 'questions');
+        const questionTTS = findCachedEntry(q.question, 'questions');
+
+        // Navigation phrases
+        let navPhraseText = null;
+        const lp = language ? this.db.language_phrases.find(p => p.language === language) : null;
+        if (lp) {
+            if (idx === 0) navPhraseText = lp.phrases?.first_question;
+            else if (idx === questionList.length - 1) navPhraseText = lp.phrases?.last_question;
+            else navPhraseText = lp.phrases?.next_question;
+        }
+        const navigationTTS = findCachedEntry(navPhraseText, 'phrases');
 
         const optionsTTS = [];
         for (let i = 0; i < options.length; i++) {
           const optionText = options[i];
-          let optTTS = null;
-          optTTS = findCachedEntry(optionText, 'options');
-          optionsTTS.push(optTTS ? optTTS.audio_url : null);
+          const optTTS = findCachedEntry(optionText, 'options');
+
+          let labelText = null;
+          if (numbering === 'alphabet') labelText = lp?.phrases?.[`option_${String.fromCharCode(97 + i)}`];
+          else if (numbering === 'numeric') labelText = lp?.phrases?.[`option_${i + 1}`];
+
+          const labelTTS = findCachedEntry(labelText, 'phrases');
+
+          optionsTTS.push({
+              text: optTTS ? optTTS.audio_url : null,
+              label: labelTTS ? labelTTS.audio_url : null
+          });
         }
 
         // Find phrases TTS (correct_answer_is)
         let correctPhraseTTS = null;
-        if (language) {
-          const lp = this.db.language_phrases.find(p => p.language === language);
-          const phraseText = lp?.phrases?.correct_answer_is;
+        if (lp) {
+          const phraseText = lp.phrases?.correct_answer_is;
           if (phraseText) {
             correctPhraseTTS = findCachedEntry(phraseText, 'phrases');
           }
@@ -341,6 +390,7 @@ export class VideoGenerator {
           explanation: q.explanation || null,
           tts_audio: {
             question: questionTTS ? questionTTS.audio_url : null,
+            navigation: navigationTTS ? navigationTTS.audio_url : null,
             options: optionsTTS,
             correct_phrase: correctPhraseTTS ? correctPhraseTTS.audio_url : null
           }
@@ -642,26 +692,48 @@ export class VideoGenerator {
 
       if (ttsEnabled) {
         try {
-          // Question audio first
-          await renderer.playTTSForQuestion();
+          const isFirst = index === 0;
+          const isLast = index === questions.length - 1;
 
-          // If options are shown one-by-one, speak each option as it appears.
-          if (presetConfig?.animation?.options_display_mode === 'one_by_one') {
-            const delay = Number(presetConfig?.animation?.option_reveal_delay || 0.5);
-            const optionsCount = question?.options?.length || 0;
-            for (let i = 0; i < optionsCount; i++) {
-              await new Promise(r => setTimeout(r, Math.max(0, delay) * 1000));
-              await renderer.playTTSForOption(i);
-            }
-          } else {
-            // All-at-once: speak options sequentially immediately after question.
-            const optionsCount = question?.options?.length || 0;
-            for (let i = 0; i < optionsCount; i++) {
-              await renderer.playTTSForOption(i);
-            }
+          // 1. Navigation phrase
+          if (question.tts_audio.navigation) {
+              if ((isFirst && audioConfig.play_first_question) ||
+                  (isLast && audioConfig.play_last_question) ||
+                  (!isFirst && !isLast && audioConfig.play_next_question)) {
+                  const audio = new Audio(question.tts_audio.navigation);
+                  await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play().catch(r); });
+              }
           }
 
-          // Wait for timer to finish (approximate sync with animation)
+          // 2. Question audio
+          await renderer.playTTSForQuestion();
+
+          // 3. Options audio
+          const playOptionsAudio = audioConfig.play_options_audio !== false;
+          const playLabels = audioConfig.play_options;
+
+          if (playOptionsAudio || playLabels) {
+              const optionsCount = question?.options?.length || 0;
+              const delay = Number(presetConfig?.animation?.option_reveal_delay || 0.5);
+
+              for (let i = 0; i < optionsCount; i++) {
+                if (presetConfig?.animation?.options_display_mode === 'one_by_one') {
+                  await new Promise(r => setTimeout(r, Math.max(0, delay) * 1000));
+                }
+
+                const optAudio = question.tts_audio.options[i];
+                if (playLabels && optAudio?.label) {
+                   const audio = new Audio(optAudio.label);
+                   await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play().catch(r); });
+                }
+                if (playOptionsAudio && optAudio?.text) {
+                   const audio = new Audio(optAudio.text);
+                   await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play().catch(r); });
+                }
+              }
+          }
+
+          // 4. Wait for timer to finish
           const waitBeforeAnswer = (qDurationData ? (qDurationData.qRevealDur + qDurationData.optionsDur + qDurationData.timerDuration) : 0);
           const elapsedSoFar = renderer.getCurrentTime();
           const remainingWait = (waitBeforeAnswer - elapsedSoFar);
@@ -670,17 +742,22 @@ export class VideoGenerator {
               await new Promise(r => setTimeout(r, remainingWait * 1000));
           }
 
-          // Play correct answer audio if enabled
+          // 5. Play correct answer audio if enabled
           if (audioConfig.play_correct_answer !== false) {
               if (audioConfig.play_correct_answer_phrase !== false && question.tts_audio.correct_phrase) {
                   const audio = new Audio(question.tts_audio.correct_phrase);
-                  await new Promise(r => {
-                      audio.onended = r;
-                      audio.onerror = r;
-                      audio.play().catch(r);
-                  });
+                  await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play().catch(r); });
               }
-              await renderer.playTTSForOption(question.correct_answer_index);
+
+              const correctOpt = question.tts_audio.options[question.correct_answer_index];
+              if (playLabels && correctOpt?.label) {
+                  const audio = new Audio(correctOpt.label);
+                  await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play().catch(r); });
+              }
+              if (correctOpt?.text) {
+                  const audio = new Audio(correctOpt.text);
+                  await new Promise(r => { audio.onended = r; audio.onerror = r; audio.play().catch(r); });
+              }
           }
 
         } catch (e) {
@@ -787,7 +864,10 @@ export class VideoGenerator {
     const segments = [];
     let cursor = Math.max(0, introDuration);
 
-    for (const q of questions) {
+    for (let idx = 0; idx < questions.length; idx++) {
+      const q = questions[idx];
+      const isFirst = idx === 0;
+      const isLast = idx === questions.length - 1;
       let t = cursor;
 
       // 1. Question audio
@@ -798,31 +878,49 @@ export class VideoGenerator {
         qDur = await this.getAudioDurationSeconds(qAudio);
       }
 
-      const qRevealDur = Math.max(Number(anim.question_display_duration || 2), qDur + 0.5);
+      let navDur = 0;
+      const navAudio = q?.tts_audio?.navigation;
+      if (navAudio) {
+          if ((isFirst && audioCfg.play_first_question) ||
+              (isLast && audioCfg.play_last_question) ||
+              (!isFirst && !isLast && audioCfg.play_next_question)) {
+              segments.push({ url: navAudio, startSeconds: t + qDur });
+              navDur = await this.getAudioDurationSeconds(navAudio);
+          }
+      }
+
+      const qRevealDur = Math.max(Number(anim.question_display_duration || 2), qDur + navDur + 0.5);
       t = cursor + qRevealDur;
 
       // 2. Options audio (Always generate for all options now)
       const opts = Array.isArray(q?.tts_audio?.options) ? q.tts_audio.options : [];
       const optionsCount = Math.min(opts.length, q?.options?.length || opts.length);
+      const playOptionsAudio = audioCfg.play_options_audio !== false;
+      const playLabels = audioCfg.play_options;
 
-      let optionsDur = 0;
       if (optionsMode === 'one_by_one') {
         for (let i = 0; i < optionsCount; i++) {
           t += optionRevealDelay;
-          const oAudio = opts[i];
-          if (oAudio) {
-            segments.push({ url: oAudio, startSeconds: t });
-            const od = await this.getAudioDurationSeconds(oAudio);
-            t += od;
+          const o = opts[i];
+          if (o.label && playLabels) {
+              segments.push({ url: o.label, startSeconds: t });
+              t += await this.getAudioDurationSeconds(o.label);
+          }
+          if (o.text && playOptionsAudio) {
+            segments.push({ url: o.text, startSeconds: t });
+            t += await this.getAudioDurationSeconds(o.text);
           }
         }
       } else {
         for (let i = 0; i < optionsCount; i++) {
-          const oAudio = opts[i];
-          if (oAudio) {
-            segments.push({ url: oAudio, startSeconds: t });
-            const od = await this.getAudioDurationSeconds(oAudio);
-            t += od;
+          const o = opts[i];
+          if (o.label && playLabels) {
+              segments.push({ url: o.label, startSeconds: t });
+              t += await this.getAudioDurationSeconds(o.label);
+          }
+          if (o.text && playOptionsAudio) {
+            segments.push({ url: o.text, startSeconds: t });
+            t += await this.getAudioDurationSeconds(o.text);
           }
         }
       }
@@ -840,10 +938,16 @@ export class VideoGenerator {
               at += await this.getAudioDurationSeconds(q.tts_audio.correct_phrase);
           }
 
-          const correctOptAudio = opts[q.correct_answer_index];
-          if (correctOptAudio) {
-              segments.push({ url: correctOptAudio, startSeconds: at });
-              at += await this.getAudioDurationSeconds(correctOptAudio);
+          const correctOpt = opts[q.correct_answer_index];
+          if (correctOpt) {
+              if (playLabels && correctOpt.label) {
+                  segments.push({ url: correctOpt.label, startSeconds: at });
+                  at += await this.getAudioDurationSeconds(correctOpt.label);
+              }
+              if (correctOpt.text) {
+                  segments.push({ url: correctOpt.text, startSeconds: at });
+                  at += await this.getAudioDurationSeconds(correctOpt.text);
+              }
           }
           answerRevealDur = Math.max(answerRevealDur, (at - t) + 1);
       }
@@ -880,31 +984,29 @@ export class VideoGenerator {
       return null;
     }
 
-    console.log(`Muxing ${audioInputs.length} audio files into video`);
+    console.log(`Muxing ${audioInputs.length} audio files into video (MP4)`);
 
-    let outPath = videoPath.replace(/\.webm$/i, '') + '_tts.webm';
+    let outPath = videoPath.replace(/\.webm$/i, '') + '_tts.mp4';
 
     // If custom name is provided, use it for the TTS version too
     if (customName) {
       const sanitizedName = customName.replace(/[^a-zA-Z0-9_-]/g, '_');
-      outPath = path.join(path.dirname(videoPath), `${sanitizedName}_tts.webm`);
+      outPath = path.join(path.dirname(videoPath), `${sanitizedName}_tts.mp4`);
 
       // Handle existing files
       if (fs.existsSync(outPath)) {
         const timestamp = Date.now();
-        outPath = path.join(path.dirname(videoPath), `${sanitizedName}_tts_${timestamp}.webm`);
+        outPath = path.join(path.dirname(videoPath), `${sanitizedName}_tts_${timestamp}.mp4`);
       }
     }
 
     // Build ffmpeg args:
     // input0: video
     // inputs1..N: audio segments
-    const args = ['-i', videoPath];
+    const args = ['-y', '-i', videoPath];
     for (const a of audioInputs) {
       args.push('-i', a.abs);
     }
-
-    const totalMs = Math.max(0, Number(totalDurationSeconds || 0)) * 1000;
 
     // filter_complex:
     // [1:a]adelay=ms|ms,apad[a1]; ...; anullsrc=... [base];
@@ -912,30 +1014,32 @@ export class VideoGenerator {
     const filterParts = [];
 
     // base silence
-    // Use 48k to match opus defaults.
-    filterParts.push(`anullsrc=r=48000:cl=stereo,atrim=0:${(Number(totalDurationSeconds || 0)).toFixed(3)}[base]`);
+    filterParts.push(`anullsrc=r=44100:cl=stereo,atrim=0:${(Number(totalDurationSeconds || 0)).toFixed(3)}[base]`);
 
     audioInputs.forEach((a, idx) => {
       const inLabel = `${idx + 1}:a`;
       const outLabel = `a${idx + 1}`;
       const delayMs = Math.max(0, Math.round(a.startSeconds * 1000));
-      // Normalize each input to 48k stereo before delaying
-      filterParts.push(`[${inLabel}]aresample=48000,aformat=channel_layouts=stereo,adelay=${delayMs}|${delayMs},apad,atrim=0:${(Number(totalDurationSeconds || 0)).toFixed(3)}[${outLabel}]`);
+      // Normalize each input and apply delay.
+      // Also apply a small volume boost (1.5x) to each segment to address "low audio" issue
+      filterParts.push(`[${inLabel}]aresample=44100,aformat=channel_layouts=stereo,volume=1.5,adelay=${delayMs}|${delayMs},apad,atrim=0:${(Number(totalDurationSeconds || 0)).toFixed(3)}[${outLabel}]`);
     });
 
     const mixInputs = ['[base]', ...audioInputs.map((_, idx) => `[a${idx + 1}]`)].join('');
-    // Use volume adjustment to prevent clipping if many tracks overlap
-    const volumeAdj = audioInputs.length > 3 ? `,volume=${(1/Math.sqrt(audioInputs.length)).toFixed(2)}` : '';
-    filterParts.push(`${mixInputs}amix=inputs=${audioInputs.length + 1}:duration=longest:dropout_transition=0${volumeAdj}[aout]`);
+    // Use volume boost on final mix as well to ensure clear audio
+    filterParts.push(`${mixInputs}amix=inputs=${audioInputs.length + 1}:duration=longest:dropout_transition=0,volume=1.2[aout]`);
 
     args.push(
       '-filter_complex',
       filterParts.join(';'),
       '-map', '0:v:0',
       '-map', '[aout]',
-      '-c:v', 'copy',
-      '-c:a', 'libopus',
-      '-b:a', '128k',
+      '-c:v', 'libx264',
+      '-pix_fmt', 'yuv420p',
+      '-preset', 'fast',
+      '-c:a', 'aac',
+      '-b:a', '192k',
+      '-shortest',
       '-t', String(Number(totalDurationSeconds || 0)),
       outPath
     );
@@ -957,7 +1061,7 @@ export class VideoGenerator {
         args: ['--disable-web-security', '--disable-features=IsolateOrigins,site-per-process']
       });
 
-      const videoFileName = `video_${Date.now()}.webm`;
+      const videoFileName = `video_${Date.now()}.mp4`;
       const videoPath = path.join(this.outputDir, videoFileName);
 
       // Create context with video recording
@@ -1124,7 +1228,10 @@ export class VideoGenerator {
    * Get video info
    */
   getVideoInfo(videoId) {
-    const videoPath = path.join(this.outputDir, `video_${videoId}.webm`);
+    let videoPath = path.join(this.outputDir, `video_${videoId}.mp4`);
+    if (!fs.existsSync(videoPath)) {
+      videoPath = path.join(this.outputDir, `video_${videoId}.webm`);
+    }
 
     if (!fs.existsSync(videoPath)) {
       return null;
@@ -1150,7 +1257,7 @@ export class VideoGenerator {
 
     const files = fs.readdirSync(this.outputDir);
     const videos = files
-      .filter(file => file.endsWith('.webm'))
+      .filter(file => file.endsWith('.mp4') || file.endsWith('.webm'))
       .map(file => {
         const stats = fs.statSync(path.join(this.outputDir, file));
         return {
@@ -1167,8 +1274,8 @@ export class VideoGenerator {
   /**
    * Delete video
    */
-  deleteVideo(videoId) {
-    const videoPath = path.join(this.outputDir, `video_${videoId}.webm`);
+  deleteVideo(filename) {
+    const videoPath = path.join(this.outputDir, filename);
 
     if (fs.existsSync(videoPath)) {
       fs.unlinkSync(videoPath);

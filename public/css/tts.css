@@ -1851,3 +1851,34 @@ select.form-control {
     background: #4f46e5;
     color: white;
 }
+
+.icon-btn {
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: white;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+.icon-btn.danger {
+  color: #ef4444;
+  border-color: #fee2e2;
+}
+
+.icon-btn.danger:hover {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #dc2626;
+}

@@ -151,6 +151,8 @@ class DesignerUI {
         play_next_question: true,
         play_last_question: true,
         play_options: true,
+        play_options_audio: true,
+        phrase_set_id: null,
         play_correct_answer: true,
         play_correct_answer_phrase: true,
         question_gap: 1.0,
@@ -236,6 +238,9 @@ class DesignerUI {
 
       // Load fonts library
       await this.loadFontsLibrary();
+
+      // Load TTS sets for phrases
+      await this.loadTTSPhraseSets();
 
       // Populate form with preset values
       this.populateForm();
@@ -343,6 +348,25 @@ class DesignerUI {
     } catch (error) {
       console.error('Error loading media library:', error);
       this.mediaLibrary = { images: [], videos: [], all: [] };
+    }
+  }
+
+  async loadTTSPhraseSets() {
+    try {
+      const response = await fetch('/api/tts/sets');
+      const sets = await response.json();
+
+      const select = document.getElementById('audioPhraseSet');
+      if (select) {
+          select.innerHTML = '<option value="">Default Set</option>' +
+              sets.map(s => `<option value="${s.id}">${s.name} (${s.provider})</option>`).join('');
+
+          if (this.presetConfig?.audio?.phrase_set_id) {
+              select.value = this.presetConfig.audio.phrase_set_id;
+          }
+      }
+    } catch (error) {
+      console.error('Error loading TTS sets:', error);
     }
   }
 
@@ -737,6 +761,11 @@ class DesignerUI {
     document.getElementById('audioPlayNextQuestion').checked = this.presetConfig.audio.play_next_question;
     document.getElementById('audioPlayLastQuestion').checked = this.presetConfig.audio.play_last_question;
     document.getElementById('audioPlayOptions').checked = this.presetConfig.audio.play_options;
+    document.getElementById('audioPlayOptionsAudio').checked = this.presetConfig.audio.play_options_audio !== false;
+    const phraseSetSelect = document.getElementById('audioPhraseSet');
+    if (phraseSetSelect) {
+        phraseSetSelect.value = this.presetConfig.audio.phrase_set_id || '';
+    }
     document.getElementById('audioPlayCorrectAnswer').checked = this.presetConfig.audio.play_correct_answer !== false;
     document.getElementById('audioPlayCorrectAnswerPhrase').checked = this.presetConfig.audio.play_correct_answer_phrase !== false;
     document.getElementById('audioQuestionGap').value = this.presetConfig.audio.question_gap;
@@ -1567,6 +1596,14 @@ class DesignerUI {
 
     this.addListener('audioPlayOptions', 'change', (value) => {
       this.presetConfig.audio.play_options = document.getElementById('audioPlayOptions').checked;
+    });
+
+    this.addListener('audioPlayOptionsAudio', 'change', (value) => {
+      this.presetConfig.audio.play_options_audio = document.getElementById('audioPlayOptionsAudio').checked;
+    });
+
+    this.addListener('audioPhraseSet', 'change', (value) => {
+      this.presetConfig.audio.phrase_set_id = value || null;
     });
 
     this.addListener('audioPlayCorrectAnswer', 'change', (value) => {
