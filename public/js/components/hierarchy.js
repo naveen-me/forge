@@ -38,6 +38,14 @@ export class HierarchyComponent {
     const response = await fetch('/api/questions');
     const data = await response.json();
     this.questions = Array.isArray(data.questions) ? data.questions : data;
+
+    // Also load TTS cache to find playable audio
+    try {
+        const ttsRes = await fetch('/api/tts/cache');
+        this.ttsCache = await ttsRes.json();
+    } catch (e) {
+        this.ttsCache = [];
+    }
   }
 
   renderContent() {
@@ -154,20 +162,20 @@ export class HierarchyComponent {
         <div class="card-header">
           <span class="card-title">${this.escapeHtml(topic?.name || 'Topic')}</span>
           <div class="topic-actions topic-actions-header">
-            <a class="icon-btn" href="/api/csv/sample?topicId=${this.selectedTopicId}" title="Download sample CSV" aria-label="Download sample CSV">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            <a class="icon-btn" href="/api/csv/sample?topicId=${this.selectedTopicId}" title="Download sample CSV">
+              <span class="material-symbols-outlined">description</span>
             </a>
-            <a class="icon-btn" href="/api/csv/export?topicId=${this.selectedTopicId}" title="Export CSV" aria-label="Export CSV">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <a class="icon-btn" href="/api/csv/export?topicId=${this.selectedTopicId}" title="Export CSV">
+              <span class="material-symbols-outlined">download</span>
             </a>
-            <button class="icon-btn" id="importCsvBtn" type="button" title="Import CSV" aria-label="Import CSV">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <button class="icon-btn" id="importCsvBtn" type="button" title="Import CSV">
+              <span class="material-symbols-outlined">upload</span>
             </button>
-            <button class="icon-btn" id="editTopicBtn" type="button" title="Edit topic" aria-label="Edit topic">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            <button class="icon-btn" id="editTopicBtn" type="button" title="Edit topic">
+              <span class="material-symbols-outlined">edit</span>
             </button>
-            <button class="icon-btn danger" id="deleteTopicBtn" type="button" title="Delete topic" aria-label="Delete topic">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+            <button class="icon-btn danger" id="deleteTopicBtn" type="button" title="Delete topic">
+              <span class="material-symbols-outlined">delete</span>
             </button>
             <input type="file" id="importCsvInput" accept=".csv" style="display:none;">
           </div>
@@ -179,27 +187,59 @@ export class HierarchyComponent {
             </div>
           ` : `
             <div class="questions-list">
-              ${questions.map((q, idx) => `
+              ${questions.map((q, idx) => {
+                const questionAudio = this.getAudioUrl(q.question, 'questions');
+                return `
                 <div class="question-card">
-                  <div class="question-header">
-                    <span class="question-number">#${idx + 1}</span>
-                  </div>
-                  <div class="question-text">${this.escapeHtml(q.question)}</div>
-                  <div class="question-options">
-                    ${(q.options || []).map((opt, i) => `
-                      <div class="option ${q.correct_option === i ? 'correct-option' : ''}">
-                        <span class="option-label">${String.fromCharCode(65 + i)}.</span>
-                        <span class="option-text">${this.escapeHtml(opt)}</span>
-                        ${q.correct_option === i ? '<span class="correct-badge">&#10003; Correct</span>' : ''}
+                  <div class="question-card-header">
+                    <div class="question-card-main">
+                      <div class="question-badge">Question #${idx + 1}</div>
+                      <div class="question-text">
+                        ${this.escapeHtml(q.question)}
+                        ${questionAudio ? `
+                          <button class="play-btn-small" onclick="hierarchyComponent.playAudio(this, '${questionAudio}')" title="Play question audio">
+                            <span class="material-symbols-outlined">play_arrow</span>
+                          </button>
+                        ` : ''}
                       </div>
-                    `).join('')}
+                    </div>
+                    <div class="question-card-actions">
+                      <button class="icon-btn" data-action="edit-question" data-id="${q.id}" title="Edit">
+                        <span class="material-symbols-outlined">edit</span>
+                      </button>
+                      <button class="icon-btn danger" data-action="delete-question" data-id="${q.id}" title="Delete">
+                        <span class="material-symbols-outlined">delete</span>
+                      </button>
+                    </div>
                   </div>
-                  <div style="margin-top: 10px; display:flex; gap: 8px;">
-                    <button class="btn btn-secondary btn-small" data-action="edit-question" data-id="${q.id}">Edit</button>
-                    <button class="btn btn-danger btn-small" data-action="delete-question" data-id="${q.id}">Delete</button>
+
+                  <div class="options-grid">
+                    ${(q.options || []).map((opt, i) => {
+                      const isCorrect = q.correct_option === i;
+                      const optionAudio = this.getAudioUrl(opt, 'options');
+                      return `
+                      <div class="option-item ${isCorrect ? 'is-correct' : ''}">
+                        <span class="option-letter">${String.fromCharCode(65 + i)}.</span>
+                        <span class="option-content">${this.escapeHtml(opt)}</span>
+                        <div class="audio-player-inline">
+                          ${optionAudio ? `
+                            <button class="play-btn-small" onclick="hierarchyComponent.playAudio(this, '${optionAudio}')" title="Play option audio">
+                              <span class="material-symbols-outlined">play_arrow</span>
+                            </button>
+                          ` : ''}
+                        </div>
+                      </div>
+                    `}).join('')}
                   </div>
+
+                  ${q.explanation ? `
+                    <div class="explanation-section">
+                      <span class="material-symbols-outlined explanation-icon">info</span>
+                      <div class="explanation-text"><strong>Explanation:</strong> ${this.escapeHtml(q.explanation)}</div>
+                    </div>
+                  ` : ''}
                 </div>
-              `).join('')}
+              `}).join('')}
             </div>
           `}
         </div>
@@ -320,6 +360,57 @@ export class HierarchyComponent {
       console.error('CSV import failed:', error);
       alert(`CSV import failed: ${error.message}`);
     }
+  }
+
+  getAudioUrl(text, category) {
+    if (!this.ttsCache || !text) return null;
+    // Find a default version or any version that matches text and category
+    const entry = this.ttsCache.find(c =>
+        c.category === category &&
+        c.text === text &&
+        c.is_default
+    ) || this.ttsCache.find(c =>
+        c.category === category &&
+        c.text === text
+    );
+    return entry ? entry.audio_url : null;
+  }
+
+  playAudio(btn, url) {
+    if (this.currentAudio) {
+        this.currentAudio.pause();
+        if (this.currentBtn) {
+            this.currentBtn.querySelector('.material-symbols-outlined').textContent = 'play_arrow';
+            this.currentBtn.classList.remove('playing');
+        }
+    }
+
+    if (this.currentAudioUrl === url) {
+        this.currentAudioUrl = null;
+        return;
+    }
+
+    const icon = btn.querySelector('.material-symbols-outlined');
+    icon.textContent = 'pause';
+    btn.classList.add('playing');
+
+    this.currentAudio = new Audio(url);
+    this.currentAudioUrl = url;
+    this.currentBtn = btn;
+
+    this.currentAudio.onended = () => {
+        icon.textContent = 'play_arrow';
+        btn.classList.remove('playing');
+        this.currentAudio = null;
+        this.currentAudioUrl = null;
+        this.currentBtn = null;
+    };
+
+    this.currentAudio.play().catch(e => {
+        console.error('Audio play failed:', e);
+        icon.textContent = 'play_arrow';
+        btn.classList.remove('playing');
+    });
   }
 
   escapeHtml(text) {
