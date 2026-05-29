@@ -596,8 +596,9 @@ export class VideosComponent {
 
     if (!card || !content) return;
 
-    const { current, queue } = this.queueStatus;
-    const hasActivity = current || queue.length > 0;
+    const { current, queue, history } = this.queueStatus;
+    const failedJobs = (history || []).filter(j => j.status === 'failed').slice(0, 3);
+    const hasActivity = current || queue.length > 0 || failedJobs.length > 0;
 
     if (!hasActivity) {
       card.style.display = 'none';
@@ -632,6 +633,27 @@ export class VideosComponent {
           </div>
         </div>
       `;
+    }
+
+    // Failed jobs
+    if (failedJobs.length > 0) {
+      html += `<div style="margin: 20px 0 12px; font-size: 13px; font-weight: 700; color: #ef4444; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;">
+        <span class="material-symbols-outlined" style="font-size: 18px;">error</span>
+        Failed Jobs
+      </div>`;
+      failedJobs.forEach(job => {
+        html += `
+          <div class="queue-job failed-job" style="padding: 16px; border: 1px solid #fecaca; background: #fff1f2; margin-bottom: 10px; border-left: 4px solid #ef4444; border-radius: 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <strong style="color: #991b1b;">${this.escapeHtml(job.customName || `Job ${job.id}`)}</strong>
+              <span style="font-size: 11px; color: #b91c1c;">${new Date(job.completedAt).toLocaleTimeString()}</span>
+            </div>
+            <div style="color: #b91c1c; font-size: 13px;">
+              Error: ${this.escapeHtml(job.error || 'Unknown error occurred during generation')}
+            </div>
+          </div>
+        `;
+      });
     }
 
     // Queued jobs

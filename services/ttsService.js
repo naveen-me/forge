@@ -416,7 +416,12 @@ export class TTSService {
       const finalVoiceName = voiceName || profile?.voice;
       
       if (!finalVoiceName) {
-        throw new Error('Missing voice selection (profileId or voiceName)');
+        throw new Error('Missing voice selection. Please select a valid voice profile or voice name.');
+      }
+
+      // Validate provider availability
+      if (provider === 'google' && !this.isGoogleTTSAvailable()) {
+        throw new Error('Google TTS provider is selected but not configured. Please add Google Cloud credentials in Settings.');
       }
 
       const voiceKey = finalVoiceName;

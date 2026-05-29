@@ -1202,10 +1202,12 @@ class TTSComponent {
         </div>
         <div class="sets-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px;">
           ${sets.length === 0 ? '<p>No sets found.</p>' : sets.map(set => `
-            <div class="tts-set-card" onclick="ttsComponent.openSet('${set.id}')" style="cursor: pointer; background: white; border: 1px solid #ddd; padding: 16px; border-radius: 8px;">
+            <div class="tts-set-card" onclick="ttsComponent.openSet('${set.id}')" style="cursor: pointer; background: white; border: 1px solid #ddd; padding: 16px; border-radius: 8px; position: relative;">
               <div class="set-name" style="font-weight:bold;">${this.escapeHtml(set.name)}</div>
               <div style="font-size: 12px; color: #666;">${set.item_count} files &middot; ${set.provider}</div>
-              <button class="btn btn-danger btn-small" style="margin-top:10px;" onclick="event.stopPropagation(); ttsComponent.deleteSet('${set.id}')">Delete</button>
+              <button class="icon-btn danger" style="position: absolute; bottom: 10px; right: 10px;" onclick="event.stopPropagation(); ttsComponent.deleteSet('${set.id}')" title="Delete Set">
+                <span class="material-symbols-outlined">delete</span>
+              </button>
             </div>
           `).join('')}
         </div>
@@ -1234,8 +1236,10 @@ class TTSComponent {
                 ${entries.map(e => `
                     <div style="display:flex; align-items:center; gap:10px; padding:10px; border-bottom:1px solid #eee;">
                         <input type="checkbox" onchange="ttsComponent.toggleEntrySelection('${e.id}')" ${this.selectedSetEntries.has(e.id) ? 'checked' : ''}>
-                        <div style="flex:1;">${this.escapeHtml(e.text)}</div>
-                        <button class="play-btn-small" onclick="ttsComponent.playAudioInline(this, '${e.audio_url}')">Play</button>
+                        <div style="flex:1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${this.escapeHtml(e.text)}</div>
+                        <button class="play-btn-small" onclick="ttsComponent.playAudioInline(this, '${e.audio_url}')" title="Play">
+                            <span class="material-symbols-outlined">play_arrow</span>
+                        </button>
                     </div>
                 `).join('')}
             </div>
@@ -2221,22 +2225,45 @@ class TTSComponent {
 
       if (!this.activeJobs.length) {
           // If a job was just completed, show completion message before hiding
-          if (this._ttsJobCompleted === false && this._lastJobStatus === 'running') {
+          if (this._ttsJobCompleted === false && (this._lastJobStatus === 'running' || this._lastJobStatus === 'queued')) {
               this._ttsJobCompleted = true;
               const progressLog = document.getElementById('ttsProgressLog');
-              if (progressLog) {
-                  const p = document.createElement('p');
-                  p.innerHTML = `<span class="log-msg-success">✅ All items processed successfully!</span>`;
-                  progressLog.appendChild(p);
-              }
               const progressBar = document.getElementById('ttsProgressBar');
-              if (progressBar) progressBar.style.width = '100%';
               const progressPercent = document.getElementById('ttsProgressPercent');
-              if (progressPercent) progressPercent.textContent = '100%';
 
-              setTimeout(() => {
-                  if (!this.activeJobs.length) area.style.display = 'none';
-              }, 5000);
+              // Fetch the full job info from history if possible to see if it failed
+              this.loadLastJobDetails().then(lastJob => {
+                const hasErrors = lastJob && lastJob.progress && Array.isArray(lastJob.progress.errors) && lastJob.progress.errors.length > 0;
+                if (lastJob && (lastJob.status === 'failed' || hasErrors)) {
+                  if (progressLog) {
+                      progressLog.innerHTML = `
+                        <div class="alert alert-error" style="margin-top:10px;">
+                          <strong>❌ Generation Failed or had errors</strong>
+                          <p>${this.escapeHtml(lastJob.error || 'Some items failed to process.')}</p>
+                          ${hasErrors ? lastJob.progress.errors.map(err => `<div style="font-size:0.85em; margin-top:4px;">&bull; ${this.escapeHtml(err.category)}: ${this.escapeHtml(err.error)}</div>`).join('') : ''}
+                        </div>
+                      `;
+                  }
+                  if (progressBar) progressBar.style.background = '#ef4444';
+                } else {
+                  if (progressLog) {
+                      progressLog.innerHTML = `<p class="log-msg-success">✅ All items processed successfully!</p>`;
+                  }
+                  if (progressBar) {
+                    progressBar.style.width = '100%';
+                    progressBar.style.background = '#10b981';
+                  }
+                  if (progressPercent) progressPercent.textContent = '100%';
+
+                  setTimeout(() => {
+                      if (!this.activeJobs.length && area.style.display !== 'none' && this._ttsJobCompleted) {
+                        area.style.display = 'none';
+                        // Reset progress bar color for next time
+                        if (progressBar) progressBar.style.background = '';
+                      }
+                  }, 5000);
+                }
+              });
           }
           this._lastJobStatus = null;
           return;
@@ -2251,15 +2278,40 @@ class TTSComponent {
       const progressPercent = document.getElementById('ttsProgressPercent');
       const progressLog = document.getElementById('ttsProgressLog');
 
-      if (progressBar) progressBar.style.width = `${job.progress.percentage}%`;
+      if (progressBar) {
+        progressBar.style.width = `${job.progress.percentage}%`;
+        progressBar.style.background = ''; // reset color
+      }
       if (progressPercent) progressPercent.textContent = `${Math.round(job.progress.percentage)}%`;
       if (progressLog) {
           progressLog.innerHTML = `
-            <p><strong>Status:</strong> ${job.status.toUpperCase()}</p>
-            <p>Processing ${job.progress.completed_items} of ${job.progress.total_items} items...</p>
-            ${job.progress.current_item ? `<p style="font-size:0.85em; color:#666;">Current: ${job.progress.current_item.category} - ${job.progress.current_item.text?.substring(0, 30)}...</p>` : ''}
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <strong>Status: ${job.status.toUpperCase()}</strong>
+              <span>${job.progress.completed_items} / ${job.progress.total_items} items</span>
+            </div>
+            ${job.progress.current_item ? `
+              <div style="font-size:0.85em; color:#64748b; margin-bottom:8px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                Current: ${job.progress.current_item.category} - ${this.escapeHtml(job.progress.current_item.text)}
+              </div>
+            ` : ''}
+            ${job.progress.errors && job.progress.errors.length > 0 ? `
+              <div style="color:#ef4444; font-size:0.85em; margin-top:8px;">
+                ⚠️ ${job.progress.errors.length} error(s) so far...
+              </div>
+            ` : ''}
           `;
       }
+  }
+
+  async loadLastJobDetails() {
+    try {
+      const res = await fetch('/api/tts/jobs');
+      if (!res.ok) return null;
+      const jobs = await res.json();
+      return jobs[0] || null; // jobs are sorted by created_at desc
+    } catch (e) {
+      return null;
+    }
   }
 
   escapeHtml(text) {

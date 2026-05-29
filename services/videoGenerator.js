@@ -1021,13 +1021,13 @@ export class VideoGenerator {
       const outLabel = `a${idx + 1}`;
       const delayMs = Math.max(0, Math.round(a.startSeconds * 1000));
       // Normalize each input and apply delay.
-      // Also apply a small volume boost (1.5x) to each segment to address "low audio" issue
-      filterParts.push(`[${inLabel}]aresample=44100,aformat=channel_layouts=stereo,volume=1.5,adelay=${delayMs}|${delayMs},apad,atrim=0:${(Number(totalDurationSeconds || 0)).toFixed(3)}[${outLabel}]`);
+      // Also apply a volume boost (2.0x) to each segment to address "low audio" issue
+      filterParts.push(`[${inLabel}]aresample=44100,aformat=channel_layouts=stereo,volume=2.0,adelay=${delayMs}|${delayMs},apad,atrim=0:${(Number(totalDurationSeconds || 0)).toFixed(3)}[${outLabel}]`);
     });
 
     const mixInputs = ['[base]', ...audioInputs.map((_, idx) => `[a${idx + 1}]`)].join('');
     // Use volume boost on final mix as well to ensure clear audio
-    filterParts.push(`${mixInputs}amix=inputs=${audioInputs.length + 1}:duration=longest:dropout_transition=0,volume=1.2[aout]`);
+    filterParts.push(`${mixInputs}amix=inputs=${audioInputs.length + 1}:duration=longest:dropout_transition=0,volume=1.5[aout]`);
 
     args.push(
       '-filter_complex',
