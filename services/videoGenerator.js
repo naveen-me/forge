@@ -116,7 +116,7 @@ export class VideoGenerator {
       const timerDuration = preset.config.timer?.duration || 5;
 
       const perQuestionDurations = [];
-      for (let idx = 0; i < questions.length; i++) {
+      for (let idx = 0; idx < questions.length; idx++) {
         const q = questions[idx];
         const isFirst = idx === 0;
         const isLast = idx === questions.length - 1;
@@ -924,7 +924,7 @@ export class VideoGenerator {
           }
         }
       }
-      optionsDur = t - (cursor + qRevealDur);
+      const optionsDur = t - (cursor + qRevealDur);
 
       // 3. Timer (just visual, but we need to know when it ends)
       t = cursor + qRevealDur + optionsDur + timerDuration;

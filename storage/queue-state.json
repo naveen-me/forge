@@ -447,7 +447,111 @@
           }
         ]
       }
+    ],
+    [
+      "7f342a1e-766f-4e57-8133-76d72796fe1a",
+      {
+        "id": "7f342a1e-766f-4e57-8133-76d72796fe1a",
+        "questionIds": [
+          "question_1771121354670_telugu_1",
+          "question_1771121354670_telugu_2",
+          "question_1771121354670_telugu_3",
+          "question_1771121354670_telugu_4",
+          "question_1771121354670_telugu_5",
+          "question_1771121354670_telugu_6",
+          "question_1771121354670_telugu_7",
+          "question_1771121354670_telugu_8",
+          "question_1771121354670_telugu_9",
+          "question_1771121354670_telugu_10",
+          "question_1771121354670_telugu_11",
+          "question_1771121354670_telugu_12"
+        ],
+        "presetId": "preset_1770172110088",
+        "customName": "newvidtoday",
+        "batches": [
+          [
+            "question_1771121354670_telugu_1",
+            "question_1771121354670_telugu_2",
+            "question_1771121354670_telugu_3",
+            "question_1771121354670_telugu_4",
+            "question_1771121354670_telugu_5",
+            "question_1771121354670_telugu_6",
+            "question_1771121354670_telugu_7",
+            "question_1771121354670_telugu_8",
+            "question_1771121354670_telugu_9",
+            "question_1771121354670_telugu_10",
+            "question_1771121354670_telugu_11",
+            "question_1771121354670_telugu_12"
+          ]
+        ],
+        "batchSize": 12,
+        "setId": "set_1780043498387_18rzqleiy",
+        "status": "failed",
+        "addedAt": "2026-05-29T08:34:57.327Z",
+        "startedAt": "2026-05-29T08:34:57.329Z",
+        "completedAt": "2026-05-29T08:34:57.334Z",
+        "error": "i is not defined",
+        "progress": 1,
+        "totalBatches": 1,
+        "completedBatches": 0
+      }
+    ],
+    [
+      "9b261445-ce59-412b-bbf0-f0e925d96d63",
+      {
+        "id": "9b261445-ce59-412b-bbf0-f0e925d96d63",
+        "questionIds": [
+          "question_1771121354670_telugu_1",
+          "question_1771121354670_telugu_2",
+          "question_1771121354670_telugu_3",
+          "question_1771121354670_telugu_4",
+          "question_1771121354670_telugu_5",
+          "question_1771121354670_telugu_6",
+          "question_1771121354670_telugu_7",
+          "question_1771121354670_telugu_8",
+          "question_1771121354670_telugu_9",
+          "question_1771121354670_telugu_10",
+          "question_1771121354670_telugu_11",
+          "question_1771121354670_telugu_12"
+        ],
+        "presetId": "preset_1770172110088",
+        "customName": "checking _video",
+        "batches": [
+          [
+            "question_1771121354670_telugu_1",
+            "question_1771121354670_telugu_2",
+            "question_1771121354670_telugu_3",
+            "question_1771121354670_telugu_4",
+            "question_1771121354670_telugu_5",
+            "question_1771121354670_telugu_6",
+            "question_1771121354670_telugu_7",
+            "question_1771121354670_telugu_8",
+            "question_1771121354670_telugu_9",
+            "question_1771121354670_telugu_10",
+            "question_1771121354670_telugu_11",
+            "question_1771121354670_telugu_12"
+          ]
+        ],
+        "batchSize": 12,
+        "setId": "set_1780043498387_18rzqleiy",
+        "status": "completed",
+        "addedAt": "2026-05-29T08:55:36.502Z",
+        "startedAt": "2026-05-29T08:55:36.504Z",
+        "completedAt": "2026-05-29T09:00:47.826Z",
+        "error": null,
+        "progress": 100,
+        "totalBatches": 1,
+        "completedBatches": 1,
+        "generatedVideos": [
+          {
+            "path": "/Volumes/Moon/three/forge/videos/checking__video.mp4",
+            "duration": 214.896,
+            "questionCount": 12,
+            "customName": "checking _video"
+          }
+        ]
+      }
     ]
   ],
-  "savedAt": "2026-05-27T18:30:03.603Z"
+  "savedAt": "2026-05-29T09:00:47.826Z"
 }
