@@ -107,6 +107,7 @@
             <button class="tab-btn" data-tab="options">Options</button>
             <button class="tab-btn" data-tab="timer">Timer</button>
             <button class="tab-btn" data-tab="explanation">Explanation</button>
+            <button class="tab-btn" data-tab="avatars">Avatars</button>
             <button class="tab-btn" data-tab="overlays">Overlays</button>
             <button class="tab-btn" data-tab="audio">Audio Narration</button>
           </div>
@@ -362,6 +363,29 @@
               <option value="fill">Fill</option>
               <option value="none">None</option>
             </select>
+          </div>
+
+          <hr style="border: none; border-top: 1px solid #333; margin: 15px 0;">
+          <h4 style="margin: 0 0 10px; color: #ddd;">Question Transition</h4>
+          <div class="form-group">
+            <label>Type</label>
+            <select id="transType">
+              <option value="none">None</option>
+              <option value="slide_in">Slide In</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Direction</label>
+            <select id="transDir">
+              <option value="left">Left</option>
+              <option value="right">Right</option>
+              <option value="up">Up</option>
+              <option value="down">Down</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Duration: <span id="transDurVal">0.5s</span></label>
+            <input type="range" id="transDur" min="0.1" max="2" step="0.1" value="0.5">
           </div>
         </div>
 
@@ -812,6 +836,12 @@
               </div>
             </div>
           </div>
+
+          <hr style="border: none; border-top: 1px solid #333; margin: 15px 0;">
+          <h4 style="margin: 0 0 10px; color: #ddd;">Random Correct Answer Styles</h4>
+          <p style="color: #888; font-size: 11px; margin-bottom: 10px;">One of these styles will be picked randomly for each question reveal.</p>
+          <div id="correctStyleList"></div>
+          <button type="button" class="btn btn-secondary btn-small" id="addCorrectStyleBtn">+ Add Style</button>
         </div>
 
         <!-- Timer Properties -->
@@ -1039,6 +1069,16 @@
               <option value="bottom">Bottom</option>
             </select>
           </div>
+        </div>
+
+        <!-- Avatars Properties -->
+        <div class="tab-content" id="tab-avatars">
+          <h3>Avatars Settings</h3>
+          <p style="color: #888; font-size: 13px; margin-bottom: 20px;">
+            Add talking and thinking videos. One set will be randomly used per question.
+          </p>
+          <div id="avatarList"></div>
+          <button type="button" class="btn btn-secondary" id="addAvatarBtn">+ Add Avatar Set</button>
         </div>
 
         <!-- Overlays Properties -->

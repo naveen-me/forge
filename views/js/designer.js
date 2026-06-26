@@ -81,6 +81,13 @@ class DesignerUI {
         intro: { type: 'none', url: '', duration: 3, fit: 'cover' },
         outro: { type: 'none', url: '', duration: 3, fit: 'cover' }
       },
+      transition: {
+        type: 'slide_in',
+        direction: 'left',
+        duration: 0.5
+      },
+      avatars: [],
+      correct_answer_styles: [],
       question: {
         position: { x: 120, y: 120 },
         width: 1680,
@@ -817,6 +824,18 @@ class DesignerUI {
     document.getElementById('explImageHeight').value = this.presetConfig.explanation.image_height || 300;
     document.getElementById('explImageFit').value = this.presetConfig.explanation.image_fit || 'contain';
     document.getElementById('explImagePosition').value = this.presetConfig.explanation.image_position || 'center';
+
+    // Transition
+    if (!this.presetConfig.transition) {
+      this.presetConfig.transition = { type: 'slide_in', direction: 'left', duration: 0.5 };
+    }
+    document.getElementById('transType').value = this.presetConfig.transition.type || 'slide_in';
+    document.getElementById('transDir').value = this.presetConfig.transition.direction || 'left';
+    document.getElementById('transDur').value = this.presetConfig.transition.duration || 0.5;
+
+    // Render Lists
+    this.renderAvatarList();
+    this.renderCorrectStyleList();
 
     // Update all value displays
     this.updateAllValueDisplays();
@@ -1580,6 +1599,26 @@ class DesignerUI {
         this.addOverlayItem();
       });
     }
+
+    const addAvatarBtn = document.getElementById('addAvatarBtn');
+    if (addAvatarBtn) {
+      addAvatarBtn.addEventListener('click', () => this.addAvatarItem());
+    }
+
+    const addCorrectStyleBtn = document.getElementById('addCorrectStyleBtn');
+    if (addCorrectStyleBtn) {
+      addCorrectStyleBtn.addEventListener('click', () => this.addCorrectStyleItem());
+    }
+
+    this.addListener('transType', 'change', (value) => {
+      this.presetConfig.transition.type = value;
+    });
+    this.addListener('transDir', 'change', (value) => {
+      this.presetConfig.transition.direction = value;
+    });
+    this.addRangeListener('transDur', (value) => {
+      this.presetConfig.transition.duration = parseFloat(value);
+    }, 'transDurVal', (v) => v + 's');
 
     // Audio Narration Event Listeners
     this.addListener('audioPlayFirstQuestion', 'change', (value) => {
@@ -2726,7 +2765,8 @@ class DesignerUI {
   updateLastUpdated() {
     const now = new Date();
     const timeStr = now.toLocaleTimeString();
-    document.getElementById('lastUpdated').textContent = timeStr;
+    const el = document.getElementById('lastUpdated');
+    if (el) el.textContent = timeStr;
   }
 
   async savePreset() {
@@ -3161,6 +3201,124 @@ class DesignerUI {
 
   getOverlayMaxHeight() {
     return this.presetConfig?.canvas?.height || 1080;
+  }
+
+  addAvatarItem() {
+    if (!this.presetConfig.avatars) this.presetConfig.avatars = [];
+    this.presetConfig.avatars.push({
+      talking_video: '',
+      thinking_video: '',
+      width: 400,
+      height: 400,
+      position: { x: 1400, y: 600 }
+    });
+    this.renderAvatarList();
+    this.scheduleUpdate();
+  }
+
+  removeAvatarItem(index) {
+    this.presetConfig.avatars.splice(index, 1);
+    this.renderAvatarList();
+    this.scheduleUpdate();
+  }
+
+  renderAvatarList() {
+    const list = document.getElementById('avatarList');
+    if (!list) return;
+    list.innerHTML = '';
+    const avatars = this.presetConfig.avatars || [];
+    avatars.forEach((item, index) => {
+      const div = document.createElement('div');
+      div.className = 'list-item-card';
+      div.innerHTML = `
+        <div class="card-header">Avatar Set ${index + 1} <button class="btn-icon delete-btn" onclick="designer.removeAvatarItem(${index})"><span class="material-symbols-outlined">delete</span></button></div>
+        <div class="form-group"><label>Talking Video</label><select class="avatar-talking" data-index="${index}"></select></div>
+        <div class="form-group"><label>Thinking Video</label><select class="avatar-thinking" data-index="${index}"></select></div>
+        <div class="form-row">
+          <div class="form-group"><label>Width</label><input type="number" class="avatar-width" value="${item.width}" data-index="${index}"></div>
+          <div class="form-group"><label>Height</label><input type="number" class="avatar-height" value="${item.height}" data-index="${index}"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>PosX</label><input type="number" class="avatar-x" value="${item.position.x}" data-index="${index}"></div>
+          <div class="form-group"><label>PosY</label><input type="number" class="avatar-y" value="${item.position.y}" data-index="${index}"></div>
+        </div>
+      `;
+      list.appendChild(div);
+      const talkingSelect = div.querySelector('.avatar-talking');
+      const thinkingSelect = div.querySelector('.avatar-thinking');
+      this.populateMediaSelectOnElement(talkingSelect, 'video', item.talking_video);
+      this.populateMediaSelectOnElement(thinkingSelect, 'video', item.thinking_video);
+
+      talkingSelect.onchange = (e) => { item.talking_video = e.target.value; this.scheduleUpdate(); };
+      thinkingSelect.onchange = (e) => { item.thinking_video = e.target.value; this.scheduleUpdate(); };
+      div.querySelector('.avatar-width').oninput = (e) => { item.width = parseInt(e.target.value); this.scheduleUpdate(); };
+      div.querySelector('.avatar-height').oninput = (e) => { item.height = parseInt(e.target.value); this.scheduleUpdate(); };
+      div.querySelector('.avatar-x').oninput = (e) => { item.position.x = parseInt(e.target.value); this.scheduleUpdate(); };
+      div.querySelector('.avatar-y').oninput = (e) => { item.position.y = parseInt(e.target.value); this.scheduleUpdate(); };
+    });
+  }
+
+  addCorrectStyleItem() {
+    if (!this.presetConfig.correct_answer_styles) this.presetConfig.correct_answer_styles = [];
+    this.presetConfig.correct_answer_styles.push({
+      background_type: 'color',
+      background_color: '#1b5e20',
+      background_url: '',
+      font_color: '#ffffff'
+    });
+    this.renderCorrectStyleList();
+    this.scheduleUpdate();
+  }
+
+  removeCorrectStyleItem(index) {
+    this.presetConfig.correct_answer_styles.splice(index, 1);
+    this.renderCorrectStyleList();
+    this.scheduleUpdate();
+  }
+
+  renderCorrectStyleList() {
+    const list = document.getElementById('correctStyleList');
+    if (!list) return;
+    list.innerHTML = '';
+    const styles = this.presetConfig.correct_answer_styles || [];
+    styles.forEach((item, index) => {
+      const div = document.createElement('div');
+      div.className = 'list-item-card';
+      div.innerHTML = `
+        <div class="card-header">Style ${index + 1} <button class="btn-icon delete-btn" onclick="designer.removeCorrectStyleItem(${index})"><span class="material-symbols-outlined">delete</span></button></div>
+        <div class="form-group"><label>BG Type</label><select class="style-bg-type" data-index="${index}"><option value="color">Color</option><option value="image">Image</option></select></div>
+        <div class="form-group style-color-group"><label>BG Color</label><input type="color" class="style-bg-color" value="${item.background_color}"></div>
+        <div class="form-group style-image-group" style="display:none"><label>BG Image</label><select class="style-bg-image"></select></div>
+        <div class="form-group"><label>Font Color</label><input type="color" class="style-font-color" value="${item.font_color}"></div>
+      `;
+      list.appendChild(div);
+      const typeSelect = div.querySelector('.style-bg-type');
+      const colorInput = div.querySelector('.style-bg-color');
+      const imageSelect = div.querySelector('.style-bg-image');
+      const fontInput = div.querySelector('.style-font-color');
+
+      typeSelect.value = item.background_type;
+      div.querySelector('.style-color-group').style.display = item.background_type === 'color' ? 'block' : 'none';
+      div.querySelector('.style-image-group').style.display = item.background_type === 'image' ? 'block' : 'none';
+
+      this.populateMediaSelectOnElement(imageSelect, 'image', item.background_url);
+
+      typeSelect.onchange = (e) => {
+        item.background_type = e.target.value;
+        div.querySelector('.style-color-group').style.display = e.target.value === 'color' ? 'block' : 'none';
+        div.querySelector('.style-image-group').style.display = e.target.value === 'image' ? 'block' : 'none';
+        this.scheduleUpdate();
+      };
+      colorInput.oninput = (e) => { item.background_color = e.target.value; this.scheduleUpdate(); };
+      imageSelect.onchange = (e) => { item.background_url = e.target.value; this.scheduleUpdate(); };
+      fontInput.oninput = (e) => { item.font_color = e.target.value; this.scheduleUpdate(); };
+    });
+  }
+
+  populateMediaSelectOnElement(selectEl, type, currentValue) {
+    if (!selectEl) return;
+    const media = type === 'image' ? this.mediaLibrary.images : this.mediaLibrary.videos;
+    selectEl.innerHTML = '<option value="">None</option>' + media.map(m => `<option value="${m.url}" ${m.url === currentValue ? 'selected' : ''}>${m.label || m.filename}</option>`).join('');
   }
 
   async testVideo() {
