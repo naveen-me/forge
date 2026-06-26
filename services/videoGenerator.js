@@ -114,6 +114,7 @@ export class VideoGenerator {
       };
       const audioConfig = preset.config.audio || {};
       const timerDuration = preset.config.timer?.duration || 5;
+      const transDur = Number(preset.config.transition?.duration || 0.5);
 
       const perQuestionDurations = [];
       for (let idx = 0; idx < questions.length; idx++) {
@@ -172,7 +173,9 @@ export class VideoGenerator {
 
         const qRevealDur = Math.max(Number(animConfig.question_display_duration || 2), qDur + navDur + 0.5);
 
-        const total = qRevealDur + optionsDur + timerDuration + answerRevealDur;
+        // Add transition duration to each question except maybe the first one?
+        // Usually, transition happens BETWEEN questions.
+        const total = qRevealDur + optionsDur + timerDuration + answerRevealDur + transDur;
 
         perQuestionDurations.push({
             total,
@@ -540,6 +543,16 @@ export class VideoGenerator {
     }
     canvas {
       display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transition: transform ${preset.config.transition?.duration || 0.5}s ease-in-out;
+    }
+    #canvas_old {
+      z-index: 1;
+    }
+    #canvas {
+      z-index: 2;
     }
     #overlay {
       position: fixed;
@@ -562,6 +575,7 @@ export class VideoGenerator {
 </head>
 <body>
   <div id="overlay"></div>
+  <canvas id="canvas_old"></canvas>
   <canvas id="canvas"></canvas>
 
   <script type="module">
@@ -576,6 +590,7 @@ export class VideoGenerator {
 
     // Initialize renderer
     const canvas = document.getElementById('canvas');
+    const canvas_old = document.getElementById('canvas_old');
     const overlay = document.getElementById('overlay');
     let currentQuestionIndex = 0;
     let renderer = null;
@@ -656,6 +671,48 @@ export class VideoGenerator {
 
       const question = questions[index];
       const qDurationData = questionDurations[index];
+      const trans = presetConfig.transition || { type: 'slide_in', direction: 'left', duration: 0.5 };
+
+      // Handle transition
+      if (index > 0) {
+        // Copy current canvas to old canvas
+        const oldCtx = canvas_old.getContext('2d');
+        canvas_old.width = canvas.width;
+        canvas_old.height = canvas.height;
+        oldCtx.drawImage(canvas, 0, 0);
+
+        // Reset positions
+        canvas.style.transition = 'none';
+        canvas_old.style.transition = 'none';
+
+        let startX = 0, startY = 0;
+        if (trans.type === 'slide_in') {
+          if (trans.direction === 'left') startX = canvas.width;
+          else if (trans.direction === 'right') startX = -canvas.width;
+          else if (trans.direction === 'up') startY = canvas.height;
+          else if (trans.direction === 'down') startY = -canvas.height;
+        }
+
+        canvas.style.transform = \`translate(\${startX}px, \${startY}px)\`;
+        canvas_old.style.transform = 'translate(0, 0)';
+
+        // Force reflow
+        canvas.offsetHeight;
+
+        // Start transition
+        canvas.style.transition = \`transform \${trans.duration}s ease-in-out\`;
+        canvas_old.style.transition = \`transform \${trans.duration}s ease-in-out\`;
+
+        if (trans.type === 'slide_in') {
+          canvas.style.transform = 'translate(0, 0)';
+          if (trans.direction === 'left') canvas_old.style.transform = \`translate(\${-canvas.width}px, 0)\`;
+          else if (trans.direction === 'right') canvas_old.style.transform = \`translate(\${canvas.width}px, 0)\`;
+          else if (trans.direction === 'up') canvas_old.style.transform = \`translate(0, \${-canvas.height}px)\`;
+          else if (trans.direction === 'down') canvas_old.style.transform = \`translate(0, \${canvas.height}px)\`;
+        }
+
+        await new Promise(r => setTimeout(r, trans.duration * 1000));
+      }
 
       // Destroy previous renderer
       if (renderer) {
@@ -860,6 +917,7 @@ export class VideoGenerator {
     const optionsMode = anim.options_display_mode || 'all_at_once';
     const optionRevealDelay = Number(anim.option_reveal_delay || 0.5);
     const timerDuration = preset?.config?.timer?.duration || 5;
+    const transDur = Number(preset?.config?.transition?.duration || 0.5);
 
     const segments = [];
     let cursor = Math.max(0, introDuration);
@@ -952,7 +1010,7 @@ export class VideoGenerator {
           answerRevealDur = Math.max(answerRevealDur, (at - t) + 1);
       }
 
-      cursor += qRevealDur + optionsDur + timerDuration + answerRevealDur;
+      cursor += qRevealDur + optionsDur + timerDuration + answerRevealDur + transDur;
     }
 
     // If no audio segments, do nothing

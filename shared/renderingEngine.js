@@ -59,6 +59,10 @@ export class CanvasRenderer {
     this.canvas.width = this.config.canvas.width;
     this.canvas.height = this.config.canvas.height;
 
+    // Randomly select correct answer style and avatar set for this instance
+    this.selectedCorrectStyle = this.selectRandomStyle();
+    this.selectedAvatar = this.selectRandomAvatar();
+
     // Bind methods
     this.renderFrame = this.renderFrame.bind(this);
   }
@@ -172,12 +176,39 @@ export class CanvasRenderer {
     return total;
   }
 
+  selectRandomStyle() {
+    const styles = this.config.correct_answer_styles || [];
+    if (styles.length === 0) return null;
+    return styles[Math.floor(Math.random() * styles.length)];
+  }
+
+  selectRandomAvatar() {
+    const avatars = this.config.avatars || [];
+    if (avatars.length === 0) return null;
+    return avatars[Math.floor(Math.random() * avatars.length)];
+  }
+
   /**
    * Preload all media assets (images, videos, fonts)
    */
   async preloadAssets() {
     if (this.debug) console.log('🎨 Starting asset preload...');
     const promises = [];
+
+    // Preload avatar videos if selected
+    if (this.selectedAvatar) {
+      if (this.selectedAvatar.talking_video) {
+        promises.push(this.loadVideo(this.selectedAvatar.talking_video, 'avatar_talking'));
+      }
+      if (this.selectedAvatar.thinking_video) {
+        promises.push(this.loadVideo(this.selectedAvatar.thinking_video, 'avatar_thinking'));
+      }
+    }
+
+    // Preload correct style background if image
+    if (this.selectedCorrectStyle && this.selectedCorrectStyle.background_type === 'image' && this.selectedCorrectStyle.background_url) {
+      promises.push(this.loadImage(this.selectedCorrectStyle.background_url, 'selected_correct_bg'));
+    }
 
     // Preload background
     if (this.config.canvas.background_type === 'image' && this.config.canvas.background_url) {
@@ -849,6 +880,13 @@ export class CanvasRenderer {
     const width = opts.option_width;
     const height = opts.option_height;
 
+    // Use randomized style for correct answer if available
+    const useStyle = isCorrect && this.selectedCorrectStyle;
+    const bgColor = useStyle ? this.selectedCorrectStyle.background_color : (isCorrect ? opts.correct_answer_background_color : opts.background_color);
+    const bgType = useStyle ? this.selectedCorrectStyle.background_type : (isCorrect ? opts.correct_answer_background_type : opts.background_type);
+    const bgUrl = useStyle ? this.selectedCorrectStyle.background_url : (isCorrect ? opts.correct_answer_background_url : opts.background_url);
+    const fontColor = useStyle ? this.selectedCorrectStyle.font_color : (isCorrect ? (opts.correct_answer_font_color || opts.font_color) : opts.font_color);
+
     // Handle margin - percentage-based
     let marginTopPct, marginRightPct, marginBottomPct, marginLeftPct;
     if (typeof opts.margin === 'number') {
@@ -884,25 +922,14 @@ export class CanvasRenderer {
     this.ctx.clip();
 
     // Draw background
-    if (isCorrect) {
-      this.drawOptionBackground(x, y, width, height, {
-        background_type: opts.correct_answer_background_type,
-        background_color: opts.correct_answer_background_color,
-        background_url: opts.correct_answer_background_url,
-        background_fit: opts.correct_answer_background_fit,
-        background_pos_x: opts.correct_answer_background_pos_x,
-        background_pos_y: opts.correct_answer_background_pos_y
-      }, 'correct_bg');
-    } else {
-      this.drawOptionBackground(x, y, width, height, {
-        background_type: opts.background_type,
-        background_color: opts.background_color,
-        background_url: opts.background_url,
-        background_fit: opts.background_fit,
-        background_pos_x: opts.background_pos_x,
-        background_pos_y: opts.background_pos_y
-      }, 'option_bg');
-    }
+    this.drawOptionBackground(x, y, width, height, {
+      background_type: bgType,
+      background_color: bgColor,
+      background_url: bgUrl,
+      background_fit: useStyle ? 'cover' : (isCorrect ? opts.correct_answer_background_fit : opts.background_fit),
+      background_pos_x: useStyle ? 0.5 : (isCorrect ? opts.correct_answer_background_pos_x : opts.background_pos_x),
+      background_pos_y: useStyle ? 0.5 : (isCorrect ? opts.correct_answer_background_pos_y : opts.background_pos_y)
+    }, useStyle ? 'selected_correct_bg' : (isCorrect ? 'correct_bg' : 'option_bg'));
 
     // Restore context
     this.ctx.restore();
@@ -934,7 +961,7 @@ export class CanvasRenderer {
     // Draw text with margin applied and safe font fallback
     const fontFamily = this.getSafeFontFamily(opts.font_family);
     this.ctx.font = `${opts.font_size}px ${fontFamily}`;
-    this.ctx.fillStyle = isCorrect ? (opts.correct_answer_font_color || opts.font_color) : opts.font_color;
+    this.ctx.fillStyle = fontColor;
     this.ctx.textBaseline = 'middle';
 
     // Get label style and spacing settings
@@ -1181,6 +1208,22 @@ export class CanvasRenderer {
     }
   }
 
+  drawAvatar(animPhase) {
+    if (!this.selectedAvatar) return;
+
+    const isThinking = animPhase.phase === 'timer';
+    const videoKey = isThinking ? 'avatar_thinking' : 'avatar_talking';
+    const video = this.mediaCache.videos.get(videoKey);
+
+    if (video && video.readyState >= 2) {
+      this.ctx.save();
+      const { x, y } = this.selectedAvatar.position;
+      const { width, height } = this.selectedAvatar;
+      this.drawMediaWithFit(video, x, y, width, height, { background_fit: 'contain' });
+      this.ctx.restore();
+    }
+  }
+
   drawOverlays(animPhase) {
     const overlays = Array.isArray(this.config.overlays) ? this.config.overlays : [];
     if (!overlays.length) {
@@ -1300,6 +1343,10 @@ export class CanvasRenderer {
 
       this.ctx.save();
       this.drawBackground(time);
+      this.ctx.restore();
+
+      this.ctx.save();
+      this.drawAvatar(animPhase);
       this.ctx.restore();
 
       this.ctx.save();
