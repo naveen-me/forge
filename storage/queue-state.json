@@ -1,0 +1,424 @@
+{
+  "queue": [],
+  "currentJob": null,
+  "isProcessing": false,
+  "history": [
+    [
+      "5da8684a-0b33-410b-8865-827b328bbfc4",
+      {
+        "id": "5da8684a-0b33-410b-8865-827b328bbfc4",
+        "questionIds": [
+          "question_1771121354670_english_1",
+          "question_1771121354670_english_2",
+          "question_1771121354670_english_3",
+          "question_1771121354670_english_4",
+          "question_1771121354670_english_5",
+          "question_1771121354670_english_6",
+          "question_1771121354670_english_7",
+          "question_1771121354670_english_8",
+          "question_1771121354670_english_9",
+          "question_1771121354670_english_10",
+          "question_1771121354670_english_11",
+          "question_1771121354670_english_12"
+        ],
+        "presetId": "preset_1770172110088",
+        "customName": "eng",
+        "batches": [
+          [
+            "question_1771121354670_english_1",
+            "question_1771121354670_english_2",
+            "question_1771121354670_english_3",
+            "question_1771121354670_english_4",
+            "question_1771121354670_english_5",
+            "question_1771121354670_english_6",
+            "question_1771121354670_english_7",
+            "question_1771121354670_english_8",
+            "question_1771121354670_english_9",
+            "question_1771121354670_english_10",
+            "question_1771121354670_english_11",
+            "question_1771121354670_english_12"
+          ]
+        ],
+        "batchSize": 12,
+        "status": "completed",
+        "addedAt": "2026-02-17T09:30:48.520Z",
+        "startedAt": "2026-02-17T09:30:48.529Z",
+        "completedAt": "2026-02-17T09:34:02.589Z",
+        "error": null,
+        "progress": 100,
+        "totalBatches": 1,
+        "completedBatches": 1,
+        "generatedVideos": [
+          {
+            "path": "E:\\android\\quiz-video-generator\\complete-web\\backend\\videos\\eng.webm",
+            "duration": 126.59999999999998,
+            "questionCount": 12,
+            "customName": "eng"
+          }
+        ]
+      }
+    ],
+    [
+      "e5739d18-d97d-4d13-9a10-7c6f6e5a7078",
+      {
+        "id": "e5739d18-d97d-4d13-9a10-7c6f6e5a7078",
+        "questionIds": [
+          "question_1771121354670_telugu_1",
+          "question_1771121354670_telugu_2",
+          "question_1771121354670_telugu_3",
+          "question_1771121354670_telugu_4",
+          "question_1771121354670_telugu_5",
+          "question_1771121354670_telugu_6",
+          "question_1771121354670_telugu_7",
+          "question_1771121354670_telugu_8",
+          "question_1771121354670_telugu_9",
+          "question_1771121354670_telugu_10",
+          "question_1771121354670_telugu_11",
+          "question_1771121354670_telugu_12"
+        ],
+        "presetId": "preset_1770172110088",
+        "customName": "new tell",
+        "batches": [
+          [
+            "question_1771121354670_telugu_1",
+            "question_1771121354670_telugu_2",
+            "question_1771121354670_telugu_3",
+            "question_1771121354670_telugu_4",
+            "question_1771121354670_telugu_5",
+            "question_1771121354670_telugu_6",
+            "question_1771121354670_telugu_7",
+            "question_1771121354670_telugu_8",
+            "question_1771121354670_telugu_9",
+            "question_1771121354670_telugu_10",
+            "question_1771121354670_telugu_11",
+            "question_1771121354670_telugu_12"
+          ]
+        ],
+        "batchSize": 12,
+        "status": "cancelled",
+        "addedAt": "2026-02-17T10:11:50.931Z",
+        "startedAt": null,
+        "completedAt": "2026-02-17T10:35:12.536Z",
+        "error": null,
+        "progress": 0,
+        "totalBatches": 1,
+        "completedBatches": 0
+      }
+    ],
+    [
+      "fd7e0a80-5b4f-4599-aac2-c69c2922c1da",
+      {
+        "id": "fd7e0a80-5b4f-4599-aac2-c69c2922c1da",
+        "questionIds": [
+          "question_1771121354670_telugu_1",
+          "question_1771121354670_telugu_2",
+          "question_1771121354670_telugu_3",
+          "question_1771121354670_telugu_4",
+          "question_1771121354670_telugu_5",
+          "question_1771121354670_telugu_6",
+          "question_1771121354670_telugu_7",
+          "question_1771121354670_telugu_8",
+          "question_1771121354670_telugu_9",
+          "question_1771121354670_telugu_10",
+          "question_1771121354670_telugu_11",
+          "question_1771121354670_telugu_12"
+        ],
+        "presetId": "preset_1770172110088",
+        "customName": "new dummy",
+        "batches": [
+          [
+            "question_1771121354670_telugu_1",
+            "question_1771121354670_telugu_2",
+            "question_1771121354670_telugu_3",
+            "question_1771121354670_telugu_4",
+            "question_1771121354670_telugu_5",
+            "question_1771121354670_telugu_6",
+            "question_1771121354670_telugu_7",
+            "question_1771121354670_telugu_8",
+            "question_1771121354670_telugu_9",
+            "question_1771121354670_telugu_10",
+            "question_1771121354670_telugu_11",
+            "question_1771121354670_telugu_12"
+          ]
+        ],
+        "batchSize": 12,
+        "status": "completed",
+        "addedAt": "2026-03-01T14:49:59.266Z",
+        "startedAt": "2026-03-01T14:49:59.274Z",
+        "completedAt": "2026-03-01T14:54:22.962Z",
+        "error": null,
+        "progress": 100,
+        "totalBatches": 1,
+        "completedBatches": 1,
+        "generatedVideos": [
+          {
+            "path": "E:\\android\\quiz-video-generator\\complete-web\\backend\\videos\\new_dummy.webm",
+            "duration": 126.59999999999998,
+            "questionCount": 12,
+            "customName": "new dummy"
+          }
+        ]
+      }
+    ],
+    [
+      "5167d8b6-c8ce-47dd-8f38-2693967b50b9",
+      {
+        "id": "5167d8b6-c8ce-47dd-8f38-2693967b50b9",
+        "questionIds": [
+          "question_1771121354670_telugu_1",
+          "question_1771121354670_telugu_2",
+          "question_1771121354670_telugu_3",
+          "question_1771121354670_telugu_4",
+          "question_1771121354670_telugu_5",
+          "question_1771121354670_telugu_6",
+          "question_1771121354670_telugu_7",
+          "question_1771121354670_telugu_8",
+          "question_1771121354670_telugu_9",
+          "question_1771121354670_telugu_10",
+          "question_1771121354670_telugu_11",
+          "question_1771121354670_telugu_12"
+        ],
+        "presetId": "preset_1770172110088",
+        "customName": "dummy",
+        "batches": [
+          [
+            "question_1771121354670_telugu_1",
+            "question_1771121354670_telugu_2",
+            "question_1771121354670_telugu_3",
+            "question_1771121354670_telugu_4",
+            "question_1771121354670_telugu_5",
+            "question_1771121354670_telugu_6",
+            "question_1771121354670_telugu_7",
+            "question_1771121354670_telugu_8",
+            "question_1771121354670_telugu_9",
+            "question_1771121354670_telugu_10",
+            "question_1771121354670_telugu_11",
+            "question_1771121354670_telugu_12"
+          ]
+        ],
+        "batchSize": 12,
+        "status": "completed",
+        "addedAt": "2026-05-23T15:25:38.355Z",
+        "startedAt": "2026-05-23T15:25:38.357Z",
+        "completedAt": "2026-05-23T15:28:07.518Z",
+        "error": null,
+        "progress": 100,
+        "totalBatches": 1,
+        "completedBatches": 1,
+        "generatedVideos": [
+          {
+            "path": "/Volumes/Moon/three/quiznode/videos/dummy.webm",
+            "duration": 126.59999999999998,
+            "questionCount": 12,
+            "customName": "dummy"
+          }
+        ]
+      }
+    ],
+    [
+      "52d876de-254e-47be-aef3-3481a820f49b",
+      {
+        "id": "52d876de-254e-47be-aef3-3481a820f49b",
+        "questionIds": [
+          "question_1771121354670_telugu_1",
+          "question_1771121354670_telugu_2"
+        ],
+        "presetId": "preset_1770172110088",
+        "customName": null,
+        "batches": [
+          [
+            "question_1771121354670_telugu_1",
+            "question_1771121354670_telugu_2"
+          ]
+        ],
+        "batchSize": 2,
+        "setId": "set_1779904908385_fcqxdjdr4",
+        "status": "completed",
+        "addedAt": "2026-05-27T18:05:01.907Z",
+        "startedAt": "2026-05-27T18:05:01.910Z",
+        "completedAt": "2026-05-27T18:05:26.700Z",
+        "error": null,
+        "progress": 100,
+        "totalBatches": 1,
+        "completedBatches": 1,
+        "generatedVideos": [
+          {
+            "path": "/Volumes/Moon/three/quiznode/videos/video_1779905102376.webm",
+            "duration": 23.6,
+            "questionCount": 2,
+            "customName": null
+          }
+        ]
+      }
+    ],
+    [
+      "865e2952-cf37-46fa-931e-40efef2de802",
+      {
+        "id": "865e2952-cf37-46fa-931e-40efef2de802",
+        "questionIds": [
+          "question_1771121354670_telugu_1",
+          "question_1771121354670_telugu_2",
+          "question_1771121354670_telugu_3",
+          "question_1771121354670_telugu_4",
+          "question_1771121354670_telugu_5",
+          "question_1771121354670_telugu_6",
+          "question_1771121354670_telugu_7",
+          "question_1771121354670_telugu_8",
+          "question_1771121354670_telugu_9",
+          "question_1771121354670_telugu_10",
+          "question_1771121354670_telugu_11",
+          "question_1771121354670_telugu_12"
+        ],
+        "presetId": "preset_1770172110088",
+        "customName": "newvid",
+        "batches": [
+          [
+            "question_1771121354670_telugu_1",
+            "question_1771121354670_telugu_2",
+            "question_1771121354670_telugu_3",
+            "question_1771121354670_telugu_4",
+            "question_1771121354670_telugu_5",
+            "question_1771121354670_telugu_6",
+            "question_1771121354670_telugu_7",
+            "question_1771121354670_telugu_8",
+            "question_1771121354670_telugu_9",
+            "question_1771121354670_telugu_10",
+            "question_1771121354670_telugu_11",
+            "question_1771121354670_telugu_12"
+          ]
+        ],
+        "batchSize": 12,
+        "setId": "set_1779905711347_i1z68izqh",
+        "status": "completed",
+        "addedAt": "2026-05-27T18:27:43.734Z",
+        "startedAt": "2026-05-27T18:27:43.737Z",
+        "completedAt": "2026-05-27T18:30:03.603Z",
+        "error": null,
+        "progress": 100,
+        "totalBatches": 1,
+        "completedBatches": 1,
+        "generatedVideos": [
+          {
+            "path": "/Volumes/Moon/three/quiznode/videos/newvid.webm",
+            "duration": 126.59999999999998,
+            "questionCount": 12,
+            "customName": "newvid"
+          }
+        ]
+      }
+    ],
+    [
+      "9b261445-ce59-412b-bbf0-f0e925d96d63",
+      {
+        "id": "9b261445-ce59-412b-bbf0-f0e925d96d63",
+        "questionIds": [
+          "question_1771121354670_telugu_1",
+          "question_1771121354670_telugu_2",
+          "question_1771121354670_telugu_3",
+          "question_1771121354670_telugu_4",
+          "question_1771121354670_telugu_5",
+          "question_1771121354670_telugu_6",
+          "question_1771121354670_telugu_7",
+          "question_1771121354670_telugu_8",
+          "question_1771121354670_telugu_9",
+          "question_1771121354670_telugu_10",
+          "question_1771121354670_telugu_11",
+          "question_1771121354670_telugu_12"
+        ],
+        "presetId": "preset_1770172110088",
+        "customName": "checking _video",
+        "batches": [
+          [
+            "question_1771121354670_telugu_1",
+            "question_1771121354670_telugu_2",
+            "question_1771121354670_telugu_3",
+            "question_1771121354670_telugu_4",
+            "question_1771121354670_telugu_5",
+            "question_1771121354670_telugu_6",
+            "question_1771121354670_telugu_7",
+            "question_1771121354670_telugu_8",
+            "question_1771121354670_telugu_9",
+            "question_1771121354670_telugu_10",
+            "question_1771121354670_telugu_11",
+            "question_1771121354670_telugu_12"
+          ]
+        ],
+        "batchSize": 12,
+        "setId": "set_1780043498387_18rzqleiy",
+        "status": "completed",
+        "addedAt": "2026-05-29T08:55:36.502Z",
+        "startedAt": "2026-05-29T08:55:36.504Z",
+        "completedAt": "2026-05-29T09:00:47.826Z",
+        "error": null,
+        "progress": 100,
+        "totalBatches": 1,
+        "completedBatches": 1,
+        "generatedVideos": [
+          {
+            "path": "/Volumes/Moon/three/forge/videos/checking__video.mp4",
+            "duration": 214.896,
+            "questionCount": 12,
+            "customName": "checking _video"
+          }
+        ]
+      }
+    ],
+    [
+      "5382b612-96be-4f7e-9087-04b49fe61712",
+      {
+        "id": "5382b612-96be-4f7e-9087-04b49fe61712",
+        "questionIds": [
+          "question_1771121354670_telugu_1",
+          "question_1771121354670_telugu_2",
+          "question_1771121354670_telugu_3",
+          "question_1771121354670_telugu_4",
+          "question_1771121354670_telugu_5",
+          "question_1771121354670_telugu_6",
+          "question_1771121354670_telugu_7",
+          "question_1771121354670_telugu_8",
+          "question_1771121354670_telugu_9",
+          "question_1771121354670_telugu_10",
+          "question_1771121354670_telugu_11",
+          "question_1771121354670_telugu_12"
+        ],
+        "presetId": "preset_1770172110088",
+        "customName": "audiohigh",
+        "batches": [
+          [
+            "question_1771121354670_telugu_1",
+            "question_1771121354670_telugu_2",
+            "question_1771121354670_telugu_3",
+            "question_1771121354670_telugu_4",
+            "question_1771121354670_telugu_5",
+            "question_1771121354670_telugu_6",
+            "question_1771121354670_telugu_7",
+            "question_1771121354670_telugu_8",
+            "question_1771121354670_telugu_9",
+            "question_1771121354670_telugu_10",
+            "question_1771121354670_telugu_11",
+            "question_1771121354670_telugu_12"
+          ]
+        ],
+        "batchSize": 12,
+        "setId": "set_1780043498387_18rzqleiy",
+        "status": "completed",
+        "addedAt": "2026-05-29T13:19:41.151Z",
+        "startedAt": "2026-05-29T13:19:41.152Z",
+        "completedAt": "2026-05-29T13:28:28.981Z",
+        "error": null,
+        "progress": 100,
+        "totalBatches": 1,
+        "completedBatches": 1,
+        "generatedVideos": [
+          {
+            "path": "/Volumes/Moon/three/forge/videos/audiohigh.mp4",
+            "duration": 214.896,
+            "questionCount": 12,
+            "customName": "audiohigh"
+          }
+        ]
+      }
+    ]
+  ],
+  "savedAt": "2026-05-29T13:28:28.981Z"
+}
