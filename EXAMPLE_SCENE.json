@@ -1,0 +1,62 @@
+{
+  "canvas": {
+    "width": 1920,
+    "height": 1080,
+    "fps": 30
+  },
+  "output": {
+    "url": "rtmp://example.com/live/REPLACE_ME"
+  },
+  "layers": [
+    {
+      "id": "base-video",
+      "type": "video",
+      "layer": 0,
+      "source": "/media/program.mp4",
+      "start": "00:00:00",
+      "end": "00:30:00",
+      "loop": true
+    },
+    {
+      "id": "logo-a",
+      "type": "image",
+      "layer": 10,
+      "source": "/media/logo-a.png",
+      "start": "00:00:00",
+      "end": "00:10:00",
+      "x": 1740,
+      "y": 40,
+      "width": 140,
+      "height": 80
+    },
+    {
+      "id": "logo-b",
+      "type": "image",
+      "layer": 10,
+      "source": "https://example.com/logo-b.png",
+      "start": "00:05:00",
+      "end": "00:15:00",
+      "x": 1740,
+      "y": 40,
+      "width": 140,
+      "height": 80
+    },
+    {
+      "id": "ticker",
+      "type": "html",
+      "layer": 20,
+      "source": "https://graphics.example.com/ticker",
+      "start": "00:02:00",
+      "end": "00:08:00",
+      "x": 100,
+      "y": 900,
+      "width": 1720,
+      "height": 100,
+      "effect": {
+        "type": "scroll",
+        "direction": "left",
+        "speed": 120
+      }
+    }
+  ]
+}
