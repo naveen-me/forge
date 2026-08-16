@@ -10,6 +10,8 @@ void generate_test_media() {
     std::system("ffmpeg -y -f lavfi -i color=c=blue:s=320x240:d=1 -vframes 1 /tmp/test_logo.png > /dev/null 2>&1");
     // Generate test MP4 video using ffmpeg
     std::system("ffmpeg -y -f lavfi -i testsrc=size=640x360:rate=30 -t 2 /tmp/test_video.mp4 > /dev/null 2>&1");
+    // Generate test HLS playlist using ffmpeg
+    std::system("ffmpeg -y -f lavfi -i testsrc=size=640x360:rate=30 -t 3 -hls_time 1 -hls_list_size 5 /tmp/test_hls.m3u8 > /dev/null 2>&1");
 }
 
 void test_image_source() {
@@ -58,6 +60,18 @@ void test_video_source() {
     LOG_INFO("VideoSource test passed.");
 }
 
+void test_hls_source() {
+    tarva::VideoSource hls_source;
+    bool ok = hls_source.load("/tmp/test_hls.m3u8", 640, 360);
+    assert(ok);
+
+    std::vector<uint8_t> frame(640 * 360 * 4, 0);
+    ok = hls_source.read_frame_rgba(frame.data(), 640, 360, 0);
+    assert(ok);
+
+    LOG_INFO("HLS .m3u8 VideoSource integration test passed successfully!");
+}
+
 void test_html_source() {
     tarva::HtmlSource html_source;
     std::string html = "<html style='background: green;'><body><h1>TARVA</h1></body></html>";
@@ -79,6 +93,7 @@ int main() {
     test_image_source();
     test_text_source();
     test_video_source();
+    test_hls_source();
     test_html_source();
 
     LOG_INFO("All MediaSource tests passed successfully!");

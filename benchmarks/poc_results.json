@@ -5,13 +5,13 @@
     "width": 1920
   },
   "performance": {
-    "avgFrameTimeMs": 38.72771333333332,
-    "cpuUsagePercent": 168.46890367777755,
+    "avgFrameTimeMs": 38.23957333333333,
+    "cpuUsagePercent": 170.59059466645016,
     "droppedFrames": 0,
-    "elapsedSeconds": 5.825094,
-    "outputFps": 25.750657414283786,
-    "ramRssMb": 244,
-    "renderedFps": 25.750657414283786,
+    "elapsedSeconds": 5.751779,
+    "outputFps": 26.078887940583254,
+    "ramRssMb": 264,
+    "renderedFps": 26.078887940583254,
     "totalFrames": 150
   }
 }

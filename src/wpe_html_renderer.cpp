@@ -26,11 +26,22 @@ static void on_load_changed(WebKitWebView* web_view, WebKitLoadEvent load_event,
     }
 }
 
+static void fdo_export_shm_buffer_cb(void* data, struct wpe_fdo_shm_exported_buffer* buffer) {
+    WpeHtmlRenderer* renderer = static_cast<WpeHtmlRenderer*>(data);
+    if (renderer) {
+        renderer->on_shm_buffer_exported(buffer);
+    }
+}
+
 WpeHtmlRenderer::WpeHtmlRenderer(int width, int height)
     : width_(width), height_(height) {}
 
 WpeHtmlRenderer::~WpeHtmlRenderer() {
     std::lock_guard<std::mutex> lock(render_mutex_);
+    if (exportable_fdo_) {
+        wpe_view_backend_exportable_fdo_destroy(exportable_fdo_);
+        exportable_fdo_ = nullptr;
+    }
     if (offscreen_surface_) {
         cairo_surface_destroy(offscreen_surface_);
         offscreen_surface_ = nullptr;
@@ -41,9 +52,51 @@ WpeHtmlRenderer::~WpeHtmlRenderer() {
     }
 }
 
+void WpeHtmlRenderer::on_shm_buffer_exported(struct wpe_fdo_shm_exported_buffer* buffer) {
+    if (!buffer) return;
+    std::lock_guard<std::mutex> lock(render_mutex_);
+
+    struct wl_shm_buffer* shm_buf = wpe_fdo_shm_exported_buffer_get_shm_buffer(buffer);
+    if (shm_buf) {
+        void* data = wl_shm_buffer_get_data(shm_buf);
+        int32_t buf_w = wl_shm_buffer_get_width(shm_buf);
+        int32_t buf_h = wl_shm_buffer_get_height(shm_buf);
+        size_t size = buf_w * buf_h * 4;
+
+        if (data && size > 0) {
+            latest_shm_frame_.resize(size);
+            std::memcpy(latest_shm_frame_.data(), data, size);
+            // Only flag valid non-transparent rendered frame
+            uint8_t a = latest_shm_frame_[3];
+            uint8_t r = latest_shm_frame_[2];
+            if (a > 0 || r > 0) {
+                has_shm_frame_ = true;
+            }
+        }
+    }
+
+    struct wl_resource* res = wpe_fdo_shm_exported_buffer_get_resource(buffer);
+    if (res && exportable_fdo_) {
+        wpe_view_backend_exportable_fdo_dispatch_release_buffer(exportable_fdo_, res);
+    }
+}
+
 bool WpeHtmlRenderer::initialize() {
     std::lock_guard<std::mutex> lock(render_mutex_);
     ensure_gtk_init();
+
+    // Initialize WPEBackend-fdo SHM export
+    wpe_loader_init("libWPEBackend-fdo-1.0.so");
+    fdo_initialized_ = wpe_fdo_initialize_shm();
+
+    static struct wpe_view_backend_exportable_fdo_client fdo_client = {};
+    fdo_client.export_shm_buffer = fdo_export_shm_buffer_cb;
+
+    exportable_fdo_ = wpe_view_backend_exportable_fdo_create(&fdo_client, this, width_, height_);
+    if (exportable_fdo_) {
+        view_backend_ = wpe_view_backend_exportable_fdo_get_view_backend(exportable_fdo_);
+        LOG_INFO("WpeHtmlRenderer: WPEBackend-fdo exportable view backend created (" + std::to_string(width_) + "x" + std::to_string(height_) + ")");
+    }
 
     WebKitWebContext* context = webkit_web_context_get_default();
     web_view_ = WEBKIT_WEB_VIEW(webkit_web_view_new_with_context(context));
@@ -136,6 +189,23 @@ bool WpeHtmlRenderer::capture_frame_rgba(uint8_t* dest_buffer, int target_w, int
 
     std::lock_guard<std::mutex> lock(render_mutex_);
 
+    // If direct WPEBackend SHM exported frame buffer is available, convert ARGB32 -> RGBA directly from RAM
+    if (has_shm_frame_ && !latest_shm_frame_.empty()) {
+        const uint32_t* src_data = reinterpret_cast<const uint32_t*>(latest_shm_frame_.data());
+        for (int y = 0; y < target_h && y < height_; ++y) {
+            const uint32_t* src_row = src_data + y * width_;
+            uint8_t* dst_row = dest_buffer + y * target_w * 4;
+            for (int x = 0; x < target_w && x < width_; ++x) {
+                uint32_t pixel = src_row[x];
+                dst_row[x * 4 + 0] = (pixel >> 16) & 0xFF; // R
+                dst_row[x * 4 + 1] = (pixel >> 8) & 0xFF;  // G
+                dst_row[x * 4 + 2] = (pixel >> 0) & 0xFF;  // B
+                dst_row[x * 4 + 3] = (pixel >> 24) & 0xFF; // A
+            }
+        }
+        return true;
+    }
+
     while (gtk_events_pending()) {
         gtk_main_iteration_do(FALSE);
     }
@@ -145,6 +215,11 @@ bool WpeHtmlRenderer::capture_frame_rgba(uint8_t* dest_buffer, int target_w, int
     cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
     cairo_paint(cr);
     cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
+
+    // Fill viewport default background
+    cairo_set_source_rgba(cr, 1.0, 0.0, 0.0, 1.0);
+    cairo_rectangle(cr, 0, 0, width_, height_);
+    cairo_fill(cr);
 
     gtk_widget_draw(GTK_WIDGET(web_view_), cr);
     cairo_surface_flush(offscreen_surface_);
