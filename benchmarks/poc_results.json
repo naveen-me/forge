@@ -1,0 +1,17 @@
+{
+  "canvas": {
+    "height": 1080,
+    "targetFps": 30,
+    "width": 1920
+  },
+  "performance": {
+    "avgFrameTimeMs": 38.72771333333332,
+    "cpuUsagePercent": 168.46890367777755,
+    "droppedFrames": 0,
+    "elapsedSeconds": 5.825094,
+    "outputFps": 25.750657414283786,
+    "ramRssMb": 244,
+    "renderedFps": 25.750657414283786,
+    "totalFrames": 150
+  }
+}
