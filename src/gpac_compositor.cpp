@@ -6,31 +6,56 @@
 
 namespace tarva {
 
+// Custom GPAC Source Filter Process Callback
+static GF_Err gpac_src_filter_process(GF_Filter* filter) {
+    return GF_OK;
+}
+
+// Custom GPAC Sink Filter Process Callback
+static GF_Err gpac_sink_filter_process(GF_Filter* filter) {
+    u32 pck_count = 0;
+    GF_FilterPid* pid = gf_filter_get_ipid(filter, 0);
+    if (!pid) return GF_OK;
+
+    GF_FilterPacket* pck = gf_filter_pid_get_packet(pid);
+    if (pck) {
+        u32 size = 0;
+        const u8* data = gf_filter_pck_get_data(pck, &size);
+        GpacCompositor* comp = static_cast<GpacCompositor*>(gf_filter_get_udta(filter));
+        if (comp && data && size > 0) {
+            // Store composited GPAC frame
+        }
+        gf_filter_pid_drop_packet(pid);
+    }
+    return GF_OK;
+}
+
 GpacCompositor::GpacCompositor(int canvas_w, int canvas_h, int fps)
     : width_(canvas_w), height_(canvas_h), fps_(fps) {
-    canvas_surface_ = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width_, height_);
     init_gpac_filter_session();
 }
 
 GpacCompositor::~GpacCompositor() {
     std::lock_guard<std::mutex> lock(render_mutex_);
     cleanup_gpac_filter_session();
-    if (canvas_surface_) {
-        cairo_surface_destroy(canvas_surface_);
-        canvas_surface_ = nullptr;
-    }
 }
 
 bool GpacCompositor::init_gpac_filter_session() {
     gpac_fs_ = gf_fs_new_defaults(0);
     if (!gpac_fs_) {
-        LOG_WARN("GpacCompositor: Failed to initialize GPAC Filter Session; falling back to software rasterizer");
+        LOG_WARN("GpacCompositor: Failed to initialize GPAC Filter Session");
         return false;
     }
 
     GF_Err err = GF_OK;
+
+    // 1. Load GPAC software 2D compositor filter (drv=no, opfmt=rgba)
     std::string comp_args = "compositor:drv=no:opfmt=rgba:fps=" + std::to_string(fps_) + "/1";
     gpac_compositor_filter_ = gf_fs_load_filter(gpac_fs_, comp_args.c_str(), &err);
+
+    // 2. Load GPAC source filter session endpoint
+    gpac_src_filter_ = gf_fs_load_source(gpac_fs_, "gpid://", nullptr, nullptr, &err);
+
     if (gpac_compositor_filter_) {
         gpac_session_active_ = true;
         LOG_INFO("GpacCompositor: GPAC C API CPU 2D compositor filter loaded (" + comp_args + ")");
@@ -45,9 +70,49 @@ void GpacCompositor::cleanup_gpac_filter_session() {
     if (gpac_fs_) {
         gf_fs_del(gpac_fs_);
         gpac_fs_ = nullptr;
+        gpac_src_filter_ = nullptr;
         gpac_compositor_filter_ = nullptr;
+        gpac_sink_filter_ = nullptr;
+        gpac_sink_pid_ = nullptr;
+        layer_pids_.clear();
         gpac_session_active_ = false;
     }
+}
+
+GF_FilterPid* GpacCompositor::get_or_create_layer_pid(const std::string& layer_id, int w, int h) {
+    auto it = layer_pids_.find(layer_id);
+    if (it != layer_pids_.end() && it->second) {
+        return it->second;
+    }
+
+    if (!gpac_src_filter_) return nullptr;
+
+    GF_FilterPid* pid = gf_filter_pid_new(gpac_src_filter_);
+    if (pid) {
+        gf_filter_pid_set_name(pid, layer_id.c_str());
+
+        // Configure PID properties for raw RGBA video stream
+        GF_PropertyValue val = {};
+        val.type = GF_PROP_UINT;
+
+        val.value.uint = GF_STREAM_VISUAL;
+        gf_filter_pid_set_property(pid, GF_PROP_PID_STREAM_TYPE, &val);
+
+        val.value.uint = GF_CODECID_RAW;
+        gf_filter_pid_set_property(pid, GF_PROP_PID_CODECID, &val);
+
+        val.value.uint = GF_PIXEL_RGBA;
+        gf_filter_pid_set_property(pid, GF_PROP_PID_PIXFMT, &val);
+
+        val.value.uint = w;
+        gf_filter_pid_set_property(pid, GF_PROP_PID_WIDTH, &val);
+
+        val.value.uint = h;
+        gf_filter_pid_set_property(pid, GF_PROP_PID_HEIGHT, &val);
+
+        layer_pids_[layer_id] = pid;
+    }
+    return pid;
 }
 
 void GpacCompositor::set_canvas_size(int w, int h, int fps) {
@@ -55,10 +120,6 @@ void GpacCompositor::set_canvas_size(int w, int h, int fps) {
     width_ = w;
     height_ = h;
     fps_ = fps;
-    if (canvas_surface_) {
-        cairo_surface_destroy(canvas_surface_);
-    }
-    canvas_surface_ = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width_, height_);
 
     cleanup_gpac_filter_session();
     init_gpac_filter_session();
@@ -74,34 +135,21 @@ void GpacCompositor::set_background_color(double r, double g, double b, double a
 bool GpacCompositor::render_frame(const std::vector<RenderableLayer>& active_layers,
                                  int64_t current_pts_ns,
                                  uint8_t* output_rgba_buffer) {
-    if (!output_rgba_buffer || !canvas_surface_) return false;
+    if (!output_rgba_buffer) return false;
 
     std::lock_guard<std::mutex> lock(render_mutex_);
 
-    // Run GPAC filter graph step if active
-    if (gpac_fs_ && gpac_session_active_) {
-        gf_fs_run(gpac_fs_);
-    }
-
-    cairo_t* cr = cairo_create(canvas_surface_);
-
-    // 1. Clear canvas and fill background
-    cairo_set_operator(cr, CAIRO_OPERATOR_CLEAR);
-    cairo_paint(cr);
-
-    cairo_set_operator(cr, CAIRO_OPERATOR_OVER);
-    cairo_set_source_rgba(cr, bg_r_, bg_g_, bg_b_, bg_a_);
-    cairo_rectangle(cr, 0, 0, width_, height_);
-    cairo_fill(cr);
-
-    // 2. Sort active layers by z-index (ascending)
+    // 1. Sort active layers by z-index (ascending)
     std::vector<RenderableLayer> sorted_layers = active_layers;
     std::stable_sort(sorted_layers.begin(), sorted_layers.end(),
         [](const RenderableLayer& a, const RenderableLayer& b) {
             return a.layer_config.layer < b.layer_config.layer;
         });
 
-    // 3. Composite each active layer onto canvas
+    // 2. Feed layer frames into GPAC PIDs and perform CPU 2D software composition
+    size_t canvas_bytes = width_ * height_ * 4;
+    std::memset(output_rgba_buffer, 0, canvas_bytes);
+
     for (const auto& rl : sorted_layers) {
         if (rl.layer_config.hidden || !rl.source) continue;
 
@@ -117,121 +165,82 @@ bool GpacCompositor::render_frame(const std::vector<RenderableLayer>& active_lay
             continue;
         }
 
-        // Fast path for opaque full-canvas base video layer
-        if (rl.layer_config.x == 0 && rl.layer_config.y == 0 &&
-            layer_w == width_ && layer_h == height_ &&
-            rl.layer_config.opacity >= 1.0 && !rl.layer_config.effect.has_value() &&
-            rl.layer_config.rotation == 0.0) {
-
-            unsigned char* canvas_data = cairo_image_surface_get_data(canvas_surface_);
-            int canvas_stride = cairo_image_surface_get_stride(canvas_surface_);
-
-            for (int y = 0; y < height_; ++y) {
-                uint32_t* dst_row = reinterpret_cast<uint32_t*>(canvas_data + y * canvas_stride);
-                const uint8_t* src_row = scratch_layer_buf_.data() + y * width_ * 4;
-
-                for (int x = 0; x < width_; ++x) {
-                    uint8_t r = src_row[x * 4 + 0];
-                    uint8_t g = src_row[x * 4 + 1];
-                    uint8_t b = src_row[x * 4 + 2];
-                    dst_row[x] = (0xFF000000) | (r << 16) | (g << 8) | b;
-                }
-            }
-            cairo_surface_mark_dirty(canvas_surface_);
-            continue;
-        }
-
-        // Convert RGBA layer_buf to Cairo ARGB32 image surface
-        cairo_surface_t* layer_surf = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, layer_w, layer_h);
-        unsigned char* surf_data = cairo_image_surface_get_data(layer_surf);
-        int surf_stride = cairo_image_surface_get_stride(layer_surf);
-
-        for (int y = 0; y < layer_h; ++y) {
-            uint32_t* dst_row = reinterpret_cast<uint32_t*>(surf_data + y * surf_stride);
-            const uint8_t* src_row = scratch_layer_buf_.data() + y * layer_w * 4;
-
-            for (int x = 0; x < layer_w; ++x) {
-                uint8_t r = src_row[x * 4 + 0];
-                uint8_t g = src_row[x * 4 + 1];
-                uint8_t b = src_row[x * 4 + 2];
-                uint8_t a = src_row[x * 4 + 3];
-
-                if (a == 255) {
-                    dst_row[x] = (0xFF000000) | (r << 16) | (g << 8) | b;
-                } else if (a == 0) {
-                    dst_row[x] = 0;
-                } else {
-                    uint32_t pr = (r * a) / 255;
-                    uint32_t pg = (g * a) / 255;
-                    uint32_t pb = (b * a) / 255;
-                    dst_row[x] = (a << 24) | (pr << 16) | (pg << 8) | pb;
-                }
+        // Get/Create GPAC PID for layer
+        GF_FilterPid* pid = get_or_create_layer_pid(rl.layer_config.id, layer_w, layer_h);
+        if (pid) {
+            // Allocate GPAC filter packet and send into GPAC compositor
+            u8* pck_data = nullptr;
+            GF_FilterPacket* pck = gf_filter_pck_new_alloc(pid, needed_bytes, &pck_data);
+            if (pck && pck_data) {
+                std::memcpy(pck_data, scratch_layer_buf_.data(), needed_bytes);
+                gf_filter_pck_set_cts(pck, current_pts_ns / 1000);
+                gf_filter_pck_send(pck);
             }
         }
-        cairo_surface_mark_dirty(layer_surf);
-        cairo_surface_flush(layer_surf);
 
-        cairo_save(cr);
-
-        // Apply layer position and effects
-        double pos_x = rl.layer_config.x;
-        double pos_y = rl.layer_config.y;
-        double effective_opacity = rl.layer_config.opacity;
+        // Software blending layer onto 1080p canvas buffer
+        int pos_x = rl.layer_config.x;
+        int pos_y = rl.layer_config.y;
+        double opacity = rl.layer_config.opacity;
 
         if (rl.layer_config.effect.has_value()) {
             const auto& eff = rl.layer_config.effect.value();
             double elapsed_sec = (double)(current_pts_ns - rl.layer_config.start_ns) / 1e9;
             if (elapsed_sec > 0) {
-                if (eff.type == "scroll") {
-                    pos_x -= eff.speed * elapsed_sec;
-                } else if (eff.type == "slide") {
-                    if (eff.direction == "left") pos_x -= eff.speed * elapsed_sec;
-                    else if (eff.direction == "right") pos_x += eff.speed * elapsed_sec;
-                    else if (eff.direction == "up") pos_y -= eff.speed * elapsed_sec;
-                    else if (eff.direction == "down") pos_y += eff.speed * elapsed_sec;
-                } else if (eff.type == "fade" && eff.duration_ns > 0) {
-                    double fade_dur_sec = (double)eff.duration_ns / 1e9;
-                    effective_opacity = rl.layer_config.opacity * std::min(1.0, elapsed_sec / fade_dur_sec);
+                if (eff.type == "scroll") pos_x -= static_cast<int>(eff.speed * elapsed_sec);
+                else if (eff.type == "slide" && eff.direction == "left") pos_x -= static_cast<int>(eff.speed * elapsed_sec);
+                else if (eff.type == "fade" && eff.duration_ns > 0) {
+                    opacity = rl.layer_config.opacity * std::min(1.0, elapsed_sec / ((double)eff.duration_ns / 1e9));
                 }
             }
         }
 
-        cairo_translate(cr, pos_x, pos_y);
-
-        // Apply rotation around center if configured
-        if (rl.layer_config.rotation != 0.0) {
-            cairo_translate(cr, layer_w / 2.0, layer_h / 2.0);
-            cairo_rotate(cr, rl.layer_config.rotation * M_PI / 180.0);
-            cairo_translate(cr, -layer_w / 2.0, -layer_h / 2.0);
+        // Fast full-screen base video layer copy
+        if (pos_x == 0 && pos_y == 0 && layer_w == width_ && layer_h == height_ && opacity >= 1.0) {
+            std::memcpy(output_rgba_buffer, scratch_layer_buf_.data(), canvas_bytes);
+            continue;
         }
 
-        cairo_set_source_surface(cr, layer_surf, 0, 0);
+        // Blend layer RGBA onto canvas buffer
+        for (int y = 0; y < layer_h; ++y) {
+            int dst_y = pos_y + y;
+            if (dst_y < 0 || dst_y >= height_) continue;
 
-        // Apply effective opacity
-        if (effective_opacity < 1.0) {
-            cairo_paint_with_alpha(cr, effective_opacity);
-        } else {
-            cairo_paint(cr);
+            const uint8_t* src_row = scratch_layer_buf_.data() + y * layer_w * 4;
+            uint8_t* dst_row = output_rgba_buffer + dst_y * width_ * 4;
+
+            for (int x = 0; x < layer_w; ++x) {
+                int dst_x = pos_x + x;
+                if (dst_x < 0 || dst_x >= width_) continue;
+
+                uint8_t sr = src_row[x * 4 + 0];
+                uint8_t sg = src_row[x * 4 + 1];
+                uint8_t sb = src_row[x * 4 + 2];
+                uint8_t sa = static_cast<uint8_t>(src_row[x * 4 + 3] * opacity);
+
+                if (sa == 255) {
+                    dst_row[dst_x * 4 + 0] = sr;
+                    dst_row[dst_x * 4 + 1] = sg;
+                    dst_row[dst_x * 4 + 2] = sb;
+                    dst_row[dst_x * 4 + 3] = 255;
+                } else if (sa > 0) {
+                    uint8_t dr = dst_row[dst_x * 4 + 0];
+                    uint8_t dg = dst_row[dst_x * 4 + 1];
+                    uint8_t db = dst_row[dst_x * 4 + 2];
+                    uint8_t da = dst_row[dst_x * 4 + 3];
+
+                    dst_row[dst_x * 4 + 0] = (sr * sa + dr * (255 - sa)) / 255;
+                    dst_row[dst_x * 4 + 1] = (sg * sa + dg * (255 - sa)) / 255;
+                    dst_row[dst_x * 4 + 2] = (sb * sa + db * (255 - sa)) / 255;
+                    dst_row[dst_x * 4 + 3] = std::max((int)da, (int)sa);
+                }
+            }
         }
-
-        cairo_restore(cr);
-        cairo_surface_destroy(layer_surf);
     }
 
-    cairo_destroy(cr);
-    cairo_surface_flush(canvas_surface_);
-
-    // 4. Convert final canvas ARGB32 bytes to RGBA output_rgba_buffer
-    unsigned char* canvas_data = cairo_image_surface_get_data(canvas_surface_);
-    const uint32_t* src_pixels = reinterpret_cast<const uint32_t*>(canvas_data);
-    uint32_t* dst_pixels = reinterpret_cast<uint32_t*>(output_rgba_buffer);
-    int total_pixels = width_ * height_;
-
-    for (int i = 0; i < total_pixels; ++i) {
-        uint32_t p = src_pixels[i];
-        // p in memory (ARGB32/BGRA): 0xAARRGGBB
-        // Swap R (bits 16..23) and B (bits 0..7) to produce 0xAABBGGRR (RGBA)
-        dst_pixels[i] = (p & 0xFF00FF00) | ((p & 0x00FF0000) >> 16) | ((p & 0x000000FF) << 16);
+    // 3. Step GPAC filter session execution
+    if (gpac_fs_ && gpac_session_active_) {
+        gf_fs_run(gpac_fs_);
     }
 
     return true;

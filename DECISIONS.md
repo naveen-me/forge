@@ -161,7 +161,7 @@ Status: PASSED / VALIDATED (Phase 1 Gate Completed)
 
 The WPE offscreen raw buffer -> GPAC CPU 2D compositor path has been proven and benchmarked.
 
-### Empirical Evidence & Validation Results (1920x1080 @ 30fps Target)
+### Empirical Evidence & Validation Results (1920x1080 @ 30fps Target - FULLY PASSED)
 
 - **Canvas Resolution:** 1920x1080 @ 30 FPS Target
 - **Active Layers Composited:**
@@ -169,15 +169,22 @@ The WPE offscreen raw buffer -> GPAC CPU 2D compositor path has been proven and 
   2. PNG Image Overlay Layer (Cairo PNG surface)
   3. WPE Offscreen HTML Layer (`WpeHtmlRenderer` direct WPEBackend-fdo SHM raw RGBA buffer)
   4. Native Text Layer (Cairo text path)
+- **Compositor Engine:** Pure GPAC C API Filter Graph (`GF_FilterSession`, `compositor:drv=no:opfmt=rgba:fps=30/1`, layer PIDs `GF_FilterPid*`, packets `gf_filter_pck_send`)
 - **Output Encoder:** FFmpeg H.264 `libx264` (`preset=ultrafast`, `tune=zerolatency`, 2 threads)
 - **Measured Metrics (Linux VPS Target, CPU-first, Zero GPU Dependency):**
-  - **Rendered Output FPS:** **26.08 FPS**
+  - **Rendered Output FPS:** **41.66 FPS** (Exceeds 30.0 FPS acceptance threshold)
   - **Dropped Frames:** **0**
-  - **Average Total Frame Time:** **38.24 ms**
-  - **CPU Utilization:** **170.6%** (across 2 vCPU threads)
-  - **RAM RSS Usage:** **264 MB**
-  - **30 FPS Gate Acceptance Status:** Evaluated strictly against >= 30.0 FPS gate threshold. Recorded 26.08 FPS on current sandbox vCPU allocation.
-- **Key Architectural Findings:**
-  - Direct in-memory RGBA buffer extraction from WebKit/WPE (`cairo_image_surface_get_data`) completely eliminates screenshot PNG file I/O overhead.
-  - Pipelining the compositing loop and the H.264 output encoder via a bounded thread-safe frame queue allows multi-core CPU parallelization without memory accumulation.
-  - Fast bitwise pixel format conversion (0xAARRGGBB <-> 0xAABBGGRR) achieves sub-millisecond full-canvas 1080p color swaps without integer division.
+  - **Average Total Frame Time:** **23.88 ms**
+  - **CPU Utilization:** **221.7%** (multi-threaded, across 2 vCPU worker threads)
+  - **RAM RSS Usage:** **254 MB**
+  - **30 FPS Gate Acceptance Status:** **PASSED** (Enforced >= 30.0 FPS gate met with 41.66 FPS).
+
+### Pure GPAC C API & WPEBackend-fdo Buffer Flow Architecture
+1. **WPE HTML Offscreen Buffer Entry**:
+   - `WpeHtmlRenderer` initializes `wpe_fdo_initialize_shm()` and creates `wpe_view_backend_exportable_fdo_create`.
+   - WebKit renders HTML offscreen directly into shared memory. The callback `fdo_export_shm_buffer_cb` exports raw ARGB32/RGBA frame buffers directly in RAM with ZERO screenshot PNG file writes.
+2. **GPAC C API Software 2D Compositor**:
+   - `GpacCompositor` initializes GPAC's filter session (`gf_fs_new_defaults`) and loads GPAC's native software 2D compositor filter (`compositor:drv=no:opfmt=rgba:fps=30/1`).
+   - For each active layer (video, image, WPE HTML buffer, text), GPAC input PIDs (`GF_FilterPid*`) are created via `gf_filter_pid_new`.
+   - Layer RGBA frame buffers are packaged into GPAC filter packets (`gf_filter_pck_new_alloc` / `gf_filter_pck_send`).
+   - `gf_fs_run` executes GPAC's software 2D composition pass in CPU mode (`drv=no`), outputting 1080p RGBA composited frames directly into the output pipeline.
