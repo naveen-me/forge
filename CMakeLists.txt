@@ -18,6 +18,7 @@ pkg_check_modules(CAIRO REQUIRED cairo)
 pkg_check_modules(WEBKIT REQUIRED webkit2gtk-4.1)
 pkg_check_modules(WPE REQUIRED wpe-1.0)
 pkg_check_modules(WPE_FDO REQUIRED wpebackend-fdo-1.0)
+pkg_check_modules(WAYLAND_SERVER REQUIRED wayland-server)
 
 find_package(nlohmann_json REQUIRED)
 
@@ -33,6 +34,7 @@ include_directories(
     ${WEBKIT_INCLUDE_DIRS}
     ${WPE_INCLUDE_DIRS}
     ${WPE_FDO_INCLUDE_DIRS}
+    ${WAYLAND_SERVER_INCLUDE_DIRS}
 )
 
 link_directories(
@@ -45,6 +47,7 @@ link_directories(
     ${WEBKIT_LIBRARY_DIRS}
     ${WPE_LIBRARY_DIRS}
     ${WPE_FDO_LIBRARY_DIRS}
+    ${WAYLAND_SERVER_LIBRARY_DIRS}
 )
 
 # Core engine library
@@ -61,6 +64,7 @@ add_library(tarva_core
     src/scene_controller.cpp
     src/api_server.cpp
     src/audio_mixer.cpp
+    src/monotonic_scheduler.cpp
 )
 
 target_link_libraries(tarva_core
@@ -75,6 +79,7 @@ target_link_libraries(tarva_core
     ${WEBKIT_LIBRARIES}
     ${WPE_LIBRARIES}
     ${WPE_FDO_LIBRARIES}
+    ${WAYLAND_SERVER_LIBRARIES}
     nlohmann_json::nlohmann_json
     Threads::Threads
 )
@@ -126,6 +131,10 @@ add_executable(test_effects tests/test_effects.cpp)
 target_link_libraries(test_effects PRIVATE tarva_core)
 add_test(NAME test_effects COMMAND xvfb-run -a $<TARGET_FILE:test_effects>)
 set_tests_properties(test_effects PROPERTIES ENVIRONMENT "WEBKIT_DISABLE_COMPOSITING_MODE=1;WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1;NO_AT_BRIDGE=1")
+
+add_executable(test_scheduler tests/test_scheduler.cpp)
+target_link_libraries(test_scheduler PRIVATE tarva_core)
+add_test(NAME test_scheduler COMMAND $<TARGET_FILE:test_scheduler>)
 
 add_executable(run_poc_benchmark benchmarks/run_poc_benchmark.cpp)
 target_link_libraries(run_poc_benchmark PRIVATE tarva_core)

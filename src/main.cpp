@@ -7,6 +7,7 @@
 #include "gpac_compositor.h"
 #include "media_output.h"
 #include "benchmark_harness.h"
+#include "monotonic_scheduler.h"
 
 #include <iostream>
 #include <fstream>
@@ -82,7 +83,8 @@ int main(int argc, char** argv) {
     std::vector<uint8_t> composite_frame(canvas_w * canvas_h * 4, 0);
 
     int64_t frame_idx = 0;
-    auto last_frame_time = std::chrono::steady_clock::now();
+    tarva::MonotonicScheduler scheduler(fps);
+    scheduler.start();
 
     while (g_running) {
         int64_t current_pts_ns = frame_idx * frame_duration_ns;
@@ -109,14 +111,8 @@ int main(int argc, char** argv) {
 
         frame_idx++;
 
-        // Pacing for real-time playout interval (~33.3ms for 30fps)
-        auto now = std::chrono::steady_clock::now();
-        auto elapsed_ms = std::chrono::duration_cast<std::chrono::milliseconds>(now - last_frame_time).count();
-        int target_ms = 1000 / fps;
-        if (elapsed_ms < target_ms) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(target_ms - elapsed_ms));
-        }
-        last_frame_time = std::chrono::steady_clock::now();
+        // Monotonic deadline pacing
+        scheduler.wait_for_frame_deadline(frame_idx);
     }
 
     output.finalize();

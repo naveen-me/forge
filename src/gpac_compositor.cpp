@@ -9,13 +9,44 @@ namespace tarva {
 GpacCompositor::GpacCompositor(int canvas_w, int canvas_h, int fps)
     : width_(canvas_w), height_(canvas_h), fps_(fps) {
     canvas_surface_ = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width_, height_);
+    init_gpac_filter_session();
 }
 
 GpacCompositor::~GpacCompositor() {
     std::lock_guard<std::mutex> lock(render_mutex_);
+    cleanup_gpac_filter_session();
     if (canvas_surface_) {
         cairo_surface_destroy(canvas_surface_);
         canvas_surface_ = nullptr;
+    }
+}
+
+bool GpacCompositor::init_gpac_filter_session() {
+    gpac_fs_ = gf_fs_new_defaults(0);
+    if (!gpac_fs_) {
+        LOG_WARN("GpacCompositor: Failed to initialize GPAC Filter Session; falling back to software rasterizer");
+        return false;
+    }
+
+    GF_Err err = GF_OK;
+    std::string comp_args = "compositor:drv=no:opfmt=rgba:fps=" + std::to_string(fps_) + "/1";
+    gpac_compositor_filter_ = gf_fs_load_filter(gpac_fs_, comp_args.c_str(), &err);
+    if (gpac_compositor_filter_) {
+        gpac_session_active_ = true;
+        LOG_INFO("GpacCompositor: GPAC C API CPU 2D compositor filter loaded (" + comp_args + ")");
+    } else {
+        LOG_WARN("GpacCompositor: GPAC compositor filter failed to load: " + std::to_string((int)err));
+    }
+
+    return gpac_session_active_;
+}
+
+void GpacCompositor::cleanup_gpac_filter_session() {
+    if (gpac_fs_) {
+        gf_fs_del(gpac_fs_);
+        gpac_fs_ = nullptr;
+        gpac_compositor_filter_ = nullptr;
+        gpac_session_active_ = false;
     }
 }
 
@@ -28,6 +59,9 @@ void GpacCompositor::set_canvas_size(int w, int h, int fps) {
         cairo_surface_destroy(canvas_surface_);
     }
     canvas_surface_ = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width_, height_);
+
+    cleanup_gpac_filter_session();
+    init_gpac_filter_session();
 }
 
 void GpacCompositor::set_background_color(double r, double g, double b, double a) {
@@ -43,6 +77,11 @@ bool GpacCompositor::render_frame(const std::vector<RenderableLayer>& active_lay
     if (!output_rgba_buffer || !canvas_surface_) return false;
 
     std::lock_guard<std::mutex> lock(render_mutex_);
+
+    // Run GPAC filter graph step if active
+    if (gpac_fs_ && gpac_session_active_) {
+        gf_fs_run(gpac_fs_);
+    }
 
     cairo_t* cr = cairo_create(canvas_surface_);
 
@@ -132,7 +171,6 @@ bool GpacCompositor::render_frame(const std::vector<RenderableLayer>& active_lay
         cairo_surface_mark_dirty(layer_surf);
         cairo_surface_flush(layer_surf);
 
-
         cairo_save(cr);
 
         // Apply layer position and effects
@@ -185,8 +223,6 @@ bool GpacCompositor::render_frame(const std::vector<RenderableLayer>& active_lay
 
     // 4. Convert final canvas ARGB32 bytes to RGBA output_rgba_buffer
     unsigned char* canvas_data = cairo_image_surface_get_data(canvas_surface_);
-    int canvas_stride = cairo_image_surface_get_stride(canvas_surface_);
-
     const uint32_t* src_pixels = reinterpret_cast<const uint32_t*>(canvas_data);
     uint32_t* dst_pixels = reinterpret_cast<uint32_t*>(output_rgba_buffer);
     int total_pixels = width_ * height_;

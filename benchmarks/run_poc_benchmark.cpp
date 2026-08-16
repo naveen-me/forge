@@ -204,11 +204,11 @@ int main() {
     LOG_INFO("  RAM RSS Usage:    " + std::to_string(m.ram_rss_mb) + " MB");
     LOG_INFO("================================================================================");
 
-    if (m.rendered_fps >= 25.0 && m.dropped_frames == 0) {
-        LOG_INFO("PHASE 1 POC GATE PASSED SUCCESSFULLY!");
+    if (m.rendered_fps >= 30.0 && m.dropped_frames == 0) {
+        LOG_INFO("PHASE 1 POC GATE PASSED SUCCESSFULLY (30+ FPS ENFORCED)!");
         return 0;
     } else {
-        LOG_ERROR("PHASE 1 POC GATE CRITERIA FAILED!");
+        LOG_ERROR("PHASE 1 POC GATE CRITERIA FAILED (Target 30 FPS not met)!");
         return 1;
     }
 }
