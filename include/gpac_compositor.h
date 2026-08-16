@@ -4,8 +4,8 @@
 #include <vector>
 #include <memory>
 #include <mutex>
+#include <map>
 #include <cstdint>
-#include <cairo.h>
 
 extern "C" {
 #include <gpac/filters.h>
@@ -31,7 +31,7 @@ public:
     void set_canvas_size(int w, int h, int fps);
     void set_background_color(double r, double g, double b, double a = 1.0);
 
-    // Composites active layers into output_rgba_buffer using GPAC CPU 2D software pipeline
+    // Composites active layers into output_rgba_buffer using pure GPAC C API filter graph pipeline
     bool render_frame(const std::vector<RenderableLayer>& active_layers,
                       int64_t current_pts_ns,
                       uint8_t* output_rgba_buffer);
@@ -52,15 +52,21 @@ private:
     double bg_a_ = 1.0;
 
     GF_FilterSession* gpac_fs_ = nullptr;
+    GF_Filter* gpac_src_filter_ = nullptr;
     GF_Filter* gpac_compositor_filter_ = nullptr;
+    GF_Filter* gpac_sink_filter_ = nullptr;
+    GF_FilterPid* gpac_sink_pid_ = nullptr;
     bool gpac_session_active_ = false;
 
-    cairo_surface_t* canvas_surface_ = nullptr;
+    std::map<std::string, GF_FilterPid*> layer_pids_;
+
     std::vector<uint8_t> scratch_layer_buf_;
+    std::vector<uint8_t> last_composited_frame_;
     std::mutex render_mutex_;
 
     bool init_gpac_filter_session();
     void cleanup_gpac_filter_session();
+    GF_FilterPid* get_or_create_layer_pid(const std::string& layer_id, int w, int h);
 };
 
 } // namespace tarva
