@@ -1,0 +1,202 @@
+# TARVA AI Progress
+
+This file tracks two INDEPENDENT workstreams:
+
+- **A. Checkpoint tasks (0.x)** — the original phased plan (`ROADMAP.md` / `AGENTS.md` gates).
+  Progress is counted only here. C1–C3 are architecture gates and are NOT advanced by
+  workstream B.
+- **B. C4-local corrective work (ADR-021)** — separately authorized by the operator
+  (2026-08-17) because the local host cannot host the C1 gate build. It is corrective work
+  on the current Cairo/WebKitGTK prototype and does NOT count as completion of any
+  checkpoint task or architecture gate.
+
+---
+
+## Workstream A — Checkpoint tasks
+
+### Current Task
+ID: 0.3 (Phase C1 gate execution)
+Name: Prove WPEPlatform headless -> CPU-readable RGBA buffer
+Status: **BLOCKED / DEFERRED** — the current machine cannot reasonably build WPE WebKit from source; run on a capable build host / CI
+Started: 2026-08-17
+Last Updated: 2026-08-17
+
+### Overall Progress (checkpoint tasks only)
+Completed: 3 (0.1, 0.2, 0.3-prep)
+In Progress: 0
+Blocked: 1 (0.3 — Phase C1 gate execution)
+Not Started: 14
+
+> C4-local corrective work (workstream B) is intentionally NOT included in these counts.
+> C1, C2 and C3 remain open gates regardless of B's results.
+
+### Completed Tasks
+
+#### [0.1] Inspect repository and read all project documents
+- result: Full repository inspection complete. All project documents read. Source code examined.
+- test result: N/A (read-only task)
+- commit: N/A (no changes made)
+- important findings:
+  1. **Architecture deviation confirmed**: Current implementation uses Cairo/WebKitGTK, not GPAC/WPE as approved.
+     - `src/gpac_compositor.cpp` uses Cairo API (cairo_image_surface_create, cairo_create, cairo_paint, etc.)
+     - `src/wpe_html_renderer.cpp` uses WebKitGTK API (webkit_web_view_new_with_context, gtk_offscreen_window_new, gtk_widget_draw)
+     - GPAC and WPE libraries are linked but never actually called
+  2. **Previous audit exists**: `docs/AUDIT_REPORT.md` (dated 2026-08-16) has already documented these deviations thoroughly.
+  3. **Correction plan exists**: `docs/CORRECTION_PLAN.md` defines phases C0-C5 to restore the approved architecture.
+  4. **Benchmark claims contradicted**: `benchmarks/poc_results.json` shows 25.75 FPS (committed evidence), but `ACCEPTANCE_TESTS.md` claims 31.66 FPS. The POC gate requires >= 30 FPS.
+  5. **Xvfb dependency**: Production Dockerfile uses `xvfb-run` at runtime, violating the no-X11 requirement.
+  6. **HTML is cached snapshot**: `HtmlSource::load` captures one frame and replays it; no per-frame WPE rendering.
+  7. **Video not timestamp-aligned**: `VideoSource::read_frame_rgba` ignores pts_ns, decoding sequentially.
+  8. **No audio in output pipeline**: `AudioMixer` exists but is not wired into the engine.
+  9. **Benchmark has no pacing**: All frames rendered back-to-back (throughput, not real-time).
+  10. **Script exists**: `scripts/bootstrap_env.sh` provides non-root build environment bootstrap for Ubuntu.
+  11. **Source structure**: 14 source files, 14 headers, 10 test files, 1 benchmark file.
+  12. **Dependencies**: CMakeLists.txt requires GPAC, FFmpeg, Cairo, WebKitGTK, WPE, WPEBackend-fdo, Wayland, nlohmann_json.
+
+#### [0.2] Environment audit — record findings, then STOP
+- objective: Check Ubuntu version, CPU, RAM, disk and kernel. Record findings. STOP.
+- commands executed: run_terminal_command (os-release, nproc, cpuinfo, free, df, uname, docker/podman check, apt-cache policy for wpewebkit/gpac/libwpe/webkit2gtk)
+- files changed: AI_PROGRESS.md only (audit is read-only)
+- tests executed: None (read-only)
+- results: see "Environment Audit Findings" section below
+- remaining work: The audit conclusion (C1 build infeasible on this host) led to the
+  operator decision recorded in ADR-021 (defer C1; authorize C4-local work first).
+
+#### [0.3-prep] C1 build-host preparation (2026-08-17)
+- objective: Prepare the repository so C1 can be executed reproducibly on a capable build
+  host or CI. Do NOT build WPE WebKit here; do NOT start C1.
+- files changed (committed): `docs/C1_BUILD_REQUIREMENTS.md` (new),
+  `scripts/c1_environment_check.sh` (new), `AI_PROGRESS.md` (this file).
+- test result: `scripts/c1_environment_check.sh` verified on this host — exit 1
+  "NOT SUITABLE" (threads 4 < 8, RAM 10.7 GiB < 16 GiB), and exit 0 "SUITABLE" on a
+  simulated capable host. Script is inspection-only (installs nothing).
+- result: C1 build-host requirements documented (CPU/RAM/disk/OS/compiler/CMake/Ninja,
+  libwpe/WPEBackend-fdo/WPE WebKit/GPAC/FFmpeg/Wayland versions, headless CPU-only env vars,
+  expected build time and artifacts); environment check script added.
+- remaining work: none for this task. C1 execution is still BLOCKED (see below).
+
+### Blockers
+- **[0.3 / Phase C1] BLOCKED / DEFERRED — hardware**: WPE WebKit >= 2.52 is not packaged for
+  Ubuntu 26.04 and must be built from source (~30+ GB scratch, 1-3 h on 8 modern cores).
+  This host is a 4-thread i3-1005G1 @ 1.2 GHz with 10 GiB RAM (swap already in use); the
+  build would take many hours and risks OOM. Docker is not installed. The operator chose
+  (2026-08-17, ADR-021) to defer this gate to a capable build host / CI. The gate threshold
+  (ADR-019: >= 30 FPS, 0 drops, real-time pacing, CPU-only, soak) is NOT lowered.
+- **C2 / C3**: remain gated behind C1 per ADR-018.
+
+### What remains to execute C1 (0.3) — on a capable build host / CI
+1. Run `scripts/c1_environment_check.sh` on the candidate host; it must report
+   "SUITABLE" (exit 0). Requirements: `docs/C1_BUILD_REQUIREMENTS.md`.
+2. Build the source stack there: libwpe >= 1.16, WPEBackend-fdo >= 1.16 (meson/ninja),
+   **WPE WebKit >= 2.52** (cmake; provides WPEPlatform / `WPEDisplayHeadless`), GPAC
+   (recent dev, compositor filter), FFmpeg dev libs, Wayland dev. Use CMake 3.28-3.31
+   (NOT 4.x; `scripts/bootstrap_env.sh` pins 3.31.7). See `docs/C1_BUILD_REQUIREMENTS.md`
+   sections 2-4.
+3. Update `CMakeLists.txt` to the WPE path: replace `webkit2gtk-4.1` with `wpe-webkit-2.0`
+   (drop xvfb-run from test targets), implement the new `WpeHtmlRenderer` (WPEDisplayHeadless
+   + WPEView, thread-affine, CPU-readable buffer, no Cairo/GTK), rework `tests/test_wpe.cpp`
+   per `docs/CORRECTION_PLAN.md` Phase C1 steps.
+4. Run the C1 gate: headless WPE renders a controlled page to a CPU-readable 1920x1080
+   RGBA buffer with no X server, no GPU, no Xvfb (`LIBGL_ALWAYS_SOFTWARE=1`,
+   `EGL_PLATFORM=surfaceless`); measure and commit the per-frame capture cost (must be
+   well under 33 ms).
+5. Only after Gate C1 passes: proceed to C2 (GPAC CPU compositor consumes the buffer),
+   then C3 (1080p30 POC gate, ADR-019 criteria). Workstream B items carry over unchanged.
+
+### Next Task (when unblocked)
+ID: 0.3 (Phase C1 gate execution) — see "What remains to execute C1" above.
+
+---
+
+## Workstream B — C4-local corrective work (separately authorized, ADR-021)
+
+### Status
+Status: COMPLETED (local build + tests, 2026-08-17)
+Gate status: **N/A — this workstream does not advance C1/C2/C3.** It is corrective work on
+the current Cairo/WebKitGTK prototype, authorized by the operator so that stack-independent
+corrections progress while the C1 build is deferred. Re-verification on the real GPAC/WPE
+path is still required after C3 (see `docs/CORRECTION_PLAN.md`).
+
+### Completed items
+1. **Bounded queues** (audit A5 / C4.7) — `include/bounded_queue.h` (hard capacity +
+   blocking backpressure); used in `run_poc_benchmark` (composite -> encode, capacity 4);
+   `tests/test_bounded_queue.cpp` (capacity bound, backpressure, close/drain, 100k no-loss).
+2. **/status metrics** (audit A6 / C4.5) — `src/runtime_stats.cpp` (atomic counters) +
+   ApiServer `/status` now returns playout time, target/rendered FPS, rendered/dropped/
+   output frames, output state, active layers, per-source states, CPU % and RAM RSS;
+   `tests/test_status.cpp` (live HTTP). Verified live: ~30 FPS, 0 dropped.
+3. **Video pts alignment** (audit #4 / C4.3) — `VideoSource::read_frame_rgba` presents the
+   frame at the requested global-clock pts: bounded presentation-order reorder buffer
+   (`has_b_frames + 1`), refcounted AVFrames, keyframe-seek on backward jumps, clock-mapped
+   looping with decoder flush at EOF. `test_sources` covers sparse jump, backward jump,
+   loop wrap. Per-frame cost on this host ~11.6 ms @ 1080p (old ~10.2 ms); benchmark
+   re-run: 48.03 FPS throughput, 0 dropped.
+4. **Audio in output pipeline** (audit #5 / C4.6) — `MediaOutput` AAC stream (S16 -> FLTP,
+   sample-accurate pts, bounded fifo); `VideoSource` audio decode (isolated demux context,
+   48 kHz stereo S16, clock-aligned); engine loop mixes active-layer audio with
+   `AudioMixer` (silence otherwise). ffprobe on `tarva_playout` output: h264 video +
+   aac audio. `tests/test_audio.cpp` covers decode, mix, mux.
+5. **Incidental build fix** — `gpac_compositor.cpp` called `gf_fs_new_defaults(0)` with an
+   implicit int conversion that no longer compiles against GPAC 26.08; cast to
+   `GF_FilterSessionFlags` (the GPAC session scaffolding remains non-functional per
+   ADR-017 until C2).
+
+### Verification
+- Build: `cmake .. && make -j4` clean (0 warnings) on Ubuntu 26.04 with system packages
+  (cairo, ffmpeg dev, webkit2gtk-4.1, GPAC 26.08, wpe-1.0, wpebackend-fdo-1.0, nlohmann_json).
+- Tests: 13/13 CTest suites pass (`test_schema`, `test_wpe`, `test_sources`,
+  `test_compositor`, `test_output`, `test_timeline`, `test_source_manager`, `test_api`,
+  `test_effects`, `test_scheduler`, `test_bounded_queue`, `test_audio`, `test_status`).
+- Engine smoke: `tarva_playout` runs at ~30 FPS, 0 dropped frames, `/status` returns full
+  metrics, output file muxes h264 video + aac audio.
+- Evidence files: `benchmarks/poc_results.json` (committed throughput record) left
+  untouched; `benchmarks/README.md` documents the 2026-08-17 bounded-queue re-run
+  (48.03 FPS throughput — still NOT gate evidence per ADR-019).
+
+---
+
+## Environment Audit Findings (2026-08-17)
+
+**Hardware (this machine):**
+- OS: Ubuntu 26.04 LTS (kernel 7.0.0-29-generic)
+- CPU: 4 threads — Intel Core i3-1005G1 @ 1.20 GHz (2 cores / 4 threads, low-end mobile)
+- RAM: 10 GiB total, ~6.4 GiB available (1.3 GiB of 4.0 GiB swap already in use)
+- Disk: 90 GiB free on /
+- Docker: **NOT installed** (no docker, no podman). User reports Docker builds are too heavy for this system — consistent with hardware.
+
+**Packaging reality (Ubuntu 26.04 repos):**
+- `libwpewebkit-2.0-dev` / `libwpewebkit-1.1-dev` / `wpewebkit`: **not packaged**
+- `gpac` / `gpac-dev`: **not packaged**
+- `libwpe-1.0-dev` / `libwpebackend-fdo-1.0-dev`: **not packaged**
+- `libwebkit2gtk-4.1-dev` 2.52.3: available (this is the current WebKitGTK decoy, NOT the approved WPE path)
+
+**Conclusion:** C1 requires building WPE WebKit >= 2.52 from source (plus libwpe/WPEBackend-fdo
+and GPAC). A WPE WebKit source build needs ~30+ GB scratch space and typically 1-3 h on 8
+modern cores; on this 4-thread 1.2 GHz i3 with 10 GiB RAM (swap already active) it would take
+many hours and risks OOM with parallel jobs. This confirms the user's report: **this machine
+cannot reasonably host the C1 gate build.**
+
+**C0 status:** COMPLETE (audit notices in ACCEPTANCE_TESTS.md + benchmarks/README.md,
+ADR-017/018/019/020 recorded, honest poc_results.json = 43.93 throughput, gate corrected at
+benchmarks/run_poc_benchmark.cpp:207).
+
+---
+
+## Recovery Instructions
+If restarting:
+1. Read this file first.
+2. Workstream A: tasks 0.1, 0.2 and 0.3-prep are COMPLETED; 0.3 (C1 gate execution) is
+   BLOCKED/DEFERRED pending a capable build host. Do not attempt the WPE WebKit source
+   build on this machine. C1 preparation artifacts: `docs/C1_BUILD_REQUIREMENTS.md` and
+   `scripts/c1_environment_check.sh`.
+3. Workstream B (C4-local, ADR-021) is COMPLETED on the current prototype — do not redo it;
+   do not count it as completing C1/C2/C3.
+4. Verify `git status` shows the C4-local changes preserved (modified: CMakeLists.txt,
+   benchmarks/run_poc_benchmark.cpp, include/{api_server,media_output,media_sources,
+   scene_controller}.h, src/{api_server,gpac_compositor,main,media_output,media_sources,
+   scene_controller,runtime_stats}.cpp, tests/{test_sources,test_audio,test_bounded_queue,
+   test_status}.cpp; untracked: include/bounded_queue.h, include/runtime_stats.h,
+   src/runtime_stats.cpp, docs/AUDIT_REPORT.md, docs/CORRECTION_PLAN.md, AI_PROGRESS.md,
+   benchmarks/README.md, scripts/). Note: the C1-prep commit contains ONLY
+   `docs/C1_BUILD_REQUIREMENTS.md`, `scripts/c1_environment_check.sh` and `AI_PROGRESS.md`.
+5. Do NOT re-read all project documents unnecessarily.
