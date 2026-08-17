@@ -38,6 +38,12 @@ public:
 
     Scene current_scene() const;
 
+    // Active layers at a given playout time (for /status)
+    std::vector<Layer> active_layers_at(int64_t pts_ns) const;
+
+    // Snapshot of all managed source states (for /status)
+    std::vector<SourceHandle> source_states() const;
+
 private:
     std::shared_ptr<TimelineEngine> timeline_;
     std::shared_ptr<SourceManager> source_manager_;

@@ -1,6 +1,7 @@
 #include "media_sources.h"
 #include "logger.h"
 #include <cassert>
+#include <cstring>
 #include <iostream>
 #include <vector>
 #include <cstdlib>
@@ -53,11 +54,33 @@ void test_video_source() {
     assert(video_source.width() == 640);
     assert(video_source.height() == 360);
 
+    const size_t frame_bytes = 640 * 360 * 4;
     std::vector<uint8_t> frame(640 * 360 * 4, 0);
+    std::vector<uint8_t> frame_t500(640 * 360 * 4, 0);
+    std::vector<uint8_t> frame_back(640 * 360 * 4, 0);
+    std::vector<uint8_t> frame_wrap(640 * 360 * 4, 0);
+
+    // t=0: first frame
     ok = video_source.read_frame_rgba(frame.data(), 640, 360, 0);
     assert(ok);
 
-    LOG_INFO("VideoSource test passed.");
+    // Sparse forward jump to t=500 ms: must present a *different* frame
+    // (testsrc is animated) without decoding sequentially through every frame.
+    ok = video_source.read_frame_rgba(frame_t500.data(), 640, 360, 500LL * 1000000LL);
+    assert(ok);
+    assert(std::memcmp(frame.data(), frame_t500.data(), frame_bytes) != 0);
+
+    // Backward jump back to t=0: must resync and present the first frame again.
+    ok = video_source.read_frame_rgba(frame_back.data(), 640, 360, 0);
+    assert(ok);
+    assert(std::memcmp(frame.data(), frame_back.data(), frame_bytes) == 0);
+
+    // Loop wrap: t=3s on a 2s clip must wrap to t=1s and still present a frame.
+    ok = video_source.read_frame_rgba(frame_wrap.data(), 640, 360, 3LL * 1000000000LL);
+    assert(ok);
+    assert(std::memcmp(frame.data(), frame_wrap.data(), frame_bytes) != 0);
+
+    LOG_INFO("VideoSource pts-aligned decode test passed.");
 }
 
 void test_hls_source() {

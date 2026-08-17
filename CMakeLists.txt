@@ -65,6 +65,7 @@ add_library(tarva_core
     src/api_server.cpp
     src/audio_mixer.cpp
     src/monotonic_scheduler.cpp
+    src/runtime_stats.cpp
 )
 
 target_link_libraries(tarva_core
@@ -135,6 +136,19 @@ set_tests_properties(test_effects PROPERTIES ENVIRONMENT "WEBKIT_DISABLE_COMPOSI
 add_executable(test_scheduler tests/test_scheduler.cpp)
 target_link_libraries(test_scheduler PRIVATE tarva_core)
 add_test(NAME test_scheduler COMMAND $<TARGET_FILE:test_scheduler>)
+
+add_executable(test_bounded_queue tests/test_bounded_queue.cpp)
+target_link_libraries(test_bounded_queue PRIVATE tarva_core)
+add_test(NAME test_bounded_queue COMMAND $<TARGET_FILE:test_bounded_queue>)
+
+add_executable(test_audio tests/test_audio.cpp)
+target_link_libraries(test_audio PRIVATE tarva_core)
+add_test(NAME test_audio COMMAND $<TARGET_FILE:test_audio>)
+
+add_executable(test_status tests/test_status.cpp)
+target_link_libraries(test_status PRIVATE tarva_core)
+add_test(NAME test_status COMMAND $<TARGET_FILE:test_status>)
+set_tests_properties(test_status PROPERTIES TIMEOUT 30)
 
 add_executable(run_poc_benchmark benchmarks/run_poc_benchmark.cpp)
 target_link_libraries(run_poc_benchmark PRIVATE tarva_core)

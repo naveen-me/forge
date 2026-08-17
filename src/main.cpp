@@ -6,6 +6,8 @@
 #include "api_server.h"
 #include "gpac_compositor.h"
 #include "media_output.h"
+#include "audio_mixer.h"
+#include "runtime_stats.h"
 #include "benchmark_harness.h"
 #include "monotonic_scheduler.h"
 
@@ -33,6 +35,7 @@ int main(int argc, char** argv) {
     auto timeline = std::make_shared<tarva::TimelineEngine>();
     auto source_mgr = std::make_shared<tarva::SourceManager>();
     auto controller = std::make_shared<tarva::SceneController>(timeline, source_mgr);
+    auto stats = std::make_shared<tarva::RuntimeStats>();
 
     // Initial default scene
     tarva::Scene default_scene;
@@ -63,7 +66,7 @@ int main(int argc, char** argv) {
         api_port = std::atoi(env_p);
     }
 
-    tarva::ApiServer api_server(api_port, controller);
+    tarva::ApiServer api_server(api_port, controller, stats);
     api_server.start();
 
     LOG_INFO("API Server running at http://0.0.0.0:" + std::to_string(api_port));
@@ -78,9 +81,23 @@ int main(int argc, char** argv) {
 
     tarva::GpacCompositor compositor(canvas_w, canvas_h, fps);
     tarva::MediaOutput output(canvas_w, canvas_h, fps);
-    output.initialize(default_scene.output.url);
+
+    // Video + AAC audio output (audio stream is declared at initialize time so
+    // the container can carry both streams).
+    const int kAudioSampleRate = 48000;
+    const int kAudioChannels = 2;
+    if (!output.initialize(default_scene.output.url, true, kAudioSampleRate, kAudioChannels)) {
+        LOG_ERROR("Failed to initialize output; shutting down.");
+        api_server.stop();
+        return 1;
+    }
+    stats->set_output_state(tarva::OutputState::RUNNING);
 
     std::vector<uint8_t> composite_frame(canvas_w * canvas_h * 4, 0);
+
+    tarva::AudioMixer audio_mixer(kAudioSampleRate, kAudioChannels);
+    const size_t kSamplesPerFrame =
+        static_cast<size_t>(kAudioSampleRate) * static_cast<size_t>(frame_duration_ns) / 1000000000ULL;
 
     int64_t frame_idx = 0;
     tarva::MonotonicScheduler scheduler(fps);
@@ -88,6 +105,7 @@ int main(int argc, char** argv) {
 
     while (g_running) {
         int64_t current_pts_ns = frame_idx * frame_duration_ns;
+        stats->set_playout_time_ns(current_pts_ns);
 
         // Process scheduled runtime updates at frame boundary
         controller->process_scheduled_operations(current_pts_ns);
@@ -106,8 +124,43 @@ int main(int argc, char** argv) {
             }
         }
 
-        compositor.render_frame(renderable_layers, current_pts_ns, composite_frame.data());
-        output.send_frame_rgba(composite_frame.data(), frame_idx);
+        if (compositor.render_frame(renderable_layers, current_pts_ns, composite_frame.data())) {
+            stats->note_frame_rendered();
+        } else {
+            stats->note_frame_dropped();
+        }
+
+        if (output.send_frame_rgba(composite_frame.data(), frame_idx)) {
+            stats->note_output_frame();
+        } else {
+            stats->set_output_state(tarva::OutputState::ERROR);
+        }
+
+        // Mix audio from active sources and feed the AAC stream. Sources without
+        // audio contribute silence so the output stream stays continuous.
+        std::vector<tarva::AudioPcmBuffer> audio_buffers;
+        for (const auto& rl : renderable_layers) {
+            auto vs = std::dynamic_pointer_cast<tarva::VideoSource>(rl.source);
+            if (!vs || !vs->has_audio()) continue;
+
+            tarva::AudioPcmBuffer buf;
+            buf.sample_rate = kAudioSampleRate;
+            buf.channels = kAudioChannels;
+            buf.samples_s16.resize(kSamplesPerFrame * kAudioChannels, 0);
+            size_t got = 0;
+            if (vs->read_audio_s16(buf.samples_s16.data(), kSamplesPerFrame, current_pts_ns, got) && got > 0) {
+                buf.samples_s16.resize(got * kAudioChannels);
+                audio_buffers.push_back(std::move(buf));
+            }
+        }
+
+        tarva::AudioPcmBuffer mixed;
+        if (!audio_buffers.empty()) {
+            audio_mixer.mix_pcm_buffers(audio_buffers, mixed, kSamplesPerFrame);
+        } else {
+            mixed.samples_s16.assign(kSamplesPerFrame * kAudioChannels, 0); // silence
+        }
+        output.send_audio_s16(mixed.samples_s16.data(), kSamplesPerFrame, current_pts_ns);
 
         frame_idx++;
 
@@ -116,6 +169,7 @@ int main(int argc, char** argv) {
     }
 
     output.finalize();
+    stats->set_output_state(tarva::OutputState::FINALIZED);
     api_server.stop();
 
     LOG_INFO("TARVA Playout Engine shutdown complete.");

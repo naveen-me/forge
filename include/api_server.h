@@ -7,12 +7,14 @@
 #include <atomic>
 #include "httplib.h"
 #include "scene_controller.h"
+#include "runtime_stats.h"
 
 namespace tarva {
 
 class ApiServer {
 public:
-    ApiServer(int port, std::shared_ptr<SceneController> controller);
+    ApiServer(int port, std::shared_ptr<SceneController> controller,
+              std::shared_ptr<RuntimeStats> stats = nullptr);
     ~ApiServer();
 
     bool start();
@@ -21,6 +23,7 @@ public:
 private:
     int port_;
     std::shared_ptr<SceneController> controller_;
+    std::shared_ptr<RuntimeStats> stats_;
     httplib::Server server_;
     std::thread server_thread_;
     std::atomic<bool> running_{false};

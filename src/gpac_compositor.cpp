@@ -41,7 +41,7 @@ GpacCompositor::~GpacCompositor() {
 }
 
 bool GpacCompositor::init_gpac_filter_session() {
-    gpac_fs_ = gf_fs_new_defaults(0);
+    gpac_fs_ = gf_fs_new_defaults(static_cast<GF_FilterSessionFlags>(0));
     if (!gpac_fs_) {
         LOG_WARN("GpacCompositor: Failed to initialize GPAC Filter Session");
         return false;

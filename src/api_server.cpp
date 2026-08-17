@@ -4,8 +4,36 @@
 
 namespace tarva {
 
-ApiServer::ApiServer(int port, std::shared_ptr<SceneController> controller)
-    : port_(port), controller_(controller) {}
+namespace {
+
+std::string output_state_str(OutputState state) {
+    switch (state) {
+        case OutputState::IDLE: return "idle";
+        case OutputState::INITIALIZING: return "initializing";
+        case OutputState::RUNNING: return "running";
+        case OutputState::ERROR: return "error";
+        case OutputState::FINALIZED: return "finalized";
+    }
+    return "unknown";
+}
+
+std::string source_state_str(SourceState state) {
+    switch (state) {
+        case SourceState::DECLARED: return "declared";
+        case SourceState::PREPARING: return "preparing";
+        case SourceState::READY: return "ready";
+        case SourceState::ACTIVE: return "active";
+        case SourceState::ERROR: return "error";
+        case SourceState::ENDED: return "ended";
+    }
+    return "unknown";
+}
+
+} // namespace
+
+ApiServer::ApiServer(int port, std::shared_ptr<SceneController> controller,
+                     std::shared_ptr<RuntimeStats> stats)
+    : port_(port), controller_(controller), stats_(stats) {}
 
 ApiServer::~ApiServer() {
     stop();
@@ -21,12 +49,68 @@ void ApiServer::setup_routes() {
     // GET /status
     server_.Get("/status", [this](const httplib::Request&, httplib::Response& res) {
         Scene scene = controller_->current_scene();
+
         nlohmann::json j = {
             {"status", "running"},
             {"canvas", scene.canvas},
             {"revision", scene.revision},
             {"layerCount", scene.layers.size()}
         };
+
+        if (stats_) {
+            int64_t playout_ns = stats_->playout_time_ns();
+
+            nlohmann::json active_layers = nlohmann::json::array();
+            for (const auto& l : controller_->active_layers_at(playout_ns)) {
+                active_layers.push_back({
+                    {"id", l.id},
+                    {"type", l.type},
+                    {"layer", l.layer},
+                    {"x", l.x},
+                    {"y", l.y},
+                    {"width", l.width},
+                    {"height", l.height},
+                    {"opacity", l.opacity},
+                    {"hidden", l.hidden}
+                });
+            }
+
+            nlohmann::json sources = nlohmann::json::array();
+            for (const auto& s : controller_->source_states()) {
+                sources.push_back({
+                    {"id", s.id},
+                    {"uri", s.uri},
+                    {"type", s.type},
+                    {"state", source_state_str(s.state)},
+                    {"error", s.error_message}
+                });
+            }
+
+            j["playoutTime"] = {
+                {"ns", playout_ns},
+                {"formatted", format_time_ns(playout_ns)}
+            };
+            j["fps"] = {
+                {"target", scene.canvas.fps},
+                {"rendered", stats_->rendered_fps()}
+            };
+            j["frames"] = {
+                {"rendered", stats_->rendered_frames()},
+                {"dropped", stats_->dropped_frames()},
+                {"output", stats_->output_frames()}
+            };
+            j["activeLayers"] = active_layers;
+            j["sources"] = sources;
+            j["output"] = {
+                {"state", output_state_str(stats_->output_state())},
+                {"framesSent", stats_->output_frames()}
+            };
+            j["resources"] = {
+                {"cpuPercent", stats_->cpu_usage_percent()},
+                {"ramRssMb", stats_->ram_rss_mb()}
+            };
+        }
+
         res.set_content(j.dump(), "application/json");
     });
 

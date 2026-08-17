@@ -13,6 +13,16 @@ Scene SceneController::current_scene() const {
     return timeline_->scene();
 }
 
+std::vector<Layer> SceneController::active_layers_at(int64_t pts_ns) const {
+    std::lock_guard<std::recursive_mutex> lock(controller_mutex_);
+    return timeline_->resolve_active_layers(pts_ns);
+}
+
+std::vector<SourceHandle> SceneController::source_states() const {
+    std::lock_guard<std::recursive_mutex> lock(controller_mutex_);
+    return source_manager_->list_sources();
+}
+
 bool SceneController::update_full_scene(const Scene& new_scene) {
     std::lock_guard<std::recursive_mutex> lock(controller_mutex_);
 

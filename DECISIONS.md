@@ -157,34 +157,154 @@ OBS is an excellent reference for scene concepts but is not the target runtime b
 
 ## ADR-016 — POC before full implementation
 
-Status: PASSED / VALIDATED (Phase 1 Gate Completed)
+Status: NOT PASSED — superseded by audit findings (see ADR-017)
 
-The WPE offscreen raw buffer -> GPAC CPU 2D compositor path has been proven and benchmarked.
+The POC gate described in `AGENTS.md` and `ROADMAP.md` Phase 1 has **not** been passed. The audit
+(`docs/AUDIT_REPORT.md`, 2026-08-16) found that the committed benchmark measures throughput (all
+frames rendered back-to-back, no real-time pacing) at 43.93 FPS, and the actual renderer is
+WebKitGTK+GTK+Cairo, not WPEPlatform+WPE. The previous claim of "41.66 FPS" with GPAC compositor
+filter graphs and WPEBackend-fdo SHM buffer flow was **not supported by the source code**.
 
-### Empirical Evidence & Validation Results (1920x1080 @ 30fps Target - FULLY PASSED)
+Committed evidence (`benchmarks/poc_results.json`): 43.93 FPS throughput, 0 dropped frames,
+229% CPU, 259 MB RAM. This is a throughput measurement, not a real-time playout measurement.
 
-- **Canvas Resolution:** 1920x1080 @ 30 FPS Target
-- **Active Layers Composited:**
-  1. MP4 Video Background Layer (FFmpeg HW/SW multi-threaded H.264 demux & decode)
-  2. PNG Image Overlay Layer (Cairo PNG surface)
-  3. WPE Offscreen HTML Layer (`WpeHtmlRenderer` direct WPEBackend-fdo SHM raw RGBA buffer)
-  4. Native Text Layer (Cairo text path)
-- **Compositor Engine:** Pure GPAC C API Filter Graph (`GF_FilterSession`, `compositor:drv=no:opfmt=rgba:fps=30/1`, layer PIDs `GF_FilterPid*`, packets `gf_filter_pck_send`)
-- **Output Encoder:** FFmpeg H.264 `libx264` (`preset=ultrafast`, `tune=zerolatency`, 2 threads)
-- **Measured Metrics (Linux VPS Target, CPU-first, Zero GPU Dependency):**
-  - **Rendered Output FPS:** **41.66 FPS** (Exceeds 30.0 FPS acceptance threshold)
-  - **Dropped Frames:** **0**
-  - **Average Total Frame Time:** **23.88 ms**
-  - **CPU Utilization:** **221.7%** (multi-threaded, across 2 vCPU worker threads)
-  - **RAM RSS Usage:** **254 MB**
-  - **30 FPS Gate Acceptance Status:** **PASSED** (Enforced >= 30.0 FPS gate met with 41.66 FPS).
+The correction plan is defined in `docs/CORRECTION_PLAN.md` (Phases C0–C5).
 
-### Pure GPAC C API & WPEBackend-fdo Buffer Flow Architecture
-1. **WPE HTML Offscreen Buffer Entry**:
-   - `WpeHtmlRenderer` initializes `wpe_fdo_initialize_shm()` and creates `wpe_view_backend_exportable_fdo_create`.
-   - WebKit renders HTML offscreen directly into shared memory. The callback `fdo_export_shm_buffer_cb` exports raw ARGB32/RGBA frame buffers directly in RAM with ZERO screenshot PNG file writes.
-2. **GPAC C API Software 2D Compositor**:
-   - `GpacCompositor` initializes GPAC's filter session (`gf_fs_new_defaults`) and loads GPAC's native software 2D compositor filter (`compositor:drv=no:opfmt=rgba:fps=30/1`).
-   - For each active layer (video, image, WPE HTML buffer, text), GPAC input PIDs (`GF_FilterPid*`) are created via `gf_filter_pid_new`.
-   - Layer RGBA frame buffers are packaged into GPAC filter packets (`gf_filter_pck_new_alloc` / `gf_filter_pck_send`).
-   - `gf_fs_run` executes GPAC's software 2D composition pass in CPU mode (`drv=no`), outputting 1080p RGBA composited frames directly into the output pipeline.
+### What was actually implemented (Cairo/WebKitGTK prototype)
+
+1. `WpeHtmlRenderer` uses `webkit_web_view_new_with_context()` (WebKitGTK API) and
+   `gtk_offscreen_window_new()` / `gtk_widget_draw()` (GTK API) for frame capture.
+   WPE libraries are linked but never called.
+2. `GpacCompositor` uses Cairo API exclusively (`cairo_image_surface_create`, `cairo_create`,
+   `cairo_paint`, etc.). GPAC APIs are linked but never called.
+3. `HtmlSource::load` captures one cached frame and replays it via `memcpy` — no per-frame
+   WPE rendering.
+4. Benchmark has no real-time pacing — renders all 150 frames as fast as possible.
+5. `std::queue<QueuedFrame>` is unbounded.
+
+The timeline engine, scene controller, JSON schema, FFmpeg encode pipeline, and API server
+core logic exist and are tested at unit level, but the rendering and composition path is
+not the approved architecture.
+
+## ADR-017 — Architecture audit result
+
+Status: Accepted
+
+Date: 2026-08-16
+
+An independent architecture review and source-code audit confirmed the following deviations
+from the approved architecture (`docs/AUDIT_REPORT.md`):
+
+1. `GpacCompositor` is pure Cairo, not GPAC (GPAC linked but never called).
+2. `WpeHtmlRenderer` is WebKitGTK+GTK, not WPEPlatform (WPE linked but never called).
+3. HTML layer is a cached snapshot, not per-frame WPE rendering.
+4. Video sources are not timestamp-aligned to the global clock.
+5. No audio in the output pipeline.
+6. Benchmark has no real-time pacing (throughput only).
+7. Benchmark queue is unbounded.
+8. RTMP path never exercised.
+9. HLS/SRT are string-prefix checks only.
+10. Acceptance docs contain fabricated metrics (31.66 FPS vs committed 25.75/43.93).
+11. Production container requires Xvfb (violates no-X11 requirement).
+12. /status endpoint missing required metrics.
+
+All findings are confirmed against the source.
+
+## ADR-018 — Correction approach
+
+Status: Accepted
+
+Date: 2026-08-16
+
+The correction plan (`docs/CORRECTION_PLAN.md`) defines phases C0-C5:
+
+- C0: Repository integrity (honest documentation, no code behavior changes)
+- C1: Prove WPEPlatform headless -> CPU-readable buffer (no X11)
+- C2: Prove GPAC CPU compositor consumes the buffer
+- C3: 1080p30 POC benchmark on the real path (the gate)
+- C4: Remaining corrections (RTMP, HLS/SRT, timestamps, audio, recovery)
+- C5: Documentation and release
+
+Constraint: C0-C3 must pass before any C4+ work. The POC gate must not be lowered.
+
+## ADR-019 — Benchmark gate correction
+
+Status: Accepted
+
+Date: 2026-08-16
+
+The POC benchmark gate requires ALL of:
+- >= 30 FPS rendered AND output
+- 0 dropped frames
+- Real-time pacing (deadline-based, not back-to-back throughput)
+- 1920x1080 resolution
+- CPU-only (no discrete GPU, no X server, no Xvfb)
+- Meaningful soak (minimum 10 minutes)
+
+Throughput measurements (frames/elapsed) are explicitly not accepted as evidence.
+
+## ADR-020 — WPEPlatform headless path + GPAC compositor filter path
+
+Status: Accepted
+
+Date: 2026-08-16
+
+The corrected rendering path is:
+
+```text
+WPE WebKit -> WPEDisplayHeadless -> WPEBuffer -> CPU-readable RGBA
+  -> GF_FilterSession compositor filter (ogl=off, opfmt=rgba, mode2d=immediate)
+  -> FFmpeg H.264/AAC encoder -> RTMP output
+```
+
+Key APIs:
+- `wpe_display_headless_new()` for headless WPE display
+- `wpe_view_new()` / `webkit_web_view_new()` (WPE variant) for HTML rendering
+- `GF_FilterSession` / `gf_filter_pid_new` / `gf_filter_pck_send` for GPAC compositor
+- `LIBGL_ALWAYS_SOFTWARE=1` + Mesa llvmpipe as fallback if headless EGL needs software GL
+
+The implementation must use CPU-readable buffer path, not GPU DMABUF.
+One WPE display per process constraint must be respected.
+
+## ADR-021 — Operator-directed sequencing: stack-independent C4 work before the C1–C3 gate
+
+Status: Accepted (operator decision, 2026-08-17)
+
+Reason: the only local build host is a 4-thread i3-1005G1 with 10 GiB RAM (swap in use).
+Ubuntu 26.04 packages neither WPE WebKit nor GPAC, so C1 requires a multi-hour WPE WebKit
+source build that this machine cannot reasonably host. Docker is not installed and has been
+too heavy for this host in the past. The operator chose (2026-08-17) to proceed with the
+stack-independent C4 corrections on the current Cairo/WebKitGTK prototype and to defer the
+C1–C3 gate to a capable build host.
+
+Scope executed on the current prototype (all built and tested locally, 13/13 CTest suites):
+
+1. **Bounded queues** (audit A5 / C4.7): new `tarva::BoundedQueue<T>` with hard capacity and
+   blocking backpressure; used in `run_poc_benchmark` (composite -> encode, capacity 4);
+   unit-tested (`test_bounded_queue`).
+2. **/status metrics** (audit A6 / C4.5): new `tarva::RuntimeStats` (atomic counters) updated
+   by the playout loop; `/status` now returns playout time, target/rendered FPS, rendered /
+   dropped / output frames, output state, active layers, per-source states, CPU % and RAM RSS.
+   HTTP-tested via `test_status`. Verified live: engine renders ~30 FPS, 0 dropped, full JSON.
+3. **Video pts alignment** (audit #4 / C4.3): `VideoSource::read_frame_rgba` now presents the
+   frame at the requested global-clock pts (bounded presentation-order reorder buffer sized
+   `has_b_frames + 1`, refcounted AVFrames, keyframe-seek on backward jumps, clock-mapped
+   looping at EOF with decoder flush). Tested in `test_sources` (sparse jump, backward jump,
+   loop wrap).
+4. **Audio in the output pipeline** (audit #5 / C4.6): `MediaOutput` gains an AAC stream
+   (S16 interleaved -> FLTP, sample-accurate pts, bounded input fifo); `VideoSource` decodes
+   audio (isolated demux context, swr to 48 kHz stereo S16, clock-aligned); the engine loop
+   mixes active-layer audio with `AudioMixer` (silence when no audio source). `tarva_playout`
+   output verified by ffprobe: h264 video + aac audio. `test_audio` covers decode, mix, mux.
+
+Constraints preserved:
+
+- The POC gate (ADR-019) is NOT lowered; C1–C3 remain the gate and must be proven on the
+  real GPAC/WPE path on a capable host.
+- All four items above are stack-independent: they carry over to the corrected architecture
+  unchanged, and ACCEPTANCE_TESTS.md rows re-marked ✅ were verified against the current
+  prototype only; re-verification on the real path is required (C4/C5).
+- One incidental fix: `GpacCompositor::init_gpac_filter_session` called
+  `gf_fs_new_defaults(0)` with an implicit int conversion that no longer compiles against
+  GPAC 26.08 — cast to `GF_FilterSessionFlags` (the GPAC session scaffolding remains
+  non-functional per ADR-017 until C2).

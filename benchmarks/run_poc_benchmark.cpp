@@ -2,13 +2,12 @@
 #include "media_sources.h"
 #include "media_output.h"
 #include "benchmark_harness.h"
+#include "bounded_queue.h"
 #include "logger.h"
 #include <iostream>
 #include <vector>
 #include <cstdlib>
 #include <thread>
-#include <queue>
-#include <condition_variable>
 
 int main() {
     tarva::Logger::instance().set_level(tarva::LogLevel::INFO);
@@ -115,30 +114,20 @@ int main() {
     std::vector<tarva::RenderableLayer> scene_layers = { video_layer, logo_layer, html_layer, text_layer };
 
     // 3. Pipelined Execution Loop (Compositor Thread + Encoder Worker Thread)
+    // Bounded queue between composite and encode: hard capacity with backpressure
+    // so a slow encoder can never cause unbounded memory growth (audit finding A5).
     struct QueuedFrame {
         int64_t frame_idx;
         std::vector<uint8_t> rgba_data;
     };
 
-    std::queue<QueuedFrame> frame_queue;
-    std::mutex queue_mutex;
-    std::condition_variable queue_cv;
-    bool producer_done = false;
+    constexpr size_t kFrameQueueCapacity = 4;
+    tarva::BoundedQueue<QueuedFrame> frame_queue(kFrameQueueCapacity);
 
     // Start encoder worker thread
     std::thread encoder_thread([&]() {
-        while (true) {
-            QueuedFrame qf;
-            {
-                std::unique_lock<std::mutex> lock(queue_mutex);
-                queue_cv.wait(lock, [&]() { return !frame_queue.empty() || producer_done; });
-
-                if (frame_queue.empty() && producer_done) break;
-
-                qf = std::move(frame_queue.front());
-                frame_queue.pop();
-            }
-
+        QueuedFrame qf;
+        while (frame_queue.pop(qf)) {
             if (!output.send_frame_rgba(qf.rgba_data.data(), qf.frame_idx)) {
                 harness.record_dropped_frame();
             }
@@ -163,21 +152,16 @@ int main() {
         }
 
         {
-            std::lock_guard<std::mutex> lock(queue_mutex);
+            // Backpressure: blocks while the encoder worker is backed up.
             frame_queue.push(std::move(qf));
         }
-        queue_cv.notify_one();
 
         auto t_end = std::chrono::steady_clock::now();
         double frame_ms = std::chrono::duration_cast<std::chrono::microseconds>(t_end - t_start).count() / 1000.0;
         harness.record_frame_time(frame_ms);
     }
 
-    {
-        std::lock_guard<std::mutex> lock(queue_mutex);
-        producer_done = true;
-    }
-    queue_cv.notify_one();
+    frame_queue.close();
 
     if (encoder_thread.joinable()) {
         encoder_thread.join();
