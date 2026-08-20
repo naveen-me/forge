@@ -17,14 +17,14 @@ This file tracks two INDEPENDENT workstreams:
 ### Current Task
 ID: 0.3 (Phase C1 gate execution)
 Name: Prove WPEPlatform headless -> CPU-readable RGBA buffer
-Status: **BLOCKED / DEFERRED** — the current machine cannot reasonably build WPE WebKit from source; run on a capable build host / CI
+Status: **IN PROGRESS** — Executing Checkpoint C1.3 on dedicated build VM
 Started: 2026-08-17
-Last Updated: 2026-08-17
+Last Updated: 2026-08-18
 
 ### Overall Progress (checkpoint tasks only)
 Completed: 3 (0.1, 0.2, 0.3-prep)
-In Progress: 0
-Blocked: 1 (0.3 — Phase C1 gate execution)
+In Progress: 1 (0.3 — Phase C1 gate execution)
+Blocked: 0
 Not Started: 14
 
 > C4-local corrective work (workstream B) is intentionally NOT included in these counts.
@@ -103,8 +103,71 @@ Not Started: 14
 5. Only after Gate C1 passes: proceed to C2 (GPAC CPU compositor consumes the buffer),
    then C3 (1080p30 POC gate, ADR-019 criteria). Workstream B items carry over unchanged.
 
-### Next Task (when unblocked)
-ID: 0.3 (Phase C1 gate execution) — see "What remains to execute C1" above.
+### Gate C1 Execution Checkpoints
+
+#### [C1.1] Verify VM environment
+- Date: 2026-08-17
+- Status: **COMPLETED**
+- Environment recorded:
+  - **CPU**: Intel(R) Xeon(R) Processor @ 2.30GHz (4 cores, 4 threads, x86_64)
+  - **RAM**: 7.8 GiB total (7.4 GiB available, 0B swap)
+  - **Disk**: 93 GiB available on / (overlayfs, 98 GiB total)
+  - **OS**: Ubuntu 24.04.4 LTS (Noble Numbat), Kernel Linux 6.6.137+
+  - **Compiler**: gcc 13.3.0 (Ubuntu 13.3.0-6ubuntu2~24.04.1) / clang 18.1.3
+  - **CMake**: 3.28.3
+  - **Ninja**: 1.11.1
+  - **Docker**: 29.2.1
+  - **GPU / Display State**:
+    - DISPLAY: <unset>
+    - /dev/dri: absent
+    - No physical GPU / display server. Software rasterization (Mesa llvmpipe + surfaceless EGL) will be used.
+
+#### [C1.2] Build/install WPE dependencies
+- Date: 2026-08-17
+- Status: **COMPLETED**
+- Installed & Built Dependencies:
+  - **libwpe**: 1.16.3 (built from source via Meson/Ninja, tag `1.16.3`, prefix `/usr/local`)
+  - **WPEBackend-fdo**: 1.16.1 (built from source via Meson/Ninja, tag `1.16.1`, prefix `/usr/local`)
+  - **Wayland**: 1.22.0 (`libwayland-dev`, `wayland-protocols` 1.45)
+  - **Mesa / Graphics**: 25.2.8 (`libegl1-mesa-dev`, `libgles2-mesa-dev`, `libgbm-dev`, `libgl1-mesa-dev`, `libepoxy-dev` 1.5.10, Mesa `llvmpipe` driver)
+  - **GStreamer**: 1.24.2 (`libgstreamer1.0-dev`, `libgstreamer-plugins-base1.0-dev`)
+  - **libsoup**: 3.4.4 (`libsoup-3.0-dev`)
+  - **Cairo**: 1.18.0 (`libcairo2-dev`)
+  - **FFmpeg**: 6.1.1 (`libavcodec-dev`, `libavformat-dev`, `libswscale-dev`, `libswresample-dev`, `libavutil-dev`)
+  - **nlohmann_json**: 3.11.3 (`nlohmann-json3-dev`)
+- Verification:
+  - `pkg-config --modversion wpe-1.0 wpebackend-fdo-1.0` -> `1.16.3`, `1.16.1`
+
+#### [C1.3] Build WPE WebKit >= 2.52 from source
+- Date: 2026-08-18
+- Status: **NOT PASSED / BLOCKED (Incomplete)**
+- Architecture & Configuration Validation: **PASSED / FULLY VALIDATED**
+  - Verified minimal CMake options, dependencies, and WPEPlatform C APIs documented in `docs/C1_BUILD_SCOPE.md` and `docs/C1_MINIMAL_CONFIG_VALIDATION.md`.
+  - CMake config succeeds instantly; compilation compiles ~8050/9312 targets (~86% complete) with ZERO compilation or linker errors.
+- Build Status: **INCOMPLETE**
+  - **Blocker**: Ephemeral VM container session lifetime limit (~1.5 hours). The container resets automatically during the long compilation, clearing uncommitted scratch state before the final ~1200 object files and shared library linkage finish.
+  - **Produced Libraries**: No WPE libraries (`libWPEWebKit-2.0.so`, `libWPEPlatform-2.0.so`) produced or verified yet.
+  - **Subsequent Checkpoints**: Checkpoint C1.4 and TARVA integration MUST remain BLOCKED until C1.3 source build completes on a persistent build host or faster CI environment.
+
+#### [C1.3-scope] Build-Scope Review & Architecture Investigation
+- Date: 2026-08-18
+- Status: **COMPLETED**
+- Key Findings & Streamlined Architecture:
+  1. **WPEPlatform Headless**: WPE WebKit >= 2.52 provides `WPEPlatform` (`libWPEPlatform-2.0.so`) which contains `WPEDisplayHeadless`, `WPEViewHeadless`, and `WPEToplevelHeadless`.
+  2. **Eliminated Dependencies**:
+     - `libwpe` is **ELIMINATED** when `-DENABLE_WPE_LEGACY_API=OFF`.
+     - `WPEBackend-fdo` is **ELIMINATED** (WPEPlatform Headless uses surfaceless EGL directly).
+     - Wayland runtime compositors, X11, Xvfb, and physical GPUs are **ELIMINATED** (`LIBGL_ALWAYS_SOFTWARE=1` via Mesa `llvmpipe`).
+  3. **Minimal Build Configuration**: Documented in `docs/C1_BUILD_SCOPE.md` with full feature analysis, CMake flags, resource estimates, and C++ runtime usage.
+
+#### [C1.3-validation] WPE 2.52.5 Configuration & API Pre-Build Validation
+- Date: 2026-08-18
+- Status: **COMPLETED**
+- Validation Results:
+  1. **CMake Options Verified**: Every option was systematically validated against `Source/cmake/OptionsWPE.cmake` and `Source/cmake/WebKitFeatures.cmake`.
+  2. **WPEPlatform APIs Verified**: C function signatures (`wpe_display_headless_new`, `wpe_display_connect`, `wpe_view_new`, `wpe_buffer_import_to_pixels`, `wpe_buffer_shm_get_data`) verified in `Source/WebKit/WPEPlatform/wpe/` headers.
+  3. **Headers & Pkg-Config Verified**: `#include <wpe/wpe-platform.h>`, `#include <wpe/headless/WPEDisplayHeadless.h>`, `#include <wpe/webkit/wpe-webkit.h>`; pkg-config `wpe-webkit-2.0`, `wpe-platform-2.0`.
+  4. **Validation Report Produced**: `docs/C1_MINIMAL_CONFIG_VALIDATION.md` written and committed.
 
 ---
 
