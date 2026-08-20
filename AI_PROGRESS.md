@@ -169,6 +169,15 @@ Not Started: 14
   3. **Headers & Pkg-Config Verified**: `#include <wpe/wpe-platform.h>`, `#include <wpe/headless/WPEDisplayHeadless.h>`, `#include <wpe/webkit/wpe-webkit.h>`; pkg-config `wpe-webkit-2.0`, `wpe-platform-2.0`.
   4. **Validation Report Produced**: `docs/C1_MINIMAL_CONFIG_VALIDATION.md` written and committed.
 
+#### [C1.3-CI] GitHub Actions WPE Build Workflow Design
+- Date: 2026-08-18
+- Status: **COMPLETED**
+- Workflow Design & Analysis:
+  1. **Runner**: Standard free `ubuntu-24.04` GitHub-hosted runner (2 vCPUs, 7 GB RAM, 360-min timeout limit).
+  2. **Disk Analysis**: Automated runner cleanup frees ~28 GB disk space. Minimal WPEPlatform build requires ~11-12 GB peak space.
+  3. **Workflow Created**: `.github/workflows/c1_wpe_build.yml` created targeting `ubuntu-24.04` with automated disk cleanup, verified CMake options, parallel compilation (`ninja -j2`), verification steps (`ldd`, `pkg-config`), and artifact packaging (`wpewebkit-2.52.5-ubuntu24.04-x86_64.tar.gz`).
+  4. **Specification Produced**: `docs/C1_GITHUB_ACTIONS_BUILD.md` written and committed.
+
 ---
 
 ## Workstream B — C4-local corrective work (separately authorized, ADR-021)

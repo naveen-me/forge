@@ -1,0 +1,147 @@
+name: C1 WPE WebKit Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  build-wpe:
+    name: Build WPE WebKit 2.52.5 (Minimal WPEPlatform)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Report Initial Runner Environment
+        run: |
+          echo "=== CPU Info ==="
+          nproc
+          lscpu | grep "Model name\|CPU(s):"
+          echo "=== RAM Info ==="
+          free -h
+          echo "=== Disk Info ==="
+          df -h /
+
+      - name: Free Runner Disk Space
+        run: |
+          echo "Cleaning pre-installed large packages to maximize root disk space..."
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /usr/local/share/powershell /opt/ghc /opt/hostedtoolcache
+          sudo apt-get clean
+          echo "=== Disk Info After Cleanup ==="
+          df -h /
+
+      - name: Install Verified Build Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential cmake ninja-build pkg-config git curl \
+            python3 perl ruby bison flex gperf unifdef \
+            libglib2.0-dev libsoup-3.0-dev libepoxy-dev libegl1-mesa-dev libgles2-mesa-dev libgbm-dev \
+            libharfbuzz-dev libfreetype-dev libpng-dev libjpeg-dev libwebp-dev \
+            libxml2-dev libxslt1-dev libsqlite3-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+            libavcodec-dev libavformat-dev libswscale-dev libswresample-dev libavutil-dev nlohmann-json3-dev zlib1g-dev libssl-dev ffmpeg \
+            libgcrypt20-dev libgpg-error-dev libtasn1-6-dev libxkbcommon-dev libinput-dev
+
+      - name: Download and Extract WPE WebKit 2.52.5
+        run: |
+          curl -fsSL -O https://wpewebkit.org/releases/wpewebkit-2.52.5.tar.xz
+          tar xf wpewebkit-2.52.5.tar.xz
+
+      - name: Configure CMake (Minimal WPEPlatform Headless)
+        run: |
+          mkdir -p wpewebkit-2.52.5/build
+          cd wpewebkit-2.52.5/build
+          export PKG_CONFIG_PATH=/usr/local/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig:${PKG_CONFIG_PATH:-}
+          export LD_LIBRARY_PATH=/usr/local/lib/x86_64-linux-gnu:/usr/local/lib:${LD_LIBRARY_PATH:-}
+
+          cmake -GNinja .. \
+            -DPORT=WPE \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=/usr/local \
+            -DCMAKE_C_FLAGS_RELEASE="-O1 -DNDEBUG" \
+            -DCMAKE_CXX_FLAGS_RELEASE="-O1 -DNDEBUG" \
+            -DENABLE_WPE_PLATFORM=ON \
+            -DENABLE_WPE_PLATFORM_HEADLESS=ON \
+            -DENABLE_WPE_PLATFORM_DRM=OFF \
+            -DENABLE_WPE_PLATFORM_WAYLAND=OFF \
+            -DENABLE_WPE_LEGACY_API=OFF \
+            -DENABLE_VIDEO=ON \
+            -DENABLE_BUBBLEWRAP_SANDBOX=OFF \
+            -DENABLE_DOCUMENTATION=OFF \
+            -DENABLE_INTROSPECTION=OFF \
+            -DENABLE_GAMEPAD=OFF \
+            -DENABLE_JOURNALD_LOG=OFF \
+            -DENABLE_MINIBROWSER=OFF \
+            -DENABLE_SPEECH_SYNTHESIS=OFF \
+            -DENABLE_GEOLOCATION=OFF \
+            -DENABLE_NOTIFICATIONS=OFF \
+            -DENABLE_MATHML=OFF \
+            -DENABLE_PDFJS=OFF \
+            -DENABLE_WEB_AUDIO=OFF \
+            -DENABLE_WEBDRIVER=OFF \
+            -DENABLE_SAMPLING_PROFILER=OFF \
+            -DENABLE_JIT=OFF \
+            -DENABLE_DFG_JIT=OFF \
+            -DENABLE_FTL_JIT=OFF \
+            -DUSE_AVIF=OFF \
+            -DUSE_JPEGXL=OFF \
+            -DUSE_LCMS=OFF \
+            -DUSE_WOFF2=OFF \
+            -DUSE_FLITE=OFF \
+            -DUSE_ATK=OFF \
+            -DUSE_LIBBACKTRACE=OFF \
+            -DUSE_LIBHYPHEN=OFF
+
+      - name: Build WPE WebKit 2.52.5
+        run: |
+          cd wpewebkit-2.52.5/build
+          START_TIME=$(date +%s)
+          ninja -j2 -C .
+          END_TIME=$(date +%s)
+          BUILD_DURATION=$((END_TIME - START_TIME))
+          echo "BUILD_DURATION_SECONDS=$BUILD_DURATION" >> $GITHUB_ENV
+          echo "WPE WebKit build completed in $((BUILD_DURATION / 60)) minutes and $((BUILD_DURATION % 60)) seconds."
+
+      - name: Install and Verify Libraries
+        run: |
+          cd wpewebkit-2.52.5/build
+          sudo ninja -C . install
+          sudo ldconfig
+
+          export PKG_CONFIG_PATH=/usr/local/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH:-}
+
+          echo "=== Pkg-Config Verification ==="
+          pkg-config --modversion wpe-webkit-2.0 wpe-platform-2.0
+
+          echo "=== Installed Shared Libraries ==="
+          ls -lh /usr/local/lib/x86_64-linux-gnu/libWPEWebKit-2.0.so*
+          ls -lh /usr/local/lib/x86_64-linux-gnu/libWPEPlatform-2.0.so*
+
+          echo "=== Library Linkage Verification (ldd) ==="
+          ldd /usr/local/lib/x86_64-linux-gnu/libWPEWebKit-2.0.so | grep "not found" || echo "All shared library dependencies resolved successfully!"
+
+          echo "=== Post-Build Disk Usage ==="
+          df -h /
+
+      - name: Stage Artifacts for Upload
+        run: |
+          mkdir -p wpe-artifacts/lib wpe-artifacts/include wpe-artifacts/pkgconfig
+          cp -d /usr/local/lib/x86_64-linux-gnu/libWPEWebKit-2.0.so* wpe-artifacts/lib/
+          cp -d /usr/local/lib/x86_64-linux-gnu/libWPEPlatform-2.0.so* wpe-artifacts/lib/
+          cp -r /usr/local/include/wpe-webkit-2.0 wpe-artifacts/include/
+          cp -r /usr/local/include/wpe-platform-2.0 wpe-artifacts/include/
+          cp /usr/local/lib/x86_64-linux-gnu/pkgconfig/wpe-webkit-2.0.pc wpe-artifacts/pkgconfig/
+          cp /usr/local/lib/x86_64-linux-gnu/pkgconfig/wpe-platform-2.0.pc wpe-artifacts/pkgconfig/
+          tar czf wpewebkit-2.52.5-ubuntu24.04-x86_64.tar.gz -C wpe-artifacts .
+          ls -lh wpewebkit-2.52.5-ubuntu24.04-x86_64.tar.gz
+
+      - name: Upload WPE WebKit 2.52.5 Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: wpewebkit-2.52.5-ubuntu24.04-x86_64
+          path: wpewebkit-2.52.5-ubuntu24.04-x86_64.tar.gz
+          retention-days: 14
