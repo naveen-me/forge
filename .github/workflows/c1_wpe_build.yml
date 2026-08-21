@@ -55,6 +55,7 @@ jobs:
 
       - name: Comprehensive Pre-CMake Environment Snapshot
         run: |
+          set +e  # Do not abort on individual command failures — this is a diagnostic step
           echo "============================================"
           echo "=== COMPREHENSIVE ENVIRONMENT SNAPSHOT ==="
           echo "============================================"
@@ -125,8 +126,9 @@ jobs:
 
       - name: Verify Environment & GStreamer Packages
         run: |
+          set +e  # Diagnostic step — do not abort
           echo "=== PKG-CONFIG GStreamer Modules ==="
-          pkg-config --list-all | grep gstreamer
+          pkg-config --list-all | grep gstreamer || true
           echo ""
           echo "=== GStreamer Modversions ==="
           pkg-config --modversion gstreamer-1.0
