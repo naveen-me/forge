@@ -140,11 +140,18 @@ Not Started: 14
 
 #### [C1.3] Build WPE WebKit >= 2.52 from source
 - Date: 2026-08-18
-- Status: **NOT PASSED / BLOCKED (Incomplete)**
+- Status: **IN PROGRESS — CI fix applied, awaiting CI re-run**
 - Architecture & Configuration Validation: **PASSED / FULLY VALIDATED**
   - Verified minimal CMake options, dependencies, and WPEPlatform C APIs documented in `docs/C1_BUILD_SCOPE.md` and `docs/C1_MINIMAL_CONFIG_VALIDATION.md`.
   - CMake config succeeds instantly; compilation compiles ~8050/9312 targets (~86% complete) with ZERO compilation or linker errors.
-- Build Status: **INCOMPLETE**
+- CI Build Status: **BLOCKED on missing dependency, fix committed**
+  - **Root Cause**: Skia (bundled in WPE 2.52.5) requires `Fontconfig >= 2.13.0` via `Source/ThirdParty/skia/CMakeLists.txt:6`. The package `libfontconfig-dev` was missing from the CI apt-get install list.
+  - **Error**: `Could NOT find Fontconfig (missing: Fontconfig_LIBRARY Fontconfig_INCLUDE_DIR)`
+  - **Fix**: Added `libfontconfig-dev` to `.github/workflows/c1_wpe_build.yml` apt-get install + diagnostics.
+  - **Verification**: Docker reproduction (Ubuntu 24.04, cmake 3.28.3, exact CI flags) — cmake configures successfully in 27s.
+  - **Commit**: `a10bd808`
+  - **Full report**: `docs/C1_CI_DEBUG_REPORT.md`
+- Previous Build Status: **INCOMPLETE**
   - **Blocker**: Ephemeral VM container session lifetime limit (~1.5 hours). The container resets automatically during the long compilation, clearing uncommitted scratch state before the final ~1200 object files and shared library linkage finish.
   - **Produced Libraries**: No WPE libraries (`libWPEWebKit-2.0.so`, `libWPEPlatform-2.0.so`) produced or verified yet.
   - **Subsequent Checkpoints**: Checkpoint C1.4 and TARVA integration MUST remain BLOCKED until C1.3 source build completes on a persistent build host or faster CI environment.
