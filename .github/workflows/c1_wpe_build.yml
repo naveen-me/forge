@@ -51,6 +51,10 @@ jobs:
 
       - name: Verify Environment & GStreamer Packages
         run: |
+          echo "=== Git Revision Verification ==="
+          git rev-parse HEAD
+          git branch --show-current
+          git status --short
           echo "=== APT Policy libgstreamer-plugins-bad1.0-dev ==="
           apt-cache policy libgstreamer-plugins-bad1.0-dev
           echo "=== DPKG GStreamer Packages ==="
@@ -59,9 +63,14 @@ jobs:
           pkg-config --list-all | grep gstreamer
           echo "=== Modversions ==="
           pkg-config --modversion gstreamer-1.0
+          pkg-config --modversion gstreamer-app-1.0
+          pkg-config --modversion gstreamer-pbutils-1.0
+          pkg-config --modversion gstreamer-tag-1.0
+          pkg-config --modversion gstreamer-video-1.0
           pkg-config --modversion gstreamer-codecparsers-1.0
           pkg-config --modversion gstreamer-transcoder-1.0
-          pkg-config --modversion gstreamer-webrtc-1.0 || echo "gstreamer-webrtc-1.0 not found"
+          pkg-config --modversion gstreamer-webrtc-1.0
+          pkg-config --modversion gstreamer-mpegts-1.0
           echo "=== Disk & RAM ==="
           df -h /
           free -h
