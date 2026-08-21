@@ -49,15 +49,22 @@ jobs:
             libgcrypt20-dev libgpg-error-dev libtasn1-6-dev libxkbcommon-dev libinput-dev \
             libwayland-dev wayland-protocols
 
-      - name: Verify GStreamer Development Packages
+      - name: Verify Environment & GStreamer Packages
         run: |
-          echo "=== Verifying Required GStreamer pkg-config Modules ==="
+          echo "=== APT Policy libgstreamer-plugins-bad1.0-dev ==="
+          apt-cache policy libgstreamer-plugins-bad1.0-dev
+          echo "=== DPKG GStreamer Packages ==="
+          dpkg -l | grep gstreamer
+          echo "=== PKG-CONFIG GStreamer Modules ==="
+          pkg-config --list-all | grep gstreamer
+          echo "=== Modversions ==="
           pkg-config --modversion gstreamer-1.0
-          pkg-config --modversion gstreamer-app-1.0
-          pkg-config --modversion gstreamer-pbutils-1.0
-          pkg-config --modversion gstreamer-video-1.0
           pkg-config --modversion gstreamer-codecparsers-1.0
           pkg-config --modversion gstreamer-transcoder-1.0
+          pkg-config --modversion gstreamer-webrtc-1.0 || echo "gstreamer-webrtc-1.0 not found"
+          echo "=== Disk & RAM ==="
+          df -h /
+          free -h
 
       - name: Download and Extract WPE WebKit 2.52.5
         run: |
@@ -112,6 +119,10 @@ jobs:
               if [ -f CMakeFiles/CMakeError.log ]; then
                 echo "--- CMakeFiles/CMakeError.log ---"
                 cat CMakeFiles/CMakeError.log | tail -n 150
+              fi
+              if [ -f CMakeFiles/CMakeConfigureLog.yaml ]; then
+                echo "--- CMakeFiles/CMakeConfigureLog.yaml ---"
+                cat CMakeFiles/CMakeConfigureLog.yaml | tail -n 150
               fi
               if [ -f CMakeFiles/CMakeOutput.log ]; then
                 echo "--- CMakeFiles/CMakeOutput.log ---"
