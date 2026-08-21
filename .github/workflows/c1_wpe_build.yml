@@ -107,7 +107,18 @@ jobs:
             -DUSE_FLITE=OFF \
             -DUSE_ATK=OFF \
             -DUSE_LIBBACKTRACE=OFF \
-            -DUSE_LIBHYPHEN=OFF
+            -DUSE_LIBHYPHEN=OFF || {
+              echo "=== CMAKE CONFIGURATION FAILED - DIAGNOSTIC LOGS ==="
+              if [ -f CMakeFiles/CMakeError.log ]; then
+                echo "--- CMakeFiles/CMakeError.log ---"
+                cat CMakeFiles/CMakeError.log | tail -n 150
+              fi
+              if [ -f CMakeFiles/CMakeOutput.log ]; then
+                echo "--- CMakeFiles/CMakeOutput.log ---"
+                cat CMakeFiles/CMakeOutput.log | tail -n 100
+              fi
+              exit 1
+            }
 
       - name: Build WPE WebKit 2.52.5
         run: |
