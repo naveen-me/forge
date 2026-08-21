@@ -169,17 +169,19 @@ Not Started: 14
   3. **Headers & Pkg-Config Verified**: `#include <wpe/wpe-platform.h>`, `#include <wpe/headless/WPEDisplayHeadless.h>`, `#include <wpe/webkit/wpe-webkit.h>`; pkg-config `wpe-webkit-2.0`, `wpe-platform-2.0`.
   4. **Validation Report Produced**: `docs/C1_MINIMAL_CONFIG_VALIDATION.md` written and committed.
 
-#### [C1.3-CI] GitHub Actions WPE Build Workflow Design & Run 1 Failure Analysis
-- Date: 2026-08-20
-- Status: **RUN 1 FAILED / FIX APPLIED**
+#### [C1.3-CI] GitHub Actions WPE Build Workflow Design & Run 1/2 Failure Analysis
+- Date: 2026-08-21
+- Status: **RUN 2 FAILED / FIX APPLIED**
 - Run 1 Execution Results:
   - **Run URL**: https://github.com/naveen-me/forge/actions/runs/32396427601
   - **Result**: FAIL (Duration: 2m 32s)
-  - **Runner Type**: `ubuntu-24.04` (GitHub Actions standard runner)
-  - **Disk Space Before**: 27 GB free available on `/`
-  - **Failure Point**: CMake configuration failed due to missing pkg-config modules `gstreamer-codecparsers-1.0` and `gstreamer-transcoder-1.0`.
-  - **Classification**: Missing system development dependency (`dependency`).
-  - **Fix**: Added `libgstreamer-plugins-bad1.0-dev` to `.github/workflows/c1_wpe_build.yml` apt installation list.
+  - **Failure Point**: Missing pkg-config modules `gstreamer-codecparsers-1.0` and `gstreamer-transcoder-1.0`.
+- Run 2 Execution Results:
+  - **Run URL**: https://github.com/naveen-me/forge/actions/runs/32401386247
+  - **Result**: FAIL (Duration: 2m 57s)
+  - **Failure Point**: `apt-get update` failed due to missing GPG key for pre-installed `cli.github.com` third-party apt source.
+  - **Classification**: Environment / Package Manager Key Error (`dependency`).
+  - **Fix Applied**: Added removal of unsigned third-party apt list files (`github-cli`) prior to clean `sudo apt-get update`, and added explicit GStreamer `pkg-config --modversion` verification step.
   - **Documentation**: Updated `docs/C1_GITHUB_ACTIONS_BUILD.md`.
 
 ---

@@ -113,3 +113,16 @@ CMake Error at Source/cmake/GStreamerChecks.cmake:33 (message):
 - **Failure Classification**: Missing System Development Dependency (`dependency`).
 - **Root Cause**: `gstreamer-codecparsers-1.0` and `gstreamer-transcoder-1.0` are packaged in `libgstreamer-plugins-bad1.0-dev` on Ubuntu 24.04 LTS. The workflow initially installed `libgstreamer-plugins-base1.0-dev` but omitted `libgstreamer-plugins-bad1.0-dev`.
 - **Applied Fix**: Added `libgstreamer-plugins-bad1.0-dev` to the workflow's `apt-get install` list in `.github/workflows/c1_wpe_build.yml`.
+
+---
+
+## 8. Workflow Run 2 Execution Results & Failure Analysis
+
+- **GitHub Actions Run URL**: https://github.com/naveen-me/forge/actions/runs/32401386247
+- **Status**: **FAIL**
+- **Total Workflow Duration**: 2 minutes 57 seconds (Started: 18:06:48Z, Completed: 18:09:45Z)
+- **Runner Type**: `ubuntu-24.04` (GitHub Actions hosted standard runner)
+- **Disk Space Before Build**: 27 GB free available on `/`
+- **Failure Point**: `apt-get update` failure in Step 5 due to missing GPG key for `cli.github.com` third-party repository.
+- **Root Cause**: `apt-get update` failed, preventing `libgstreamer-plugins-bad1.0-dev` from being installed.
+- **Applied Fix**: Added removal of unsigned third-party apt list files (`sudo rm -f /etc/apt/sources.list.d/github-cli*.list`) prior to `apt-get update`, and added an explicit GStreamer `pkg-config --modversion` verification step before CMake.

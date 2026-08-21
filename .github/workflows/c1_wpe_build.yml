@@ -34,8 +34,10 @@ jobs:
           echo "=== Disk Info After Cleanup ==="
           df -h /
 
-      - name: Install Verified Build Dependencies
+      - name: Remove Unsigned Third-Party Apt Sources & Install Verified Dependencies
         run: |
+          echo "Removing third-party apt repos with missing GPG keys (e.g. github-cli)..."
+          sudo rm -f /etc/apt/sources.list.d/github-cli*.list /etc/apt/sources.list.d/cli_github_com*.list || true
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             build-essential cmake ninja-build pkg-config git curl \
@@ -46,6 +48,16 @@ jobs:
             libavcodec-dev libavformat-dev libswscale-dev libswresample-dev libavutil-dev nlohmann-json3-dev zlib1g-dev libssl-dev ffmpeg \
             libgcrypt20-dev libgpg-error-dev libtasn1-6-dev libxkbcommon-dev libinput-dev \
             libwayland-dev wayland-protocols
+
+      - name: Verify GStreamer Development Packages
+        run: |
+          echo "=== Verifying Required GStreamer pkg-config Modules ==="
+          pkg-config --modversion gstreamer-1.0
+          pkg-config --modversion gstreamer-app-1.0
+          pkg-config --modversion gstreamer-pbutils-1.0
+          pkg-config --modversion gstreamer-video-1.0
+          pkg-config --modversion gstreamer-codecparsers-1.0
+          pkg-config --modversion gstreamer-transcoder-1.0
 
       - name: Download and Extract WPE WebKit 2.52.5
         run: |
