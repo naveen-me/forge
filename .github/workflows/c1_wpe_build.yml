@@ -47,7 +47,7 @@ jobs:
             build-essential cmake ninja-build pkg-config git curl \
             python3 perl ruby bison flex gperf unifdef \
             libglib2.0-dev libsoup-3.0-dev libepoxy-dev libegl1-mesa-dev libgles2-mesa-dev libgbm-dev \
-            libharfbuzz-dev libfreetype-dev libpng-dev libjpeg-dev libwebp-dev \
+            libharfbuzz-dev libfreetype-dev libfontconfig-dev libpng-dev libjpeg-dev libwebp-dev \
             libxml2-dev libxslt1-dev libsqlite3-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev \
             libavcodec-dev libavformat-dev libswscale-dev libswresample-dev libavutil-dev nlohmann-json3-dev zlib1g-dev libssl-dev ffmpeg \
             libgcrypt20-dev libgpg-error-dev libtasn1-6-dev libxkbcommon-dev libinput-dev \
@@ -99,7 +99,7 @@ jobs:
                      gstreamer-mpegts-1.0 gstreamer-codecparsers-1.0 \
                      gbm libdrm libinput \
                      xkbcommon libgcrypt \
-                     sysprof-capture-4; do
+                     sysprof-capture-4 fontconfig; do
             ver=$(pkg-config --modversion "$mod" 2>&1)
             if [ $? -eq 0 ]; then
               echo "  OK   $mod = $ver"
@@ -110,7 +110,7 @@ jobs:
           echo ""
           echo "=== apt policy for key packages ==="
           for pkg in cmake ninja-build libglib2.0-dev libsoup-3.0-dev libepoxy-dev \
-                     libegl1-mesa-dev libgles2-mesa-dev libgbm-dev libharfbuzz-dev \
+                     libegl1-mesa-dev libgles2-mesa-dev libgbm-dev libharfbuzz-dev libfontconfig-dev \
                      libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libgstreamer-plugins-bad1.0-dev \
                      libsysprof-capture-4-dev libsqlite3-dev libssl-dev; do
             echo "  $pkg: $(apt-cache policy $pkg 2>/dev/null | grep 'Installed:' | sed 's/^ *//')"
