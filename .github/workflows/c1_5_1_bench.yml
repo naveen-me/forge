@@ -1,0 +1,127 @@
+name: C1.5.1 Performance & Lifecycle Benchmark
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - '**'
+
+jobs:
+  benchmark:
+    name: Run C1.5 Benchmark on Xeon (Ubuntu 24.04)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Report Runner Environment
+        run: |
+          echo "=== CPU Info ==="
+          nproc
+          lscpu | grep "Model name\|CPU(s):"
+          echo "=== RAM Info ==="
+          free -h
+          echo "=== Disk Info ==="
+          df -h /
+          echo "=== OS Info ==="
+          cat /etc/os-release | head -5
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config \
+            libglib2.0-dev libegl1-mesa-dev libgles2-mesa-dev \
+            libgbm-dev libepoxy-dev
+
+      - name: Download WPE WebKit 2.52.5 Artifact
+        run: |
+          ARTIFACT_URL=$(gh api repos/${{ github.repository }}/actions/runs \
+            --jq '[.workflow_runs[] | select(.name == "C1 WPE WebKit Build" and .conclusion == "success")] | .[0].id' 2>/dev/null || echo "")
+          if [ -z "$ARTIFACT_URL" ]; then
+            echo "No successful C1 build found, using direct download"
+            # Try the latest run
+            RUN_ID=$(gh api repos/${{ github.repository }}/actions/runs \
+              --jq '[.workflow_runs[] | select(.name == "C1 WPE WebKit Build")] | .[0].id')
+            echo "Using run ID: $RUN_ID"
+            gh api repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts \
+              --jq '.artifacts[] | select(.name == "wpewebkit-2.52.5-ubuntu24.04-x86_64") | .archive_download_url' \
+              > /tmp/artifact_url.txt
+          fi
+          echo "=== Fetching artifact ==="
+          # Fallback: use latest artifact
+          RUN_ID=$(gh api repos/${{ github.repository }}/actions/runs \
+            --jq '[.workflow_runs[] | select(.name == "C1 WPE WebKit Build" and .conclusion == "success")] | .[0].id')
+          echo "Using successful run: $RUN_ID"
+          gh api repos/${{ github.repository }}/actions/runs/$RUN_ID/artifacts \
+            --jq '.artifacts[] | select(.name == "wpewebkit-2.52.5-ubuntu24.04-x86_64") | .archive_download_url' \
+            > /tmp/artifact_url.txt
+          gh api --method GET -H "Accept: application/zip" \
+            "$(cat /tmp/artifact_url.txt)" > /tmp/wpe-artifact.zip
+          mkdir -p /tmp/wpe-extract
+          cd /tmp/wpe-extract
+          unzip -q /tmp/wpe-artifact.zip
+          echo "=== Extracted contents ==="
+          find . -type f | head -20
+
+      - name: Install WPE WebKit Artifact
+        run: |
+          cd /tmp/wpe-extract
+          sudo tar xzf wpewebkit-2.52.5-ubuntu24.04-x86_64.tar.gz -C /usr/local/
+          sudo ldconfig
+          echo "=== Verify installation ==="
+          PKG_CONFIG_PATH=/usr/local/pkgconfig:$PKG_CONFIG_PATH \
+            pkg-config --modversion wpe-webkit-2.0 wpe-platform-2.0
+          ls -lh /usr/local/lib/libWPEWebKit-2.0.so*
+
+      - name: Build C1.5 Benchmark
+        run: |
+          PKG_CONFIG_PATH=/usr/local/pkgconfig:$PKG_CONFIG_PATH \
+            g++ -std=c++20 -O2 -o /tmp/test_c1_5 \
+            tests/test_c1_5_perf.cpp \
+            $(pkg-config --cflags --libs wpe-webkit-2.0 wpe-platform-2.0)
+          echo "=== Build successful ==="
+          file /tmp/test_c1_5
+
+      - name: Run C1.5 Benchmark
+        run: |
+          export LIBGL_ALWAYS_SOFTWARE=1
+          export WPE_DISPLAY=wpe-display-headless
+          export WEBKIT_INJECTED_BUNDLE_PATH=/usr/local/lib/
+          export WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1
+          export PKG_CONFIG_PATH=/usr/local/pkgconfig:$PKG_CONFIG_PATH
+          export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+          echo "=== Running benchmark ==="
+          timeout 120 /tmp/test_c1_5 2>&1 | tee /tmp/c1_5_results.txt
+          echo "=== Benchmark complete ==="
+          cat /tmp/c1_5_results.txt
+
+      - name: Build & Run Buffer Lifecycle Test
+        run: |
+          PKG_CONFIG_PATH=/usr/local/pkgconfig:$PKG_CONFIG_PATH \
+            g++ -std=c++20 -O2 -o /tmp/test_c1_5_1_lifecycle \
+            tests/test_c1_5_1_lifecycle.cpp \
+            $(pkg-config --cflags --libs wpe-webkit-2.0 wpe-platform-2.0)
+          echo "=== Build successful ==="
+          export LIBGL_ALWAYS_SOFTWARE=1
+          export WPE_DISPLAY=wpe-display-headless
+          export WEBKIT_INJECTED_BUNDLE_PATH=/usr/local/lib/
+          export WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1
+          export PKG_CONFIG_PATH=/usr/local/pkgconfig:$PKG_CONFIG_PATH
+          export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+          echo "=== Running lifecycle test ==="
+          timeout 60 /tmp/test_c1_5_1_lifecycle 2>&1 | tee /tmp/c1_5_1_lifecycle_results.txt
+          echo "=== Lifecycle test complete ==="
+          cat /tmp/c1_5_1_lifecycle_results.txt
+
+      - name: Upload Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c1_5_1_benchmark_results
+          path: |
+            /tmp/c1_5_results.txt
+            /tmp/c1_5_1_lifecycle_results.txt
+          retention-days: 30
