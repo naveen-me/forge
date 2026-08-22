@@ -193,6 +193,26 @@ Not Started: 12
 - Buffer lifecycle: SHM buffer polled at 2ms intervals, settling detector counts frames when fingerprint stabilizes for 16ms.
 - Files changed: `tests/test_c1_5_perf.cpp`, `C1_5_FINAL_REPORT.md`.
 
+#### [C1.5.1] WPE Buffer Lifecycle Investigation
+- Date: 2026-08-22
+- Status: **PASS**
+- Objective: Characterize WPEBufferSHM lifecycle and investigate P95 on Xeon
+- Key findings:
+  1. `buffers-changed` fires ONCE (single batch of 2 SHM buffers)
+  2. `buffer_rendered()` does NOT trigger new `buffers-changed`
+  3. SHM content evolves in-place (same memory, new frames written by WPEWebProcess)
+  4. Data pointer remains valid after `buffer_rendered()` (GBytes stays readable)
+  5. Buffer objects are reused (pool of 2 WPEBufferSHM)
+  6. **Damage-based compositing**: SHM buffers only contain non-zero pixels when HTML has visual changes (moving elements, CSS transitions, color changes). Static HTML produces all-zero buffers.
+- Content trigger matrix tested:
+  - Static background → NO content
+  - Animated balls (C1.5 pattern) → YES content
+  - Text-only counter → NO content
+  - Colored background + color-changing counter → YES content
+- CI workflow: `.github/workflows/c1_5_1_bench.yml` created for Xeon benchmark (pending trigger)
+- Production pattern: poll SHM at 2ms, detect stabilization at 16ms, copy data, call buffer_rendered()
+- Files changed: `tests/test_c1_5_1_lifecycle.cpp`, `.github/workflows/c1_5_1_bench.yml`, `C1_5_1_FINAL_REPORT.md`
+
 ---
 
 ## Workstream B — C4-local corrective work (separately authorized, ADR-021)
