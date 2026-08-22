@@ -17,15 +17,15 @@ This file tracks two INDEPENDENT workstreams:
 ### Current Task
 ID: 0.3 (Phase C1 gate execution)
 Name: Prove WPEPlatform headless -> CPU-readable RGBA buffer
-Status: **IN PROGRESS** — Executing Checkpoint C1.3 on dedicated build VM
+Status: **IN PROGRESS** — C1.3 complete, C1.4 PASS, C1.5 pending
 Started: 2026-08-17
-Last Updated: 2026-08-18
+Last Updated: 2026-08-22
 
 ### Overall Progress (checkpoint tasks only)
-Completed: 3 (0.1, 0.2, 0.3-prep)
-In Progress: 1 (0.3 — Phase C1 gate execution)
+Completed: 4 (0.1, 0.2, 0.3-prep, C1.3 build)
+In Progress: 2 (C1.4 integration PASS recorded, C1.5 measurement pending)
 Blocked: 0
-Not Started: 14
+Not Started: 13
 
 > C4-local corrective work (workstream B) is intentionally NOT included in these counts.
 > C1, C2 and C3 remain open gates regardless of B's results.
@@ -76,12 +76,9 @@ Not Started: 14
 - remaining work: none for this task. C1 execution is still BLOCKED (see below).
 
 ### Blockers
-- **[0.3 / Phase C1] BLOCKED / DEFERRED — hardware**: WPE WebKit >= 2.52 is not packaged for
-  Ubuntu 26.04 and must be built from source (~30+ GB scratch, 1-3 h on 8 modern cores).
-  This host is a 4-thread i3-1005G1 @ 1.2 GHz with 10 GiB RAM (swap already in use); the
-  build would take many hours and risks OOM. Docker is not installed. The operator chose
-  (2026-08-17, ADR-021) to defer this gate to a capable build host / CI. The gate threshold
-  (ADR-019: >= 30 FPS, 0 drops, real-time pacing, CPU-only, soak) is NOT lowered.
+- **C1.3 — RESOLVED**: WPE WebKit 2.52.5 successfully built via GitHub Actions CI.
+- **C1.4 — RESOLVED**: WPE headless rendering proven, CPU-readable RGBA pixels obtained.
+- **Remaining for C1 gate**: C1.5 (per-frame capture cost measurement at 1920x1080).
 - **C2 / C3**: remain gated behind C1 per ADR-018.
 
 ### What remains to execute C1 (0.3) — on a capable build host / CI
@@ -139,22 +136,14 @@ Not Started: 14
   - `pkg-config --modversion wpe-1.0 wpebackend-fdo-1.0` -> `1.16.3`, `1.16.1`
 
 #### [C1.3] Build WPE WebKit >= 2.52 from source
-- Date: 2026-08-18
-- Status: **IN PROGRESS — CI fix applied, awaiting CI re-run**
-- Architecture & Configuration Validation: **PASSED / FULLY VALIDATED**
-  - Verified minimal CMake options, dependencies, and WPEPlatform C APIs documented in `docs/C1_BUILD_SCOPE.md` and `docs/C1_MINIMAL_CONFIG_VALIDATION.md`.
-  - CMake config succeeds instantly; compilation compiles ~8050/9312 targets (~86% complete) with ZERO compilation or linker errors.
-- CI Build Status: **BLOCKED on missing dependency, fix committed**
-  - **Root Cause**: Skia (bundled in WPE 2.52.5) requires `Fontconfig >= 2.13.0` via `Source/ThirdParty/skia/CMakeLists.txt:6`. The package `libfontconfig-dev` was missing from the CI apt-get install list.
-  - **Error**: `Could NOT find Fontconfig (missing: Fontconfig_LIBRARY Fontconfig_INCLUDE_DIR)`
-  - **Fix**: Added `libfontconfig-dev` to `.github/workflows/c1_wpe_build.yml` apt-get install + diagnostics.
-  - **Verification**: Docker reproduction (Ubuntu 24.04, cmake 3.28.3, exact CI flags) — cmake configures successfully in 27s.
-  - **Commit**: `a10bd808`
-  - **Full report**: `docs/C1_CI_DEBUG_REPORT.md`
-- Previous Build Status: **INCOMPLETE**
-  - **Blocker**: Ephemeral VM container session lifetime limit (~1.5 hours). The container resets automatically during the long compilation, clearing uncommitted scratch state before the final ~1200 object files and shared library linkage finish.
-  - **Produced Libraries**: No WPE libraries (`libWPEWebKit-2.0.so`, `libWPEPlatform-2.0.so`) produced or verified yet.
-  - **Subsequent Checkpoints**: Checkpoint C1.4 and TARVA integration MUST remain BLOCKED until C1.3 source build completes on a persistent build host or faster CI environment.
+- Date: 2026-08-18 → 2026-08-22
+- Status: **COMPLETED**
+- CI Build: **SUCCESS** — Run #32551896254 on GitHub Actions completed successfully.
+  - `ninja -j2` built all 9312/9312 targets in 184m 57s with ZERO errors.
+  - `ninja install` installed 558/558 targets to `/usr/local/lib/`.
+  - Artifact produced: `wpewebkit-2.52.5-ubuntu24.04-x86_64` (40.2 MB).
+  - Two CI fixes applied: (1) correct install paths, (2) include libexec/ subprocess binaries.
+- Full analysis: `C1_CI_RUN_32512326532_ANALYSIS.md`.
 
 #### [C1.3-scope] Build-Scope Review & Architecture Investigation
 - Date: 2026-08-18
@@ -172,9 +161,20 @@ Not Started: 14
 - Status: **COMPLETED**
 - Validation Results:
   1. **CMake Options Verified**: Every option was systematically validated against `Source/cmake/OptionsWPE.cmake` and `Source/cmake/WebKitFeatures.cmake`.
-  2. **WPEPlatform APIs Verified**: C function signatures (`wpe_display_headless_new`, `wpe_display_connect`, `wpe_view_new`, `wpe_buffer_import_to_pixels`, `wpe_buffer_shm_get_data`) verified in `Source/WebKit/WPEPlatform/wpe/` headers.
+  2. **WPEPlatform APIs Verified**: C function signatures verified in `Source/WebKit/WPEPlatform/wpe/` headers.
   3. **Headers & Pkg-Config Verified**: `#include <wpe/wpe-platform.h>`, `#include <wpe/headless/WPEDisplayHeadless.h>`, `#include <wpe/webkit/wpe-webkit.h>`; pkg-config `wpe-webkit-2.0`, `wpe-platform-2.0`.
   4. **Validation Report Produced**: `docs/C1_MINIMAL_CONFIG_VALIDATION.md` written and committed.
+
+#### [C1.4] WPE Headless Integration Test
+- Date: 2026-08-22
+- Status: **PASS**
+- Runtime path proven:
+  `WPEDisplayHeadless -> WebKitWebView -> WPEView -> WPEBufferSHM -> CPU RGBA8888 pixels`
+- Test: `tests/test_c1_4_wpe_headless.cpp` (192/192 sampled non-zero, 191 red, 1 white)
+- Key discovery: WPE rendering is asynchronous — buffers-changed fires with empty SHM buffers; the WPEWebProcess writes content ~500ms later.
+- All 11 requirements satisfied (No X11, No Xvfb, No Wayland, No GPU, Software render, Not WebKitGTK, Not Cairo, No screenshots, No fake renderer, GPAC untouched, Timeline untouched).
+- Files changed: `tests/test_c1_4_wpe_headless.cpp`, `scripts/build_and_run_c1_4.sh`, `AI_PROGRESS.md`.
+- Remaining blocker for C1 gate: C1.5 (measure per-frame capture cost at 1920x1080, must be <33ms).
 
 ---
 
