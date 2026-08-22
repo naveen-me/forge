@@ -259,15 +259,23 @@ jobs:
 
       - name: Stage Artifacts for Upload
         run: |
-          mkdir -p wpe-artifacts/lib wpe-artifacts/include wpe-artifacts/pkgconfig
+          mkdir -p wpe-artifacts/lib wpe-artifacts/libexec/wpe-webkit-2.0 \
+            wpe-artifacts/include wpe-artifacts/pkgconfig wpe-artifacts/share
           cp -d /usr/local/lib/libWPEWebKit-2.0.so* wpe-artifacts/lib/
+          cp -d /usr/local/lib/wpe-webkit-2.0/injected-bundle/libWPEInjectedBundle.so wpe-artifacts/lib/ 2>/dev/null || true
+          cp /usr/local/libexec/wpe-webkit-2.0/WPEWebProcess wpe-artifacts/libexec/wpe-webkit-2.0/ 2>/dev/null || true
+          cp /usr/local/libexec/wpe-webkit-2.0/WPENetworkProcess wpe-artifacts/libexec/wpe-webkit-2.0/ 2>/dev/null || true
+          cp /usr/local/libexec/wpe-webkit-2.0/WPEGPUProcess wpe-artifacts/libexec/wpe-webkit-2.0/ 2>/dev/null || true
           cp -r /usr/local/include/wpe-webkit-2.0 wpe-artifacts/include/
           cp -r /usr/local/include/wpe-platform-2.0 wpe-artifacts/include/ 2>/dev/null || true
           cp /usr/local/lib/pkgconfig/wpe-webkit-2.0.pc wpe-artifacts/pkgconfig/
           cp /usr/local/lib/pkgconfig/wpe-platform-2.0.pc wpe-artifacts/pkgconfig/
           cp /usr/local/lib/pkgconfig/wpe-platform-headless-2.0.pc wpe-artifacts/pkgconfig/
           cp /usr/local/lib/pkgconfig/wpe-web-process-extension-2.0.pc wpe-artifacts/pkgconfig/
+          cp /usr/local/share/wpe-webkit-2.0/* wpe-artifacts/share/ 2>/dev/null || true
           tar czf wpewebkit-2.52.5-ubuntu24.04-x86_64.tar.gz -C wpe-artifacts .
+          echo "=== Artifact contents ==="
+          tar tzf wpewebkit-2.52.5-ubuntu24.04-x86_64.tar.gz | head -30
           ls -lh wpewebkit-2.52.5-ubuntu24.04-x86_64.tar.gz
 
       - name: Upload WPE WebKit 2.52.5 Artifacts
