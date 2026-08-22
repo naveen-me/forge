@@ -247,26 +247,26 @@ jobs:
           cd wpewebkit-2.52.5/build
           sudo ninja -C . install
           sudo ldconfig
-          export PKG_CONFIG_PATH=/usr/local/lib/x86_64-linux-gnu/pkgconfig:/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH:-}
+          export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH:-}
           echo "=== Pkg-Config Verification ==="
           pkg-config --modversion wpe-webkit-2.0 wpe-platform-2.0
           echo "=== Installed Shared Libraries ==="
-          ls -lh /usr/local/lib/x86_64-linux-gnu/libWPEWebKit-2.0.so*
-          ls -lh /usr/local/lib/x86_64-linux-gnu/libWPEPlatform-2.0.so*
+          ls -lh /usr/local/lib/libWPEWebKit-2.0.so*
           echo "=== Library Linkage Verification (ldd) ==="
-          ldd /usr/local/lib/x86_64-linux-gnu/libWPEWebKit-2.0.so | grep "not found" || echo "All shared library dependencies resolved successfully!"
+          ldd /usr/local/lib/libWPEWebKit-2.0.so | grep "not found" || echo "All shared library dependencies resolved successfully!"
           echo "=== Post-Build Disk Usage ==="
           df -h /
 
       - name: Stage Artifacts for Upload
         run: |
           mkdir -p wpe-artifacts/lib wpe-artifacts/include wpe-artifacts/pkgconfig
-          cp -d /usr/local/lib/x86_64-linux-gnu/libWPEWebKit-2.0.so* wpe-artifacts/lib/
-          cp -d /usr/local/lib/x86_64-linux-gnu/libWPEPlatform-2.0.so* wpe-artifacts/lib/
+          cp -d /usr/local/lib/libWPEWebKit-2.0.so* wpe-artifacts/lib/
           cp -r /usr/local/include/wpe-webkit-2.0 wpe-artifacts/include/
-          cp -r /usr/local/include/wpe-platform-2.0 wpe-artifacts/include/
-          cp /usr/local/lib/x86_64-linux-gnu/pkgconfig/wpe-webkit-2.0.pc wpe-artifacts/pkgconfig/
-          cp /usr/local/lib/x86_64-linux-gnu/pkgconfig/wpe-platform-2.0.pc wpe-artifacts/pkgconfig/
+          cp -r /usr/local/include/wpe-platform-2.0 wpe-artifacts/include/ 2>/dev/null || true
+          cp /usr/local/lib/pkgconfig/wpe-webkit-2.0.pc wpe-artifacts/pkgconfig/
+          cp /usr/local/lib/pkgconfig/wpe-platform-2.0.pc wpe-artifacts/pkgconfig/
+          cp /usr/local/lib/pkgconfig/wpe-platform-headless-2.0.pc wpe-artifacts/pkgconfig/
+          cp /usr/local/lib/pkgconfig/wpe-web-process-extension-2.0.pc wpe-artifacts/pkgconfig/
           tar czf wpewebkit-2.52.5-ubuntu24.04-x86_64.tar.gz -C wpe-artifacts .
           ls -lh wpewebkit-2.52.5-ubuntu24.04-x86_64.tar.gz
 
