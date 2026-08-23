@@ -150,5 +150,14 @@ target_link_libraries(test_status PRIVATE tarva_core)
 add_test(NAME test_status COMMAND $<TARGET_FILE:test_status>)
 set_tests_properties(test_status PROPERTIES TIMEOUT 30)
 
+add_executable(test_c2_gpac_composition tests/test_c2_gpac_composition.cpp)
+target_link_libraries(test_c2_gpac_composition PRIVATE tarva_core png)
+add_test(NAME test_c2_gpac_composition COMMAND $<TARGET_FILE:test_c2_gpac_composition>)
+
+add_executable(test_c2_1_native_frame_injection tests/test_c2_1_native_frame_injection.cpp)
+target_link_libraries(test_c2_1_native_frame_injection PRIVATE tarva_core png)
+add_test(NAME test_c2_1_native_frame_injection COMMAND $<TARGET_FILE:test_c2_1_native_frame_injection>)
+set_tests_properties(test_c2_1_native_frame_injection PROPERTIES ENVIRONMENT "LIBGL_ALWAYS_SOFTWARE=1;XDG_RUNTIME_DIR=/tmp/runtime-root")
+
 add_executable(run_poc_benchmark benchmarks/run_poc_benchmark.cpp)
 target_link_libraries(run_poc_benchmark PRIVATE tarva_core)

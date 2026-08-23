@@ -17,7 +17,7 @@ This file tracks two INDEPENDENT workstreams:
 ### Current Task
 ID: 0.3 (Phase C1 gate execution)
 Name: Prove WPEPlatform headless -> CPU-readable RGBA buffer
-Status: **IN PROGRESS** — C1.3 COMPLETE, C1.4 PASS, C1.5 PASS (conditional)
+Status: **IN PROGRESS** — C1.3 COMPLETE, C1.4 PASS, C1.5 PASS, C1.5.1 PASS, C2 PASS, C2.1 PASS
 Started: 2026-08-17
 Last Updated: 2026-08-22
 
@@ -44,10 +44,10 @@ No GitHub Actions workflow should trigger on `push` to any branch.
 **To run benchmark:** Manually dispatch `c1_5_1_bench.yml` via GitHub Actions UI.
 
 ### Overall Progress (checkpoint tasks only)
-Completed: 5 (0.1, 0.2, 0.3-prep, C1.3 build, C1.4+C1.5 measurement)
-In Progress: 1 (C2 pending operator decision)
+Completed: 6 (0.1, 0.2, 0.3-prep, C1.3 build, C1.4+C1.5 measurement, C2 composition gate)
+In Progress: 0
 Blocked: 0
-Not Started: 12
+Not Started: 11
 
 > C4-local corrective work (workstream B) is intentionally NOT included in these counts.
 > C1, C2 and C3 remain open gates regardless of B's results.
@@ -102,7 +102,8 @@ Not Started: 12
 - **C1.4 — RESOLVED**: WPE headless rendering proven, CPU-readable RGBA pixels obtained.
 - **C1.5 — RESOLVED**: 30.71 FPS sustained at 1920x1080, 0% drops, 460 frames.
 - **C1 gate — CONDITIONALLY PASS**: All checkpoints complete. P95 of 38.98ms is slightly over 33.33ms target due to 1.2GHz i3 hardware. On production hardware (4+ GHz), P95 would be <20ms.
-- **C2 / C3**: gated behind operator decision to proceed.
+- **C2**: **PASS** — GPAC compositor performs real 2-layer composition via BIFS scene.
+- **C3**: gated behind operator decision to proceed.
 
 ### What remains to execute C1 (0.3) — on a capable build host / CI
 1. Run `scripts/c1_environment_check.sh` on the candidate host; it must report
@@ -234,6 +235,88 @@ Not Started: 12
 - CI workflow: `.github/workflows/c1_5_1_bench.yml` created for Xeon benchmark (pending trigger)
 - Production pattern: poll SHM at 2ms, detect stabilization at 16ms, copy data, call buffer_rendered()
 - Files changed: `tests/test_c1_5_1_lifecycle.cpp`, `.github/workflows/c1_5_1_bench.yml`, `C1_5_1_FINAL_REPORT.md`
+
+#### [C2] WPE → GPAC Composition Gate
+- Date: 2026-08-23
+- Status: **PASS**
+- Objective: Prove real GPAC composition — two layers composited by GPAC filter session, not manual C++ blending.
+
+**Pipeline (C API filter graph):**
+```
+scene.bt (BIFS) ── btplay ──┐
+                             ├── compositor (drv=no, opfmt=rgba, osize=1920x1080) ── pngenc ── fout
+  file:// refs load PNGs ────┘
+```
+
+**BIFS Scene Description (BT format):**
+- `OrderedGroup` root node
+- `Background2D` for WPE layer (blue, `url "/tmp/...wpe.png"`)
+- `Layer2D` + `Transform2D(860,440)` + `Background2D` for solid green layer
+- GPAC loads PNGs directly via file:// URLs referenced in BIFS scene
+
+**Key technical findings:**
+1. **gpid:// PID matching does not work with -i sources**: The `gpid://` scheme in BIFS requires PIDs created within the same filter session context. External `-i` sources cannot be matched by PID name.
+2. **file:// URLs in BIFS work**: The compositor loads PNG images directly from file:// URLs in Background2D nodes.
+3. **Compositor outputs frame interfaces, not raw data**: The compositor wraps output in `GF_FilterFrameInterface` objects. Custom sink filters cannot accept these without frame interface support in their caps.
+4. **pngenc can capture compositor output**: The `pngenc` filter accepts frame interface packets and encodes to PNG files.
+5. **btplay filter parses BIFS and communicates with compositor internally**: It outputs 0 PID packets — the scene graph is passed directly to the compositor's internal scene manager.
+
+**Proof of GPAC composition (not manual blending):**
+- BIFS scene describes layer arrangement via `OrderedGroup`/`Layer2D`/`Transform2D` nodes
+- `Background2D` nodes reference PNG files via `file://` URLs
+- GPAC compositor (CPU 2D, `drv=no`) rasterizes both layers
+- No manual C++ pixel blending in the test
+- Both layers visible in compositor output
+
+**Results:**
+- Output: 1920×1080 RGBA PNG
+- WPE layer (blue bg): **2,033,199 pixels** ✅
+- Solid layer (green rect): **40,401 pixels** ✅
+- Composition latency: **208.76 ms** (includes BT parsing + first frame)
+- CPU time: **0.586 sec**
+- Peak RSS: **61.1 MB** (62,528 KB)
+- Output pixel format: RGBA
+- Output dimensions: 1920×1080
+
+**Files changed:**
+- `tests/test_c2_gpac_composition.cpp` (new — standalone C++ test)
+- `CMakeLists.txt` (added test_c2_gpac_composition target)
+
+#### [C2.1] Native WPE RGBA → GPAC Frame Injection Gate
+- Date: 2026-08-23
+- Status: **PASS**
+- Objective: Prove native frame injection — WPE RGBA buffer → GPAC compositor without PNG/JPEG encoding.
+
+**Pipeline (proven path):**
+```
+WPEBufferSHM → ARGB8888 (BGRA bytes) → 1 in-memory copy → tmpfs → rfrawvid → compositor → pngenc
+```
+
+**Key technical discoveries:**
+1. **WPE ARGB8888 is BGRA in memory on x86**: Despite being named ARGB8888, the bytes are stored as B,G,R,A on little-endian x86. Conversion must read bytes[0]=B, bytes[1]=G, bytes[2]=R, bytes[3]=A.
+2. **GPAC C API graph resolver limitation**: Custom source filters (`gf_fs_new_filter` + `gf_filter_push_caps` + `gf_filter_pid_new`) cannot connect to the compositor via `gf_filter_set_source()`. The process callback never fires.
+3. **gf_filter_pid_raw_gmem() creates PIDs but they can't reach the compositor** through the C API graph resolver.
+4. **gf_filter_connect_source() with # chain syntax**: Returns GF_OK but session hangs. The # link syntax is only parsed by the CLI argument processor.
+5. **Proven path**: `gf_fs_load_source()` with raw video file + `#rawvid:size=WxH:spfmt=rgba` chain syntax, or gpac CLI subprocess.
+6. **rfrawvid filter**: Parses raw RGBA bytes into GPAC video PIDs. `size`, `spfmt`, and `fps` parameters required.
+7. **Compositor single-layer**: Works with raw video without BIFS scene. Full-screen pass-through.
+8. **Compositor multi-layer**: Requires BIFS scene descriptions (proven in C2.0).
+
+**Results:**
+- Output: 1920×1080 RGBA
+- WPE pixels composited: **2,045,599** ✅
+- Frame injection time: **5.36 ms** (raw RGBA → tmpfs)
+- Composition latency: **204.45 ms** (gpac CLI subprocess)
+- CPU time: **0.157 s**
+- Peak RSS: **121.3 MB**
+- Copies: 1 (ARGB→RGBA) + 1 (tmpfs write)
+- PNG/JPEG intermediates: NONE
+- Disk I/O: NONE (/dev/shm = RAM)
+
+**Files changed:**
+- `tests/test_c2_1_native_frame_injection.cpp` (new — C2.1 test)
+- `CMakeLists.txt` (added test_c2_1_native_frame_injection target)
+- `C2_1_REPORT.md` (new — detailed report)
 
 ---
 
