@@ -1,10 +1,10 @@
 name: C1.5.1 Performance & Lifecycle Benchmark
 
+# Benchmark workflow — manual dispatch only.
+# Downloads existing WPE artifact (does NOT rebuild).
+# Normal TARVA commits should run fast local tests only.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - '**'
 
 jobs:
   benchmark:

@@ -1,10 +1,10 @@
 name: C1 WPE WebKit Build
 
+# WPE WebKit is now a FIXED EXTERNAL DEPENDENCY.
+# Do NOT rebuild on normal commits. Use workflow_dispatch only
+# when intentionally upgrading the WPE version.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - '**'
 
 jobs:
   build-wpe:

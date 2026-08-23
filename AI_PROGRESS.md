@@ -21,6 +21,28 @@ Status: **IN PROGRESS** — C1.3 COMPLETE, C1.4 PASS, C1.5 PASS (conditional)
 Started: 2026-08-17
 Last Updated: 2026-08-22
 
+### CI Policy (effective 2026-08-23)
+
+**WPE WebKit 2.52.5 is a FIXED EXTERNAL DEPENDENCY.** It must NOT be rebuilt on normal commits.
+
+| Workflow | Trigger | Purpose |
+|---|---|---|
+| `c1_wpe_build.yml` | **workflow_dispatch ONLY** | Rebuild WPE WebKit from source (3h). Manual: upgrade WPE version or intentional rebuild. |
+| `c1_5_1_bench.yml` | **workflow_dispatch ONLY** | Download existing WPE artifact + run benchmark (30min). |
+
+**Normal TARVA commit → fast local tests only.**
+No GitHub Actions workflow should trigger on `push` to any branch.
+
+**Known-good WPE artifact:**
+- Version: WPE WebKit 2.52.5
+- Artifact: `wpewebkit-2.52.5-ubuntu24.04-x86_64` (40.2 MB)
+- Successful CI run: #32551896254
+- Built with: `-DPORT=WPE -DENABLE_WPE_PLATFORM=ON -DENABLE_WPE_PLATFORM_HEADLESS=ON -DENABLE_WPE_LEGACY_API=OFF`
+- Platforms: headless CPU-only (Mesa llvmpipe, surfaceless EGL)
+
+**To rebuild WPE:** Manually dispatch `c1_wpe_build.yml` via GitHub Actions UI.
+**To run benchmark:** Manually dispatch `c1_5_1_bench.yml` via GitHub Actions UI.
+
 ### Overall Progress (checkpoint tasks only)
 Completed: 5 (0.1, 0.2, 0.3-prep, C1.3 build, C1.4+C1.5 measurement)
 In Progress: 1 (C2 pending operator decision)
