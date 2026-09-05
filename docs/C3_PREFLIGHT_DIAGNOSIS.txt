@@ -1,0 +1,267 @@
+C3 PRE-FLIGHT DIAGNOSIS
+=======================
+
+This file records the pre-flight finding for C3.
+It does not implement C3 yet.
+
+1. Authoritative ADR conclusion
+-------------------------------
+ADR-020 defines the corrected rendering path:
+
+  WPE WebKit -> WPEDisplayHeadless -> WPEView -> WPEBuffer -> CPU-readable RGBA
+    -> GF_FilterSession compositor filter
+    -> FFmpeg H.264/AAC encoder -> RTMP output
+
+The key APIs named in ADR-020 are:
+  - wpe_display_headless_new()
+  - webkit_web_view_new() / wpe_view_new() (WPE variant)
+  - CPU-readable buffer path, not GPU DMABUF
+
+The correction plan (docs/CORRECTION_PLAN.md, Phase C1) says:
+  - Replace webkit2gtk-4.1 with wpe-webkit-2.0 in CMakeLists.txt
+  - Drop xvfb-run from WPE test targets
+  - Use WPEPlatform headless (WPEDisplayHeadless) + WPEView + WPEBuffer
+
+2. Current TARVA dependency model
+-----------------------------------
+CMakeLists.txt currently requires:
+  - GPAC
+  - libavcodec, libavformat, libswscale, libswresample, libavutil
+  - cairo
+  - webkit2gtk-4.1  <-- current WebKitGTK dependency
+  - wpe-1.0
+  - wpebackend-fdo-1.0
+  - wayland-server
+  - nlohmann_json
+  - Threads
+
+The WebKitGTK dependency is the main problem for the approved WPE path.
+
+3. Exact missing pkg-config dependency
+---------------------------------------
+On this host:
+  - /usr/local/pkgconfig/wpe-webkit-2.0.pc exists
+  - /usr/local/pkgconfig/wpe-platform-2.0.pc exists
+  - both are version 2.52.5
+
+Neither package is found by default because the search path does not include
+/usr/local/pkgconfig.
+
+wpe-webkit-2.0.pc requires:
+  - glib-2.0
+  - libsoup-3.0
+  - wpe-platform-2.0
+
+With the correct PKG_CONFIG_PATH, pkg-config resolves both:
+  - wpe-webkit-2.0 -> 2.52.5
+  - wpe-platform-2.0 -> 2.52.5
+
+Transitive dependencies are therefore present on this host.
+
+4. Whether wpe-platform-2.0.pc exists
+---------------------------------------
+Yes.
+  - /usr/local/pkgconfig/wpe-platform-2.0.pc exists
+  - It requires glib-2.0, gobject-2.0, gio-2.0
+  - Its Cflags include:
+      -I/usr/local/include/wpe-webkit-2.0/wpe-platform
+
+Relevant headers are present, including:
+  - /usr/local/include/wpe-webkit-2.0/wpe-platform/wpe/headless/WPEDisplayHeadless.h
+
+5. Exported libraries/symlinks
+------------------------------
+Present:
+  - /usr/local/lib/libWPEWebKit-2.0.so
+  - /usr/local/lib/libWPEWebKit-2.0.so.1
+  - /usr/local/lib/libWPEWebKit-2.0.so.1.9.9
+
+Relevant exported symbols in libWPEWebKit-2.0.so.1.9.9:
+  - wpe_display_headless_new
+  - wpe_display_headless_new_for_device
+  - wpe_view_headless_get_type
+  - wpe_buffer_shm_get_data
+  - wpe_buffer_shm_get_format
+  - wpe_buffer_shm_get_stride
+  - wpe_buffer_shm_get_type
+  - wpe_buffer_shm_new
+
+So the installed WPE WebKit 2.52.5 artifact already contains the
+WPEPlatform headless symbols needed by ADR-020.
+
+6. Whether the issue is simply PKG_CONFIG_PATH
+-----------------------------------------------
+Partially.
+
+For pkg-config-based discovery, the immediate issue is:
+  - /usr/local/pkgconfig is not in the default pkg-config search path here.
+  - wpe-webkit-2.0.pc and wpe-platform-2.0.pc live there.
+
+If pkg-config is invoked with the correct path, both packages resolve.
+
+However, PKG_CONFIG_PATH is not the only issue. The bigger issue is that
+CMakeLists.txt is still requesting WebKitGTK, not WPE WebKit.
+
+7. Whether CMake uses pkg_check_modules/pkg-config correctly
+-------------------------------------------------------------
+It uses pkg_check_modules correctly for what it asks for.
+But it asks for the wrong thing for the approved C3 path:
+  - pkg_check_modules(WEBKIT REQUIRED webkit2gtk-4.1)
+
+That is why TARVA currently depends on WebKitGTK/GTK/Cairo in the
+renderer source, not on WPEPlatform.
+
+8. Whether current TARVA CMake is incorrectly requesting WebKitGTK
+--------------------------------------------------------------------
+Yes.
+
+The authoritative correction instruction is:
+  Replace webkit2gtk-4.1 with wpe-webkit-2.0
+
+Currently CMakeLists.txt still contains:
+  pkg_check_modules(WEBKIT REQUIRED webkit2gtk-4.1)
+
+It also still includes WebKitGTK include dirs and links WebKitGTK libs.
+
+9. Diagnosis: build-system discovery only, or source migration
+--------------------------------------------------------------
+This is NOT discovery-only.
+
+This is BOTH:
+  A. A build-system discovery correction is required so the local build
+     can find wpe-webkit-2.0 / wpe-platform-2.0.
+  B. TARVA source currently uses WebKitGTK/GTK/Cairo APIs for HTML
+     rendering, so it cannot exercise the approved WPE path yet.
+
+Build-system only would be enough if TARVA already used WPEPlatform APIs.
+It does not.
+
+10. Exact source/API mismatches in the repository
+---------------------------------------------------
+Authoritative source-level mismatches:
+
+Current production-style renderer source:
+  - include/wpe_html_renderer.h
+  - src/wpe_html_renderer.cpp
+
+Those files currently use:
+  - <webkit2/webkit2.h>
+  - <gtk/gtk.h>
+  - <cairo.h>
+  - <wpe/wpe.h>
+  - <wpe/fdo.h>
+  - <wpe/unstable/fdo-shm.h>
+  - <wayland-server-core.h>
+
+And explicitly use WebKitGTK + GTK offscreen + Cairo:
+  - webkit_web_view_new_with_context()
+  - gtk_offscreen_window_new()
+  - gtk_container_add()
+  - gtk_widget_show_all()
+  - gtk_widget_draw()
+  - cairo_image_surface_create()
+  - cairo_create() / cairo_paint() / cairo_destroy()
+  - cairo_image_surface_get_data()
+
+That is the exact WebKitGTK + GTK + Cairo stack identified in ADR-017.
+
+By contrast, the approved WPE path (ADR-020 + C1 test code) uses:
+  - wpe_display_headless_new()
+  - WebKitWebView created via WEBKIT_WEB_VIEW(g_object_new(WEBKIT_TYPE_WEB_VIEW, ...))
+  - webkit_web_view_get_wpe_view()
+  - WPEBufferSHM via buffers-changed
+  - CPU-readable shared-memory buffer access
+
+So the rendering source is the real mismatch, not just CMake discovery.
+
+Note: the repository already contains WPE-based C1 test files that exercise
+the correct API pattern:
+  - tests/test_c1_4_wpe_headless.cpp
+  - tests/test_c1_5_perf.cpp
+  - tests/test_c1_5_1_lifecycle.cpp
+  - tests/test_c2_1_native_frame_injection.cpp
+
+Those tests already show the intended WPE platform usage pattern. The
+production renderer code is the part that has not been migrated.
+
+11. Exact CMake changes required, if any
+-----------------------------------------
+At minimum, to move CMake toward the approved path:
+  - Replace:
+      pkg_check_modules(WEBKIT REQUIRED webkit2gtk-4.1)
+    with:
+      pkg_check_modules(WEBKIT REQUIRED wpe-webkit-2.0)
+  - Update the include dirs and link libraries to use the new WEBKIT
+    package results (which now resolve to WPE WebKit).
+  - Remove or downgrade webkit2gtk-4.1 dependency for the WPE path.
+
+This is the CMake-side part of the correction.
+
+If the build is intended to use the artifact as installed here, the build
+invocation must also ensure pkg-config can find:
+  - /usr/local/pkgconfig
+
+A common minimal way to do that is to set:
+  - PKG_CONFIG_PATH=/usr/local/pkgconfig:/usr/local/lib/pkgconfig:/usr/lib/x86_64-linux-gnu/pkgconfig
+
+12. Exact source changes required, if any
+------------------------------------------
+Yes, source changes are required.
+
+The production HTML renderer currently depends on:
+  - GTK offscreen window
+  - WebKitGTK WebView creation
+  - Cairo draw-to-surface capture
+
+To follow ADR-020, the renderer must instead use the WPEPlatform headless
+pattern, roughly:
+  - WPEDisplayHeadless
+  - WPEView / WebKitWebView created through the WPE platform
+  - WPEBuffer acquisition
+  - CPU-readable RGBA access from the buffer
+
+This is not a pkg-config-only change. It is a real renderer migration in:
+  - include/wpe_html_renderer.h
+  - src/wpe_html_renderer.cpp
+
+This is why C3 cannot be considered started yet.
+
+13. Whether this can be solved without rebuilding WPE
+------------------------------------------------------
+Yes, the local discovery/build correction can be solved without rebuilding
+WPE.
+
+The installed artifact already contains:
+  - libWPEWebKit-2.0.so
+  - WPEPlatform headless symbols
+  - the required headers
+  - the needed pkg-config files
+
+What remains is to make TARVA discover and use them, and to migrate the
+renderer source off WebKitGTK/GTK/Cairo onto the WPEPlatform headless APIs.
+
+14. Conclusion and proposed minimal fix
+---------------------------------------
+This is a pre-flight blocker, not a C3 implementation failure.
+
+Smallest correct fix sequence:
+  A. Fix CMake/pkg-config discovery:
+      - Replace webkit2gtk-4.1 with wpe-webkit-2.0 in CMakeLists.txt
+      - Ensure PKG_CONFIG_PATH includes /usr/local/pkgconfig on this host
+      - Keep only the WPE dependencies required for the approved path
+
+  B. Migrate the HTML renderer source:
+      - Replace WebKitGTK + GTK offscreen + Cairo capture with the
+        WPEPlatform headless rendering path
+      - Use the WPEBuffer CPU-readable buffer pattern
+      - Keep the existing interface only if it can be re-implemented on WPE
+
+  C. After A and B, build and run the existing WPE C1/C2 test patterns
+     to confirm the installed artifact is usable before writing C3.
+
+No WPE rebuild is required for this diagnosis.
+No GPAC rebuild is required.
+C3 must not start until A and B are at least resolved enough to prove the
+real WPEPlatform path is usable.
+
+End of diagnosis.

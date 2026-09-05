@@ -1,0 +1,64 @@
+C2.3 documentation finalization — recorded copy
+================================================
+
+Status:
+- This task is complete and committed.
+- No implementation code changed.
+- No WPE rebuild.
+- C3 not started.
+
+Commit:
+- 67152024 docs(progress): finalize C2.3 as Direct WPE/Native RGBA to GPAC Continuous Dynamic Frame Gate
+
+What was updated in AI_PROGRESS.md:
+- Added:
+  - #### [C2.3] Direct WPE/Native RGBA → GPAC Continuous Dynamic Frame Gate
+
+- Documented:
+  - Objective:
+    - Prove continuous native RGBA frame injection into the GPAC CPU compositor.
+    - Prove successive source frames produce successive compositor output pixels.
+  - Architecture:
+    - Custom native RGBA source
+    - → GPAC compositor
+    - → custom sink
+  - Implementation used:
+    - GF_FS_FLAG_NON_BLOCKING
+    - buffer=0
+    - rbuffer=0
+    - native C API frame injection
+    - no files
+    - no tmpfs
+    - no subprocesses
+    - no manual pixel compositing
+
+  - Measured results from the merged C2.3 test:
+    - frames injected: 60
+    - frames received: 61
+    - changing pixel/frame IDs: present; unique pixel values received = 59, duplicate_count = 2
+    - FPS: ~19.0 on this host
+    - dropped frames: 0
+    - CPU: ~1.320 s
+    - RSS: ~46.2 MB (47,260 KB)
+    - CTS/timing evidence: source CTS explicit and monotonic (0, 3000, 6000 …; timescale 90000, frame duration 3000); sink records CTS per received packet; no backward time jump observed.
+
+  - C2.3 PASS criterion:
+    - Successive source frame pixel values must appear as successive compositor output pixel values.
+
+  - Root cause / fix (based only on merged implementation and test evidence):
+    - Root cause: the compositor buffered/reused content, so continuous packet output did not by itself prove that frame contents changed on successive playout cycles.
+    - Fix: configure the compositor with buffer=0:rbuffer=0 so it updates on successive received frames rather than holding buffered content.
+    - The test proves the fix by injecting uniquely identifiable frames per frame index and observing that successive compositor output pixel values track those successive source values.
+
+- Updated project status:
+  - Current Task / status: C2.3 PASS included.
+  - Overall Progress counts: updated to reflect C2.3 as completed.
+  - C2/C2.3 gate status: PASS.
+  - Recovery Instructions: left in place; C3 not marked complete or started.
+
+Also recorded in AI_PROGRESS.md:
+- Commit reference: ce48663e feat(gpac): achieve C2.3 dynamic frame refresh with GPAC compositor
+- PR reference: Merge pull request #21 from naveen-me/fix/c2-3-continuous-compositor-dynamic-refresh-12301287643913858135
+- Merge commit: 83a53565
+
+End of recorded copy.

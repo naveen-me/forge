@@ -1,0 +1,121 @@
+C3 PRE-FLIGHT — MIGRATE PRODUCTION HTML RENDERER TO WPEPLATFORM
+======================================================================
+
+Status: investigation done; automated build/run not yet completed from this
+agent session.
+
+What I verified
+---------------
+1. Working-tree migration files already exist and match the task spec:
+   - CMakeLists.txt
+   - include/wpe_html_renderer.h
+   - src/wpe_html_renderer.cpp
+   - tests/test_wpe_production_renderer.cpp
+
+2. The migrated renderer no longer depends on the old WebKitGTK/GTK/Cairo
+   rendering path in its own files.
+
+3. On this host, WPE WebKit 2.52.5 is only discoverable via pkg-config when
+   PKG_CONFIG_PATH includes /usr/local/pkgconfig:
+     PKG_CONFIG_PATH=/usr/local/pkgconfig pkg-config --modversion wpe-webkit-2.0
+     => 2.52.5
+
+   The WPE 2.52.5 pkg-config files pull in wpe-platform-2.0 headers, and the
+   required headless symbols are present in the installed library. The
+   migrated renderer headers compile cleanly with the WPE platform include
+   flags required by this artifact.
+
+4. wpe-webkit-2.0 links to:
+   -L/usr/local/lib -lWPEWebKit-2.0
+   -lsoup-3.0 -lgio-2.0 -lgobject-2.0 -lgmodule-2.0 -lglib-2.0 -pthread
+
+What I could NOT complete yet
+-----------------------------
+1. cmake configure
+2. make test_wpe_production_renderer
+3. run test_wpe_production_renderer
+
+The blocker is not the renderer code or the pkg-config fix itself. The
+build/ directory was created by a different user, so this agent session cannot
+overwrite it:
+   ls -ld build
+   => drwxr-xr-x+ 1 root root ...
+
+Therefore:
+   rm -rf build
+   => Permission denied
+
+and cmake cannot write a fresh CMakeCache.txt in build/.
+
+That prevented me from building the new production renderer test and verifying
+the migration gate end to end.
+
+Package ownership mismatch, not missing WPE dependencies
+---------------------------------------------------------
+What is already present on this host:
+   /usr/local/pkgconfig/wpe-webkit-2.0.pc
+   /usr/local/pkgconfig/wpe-platform-2.0.pc
+   /usr/local/lib/libWPEWebKit-2.0.so*
+   /usr/local/include/wpe-webkit-2.0/wpe-platform/wpe/headless/WPEDisplayHeadless.h
+   wpe_display_headless_new
+   wpe_view_headless_get_type
+   wpe_buffer_shm_get_data
+   wpe_buffer_shm_get_format
+   wpe_buffer_shm_get_stride
+   wpe_buffer_shm_get_type
+   wpe_buffer_shm_new
+
+What is NOT yet verified in this session:
+   A successful build + run of test_wpe_production_renderer.
+
+What is missing in the host environment as a consequence of this session
+-----------------------------------------------------------------------
+- I cannot use the existing build/ tree.
+- I cannot create a new build/ tree at repo root without permission.
+
+There was also a possible library-version mismatch worth noting, though I did
+not finish resolving it:
+   libWPEWebKit-2.0.so.1.9.9 was built against:
+     libicuuc.so.74, libicui18n.so.74, libicudata.so.74
+     libxml2.so.16
+   This host currently has:
+     libicu*.so.78
+     libxml2.so.16.1.2
+
+That is the kind of issue that can prevent a successful run even after a
+successful link. It is not yet resolved here.
+
+Proposed minimal next steps
+---------------------------
+1. Make the build directory writable to this agent session, or point me at a
+   clean writable build tree.
+
+2. Reconfigure with:
+     PKG_CONFIG_PATH=/usr/local/pkgconfig
+     cmake -S . -B <writable build dir>
+       -DCMAKE_PREFIX_PATH=/usr/local
+       -DCMAKE_MODULE_PATH=/usr/local/lib/cmake
+       -DCMAKE_POLICY_VERSION=3.5
+
+3. Build only the migration test:
+     make -C <build dir> test_wpe_production_renderer
+
+4. Run only that test:
+     env LIBGL_ALWAYS_SOFTWARE=1 XDG_RUNTIME_DIR=/tmp/runtime-root
+     <build dir>/test_wpe_production_renderer
+
+5. Record results to a plain-text file, for example:
+     docs/C3_PREFLIGHT_RENDERER_MIGRATION.txt
+
+Record once verified:
+   - build configuration used
+   - pkg-config path used
+   - WPE version discovered
+   - whether the renderer used WPEPlatform headless
+   - pixel format observed from WPEBufferSHM
+   - buffer retention/lifecycle approach used
+   - test PASS/FAIL
+   - any runtime dependency issues seen
+
+Do not start the C3 30 FPS benchmark yet.
+Do not mark C3 PASS.

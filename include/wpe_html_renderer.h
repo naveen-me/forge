@@ -7,13 +7,11 @@
 #include <atomic>
 #include <cstdint>
 
-#include <wpe/wpe.h>
-#include <wpe/fdo.h>
-#include <wpe/unstable/fdo-shm.h>
-#include <wayland-server-core.h>
-
-#include <webkit2/webkit2.h>
-#include <cairo.h>
+#include <glib.h>
+#include <glib-object.h>
+#include <wpe/webkit.h>
+#include <wpe/wpe-platform.h>
+#include <wpe/headless/wpe-headless.h>
 
 namespace tarva {
 
@@ -28,30 +26,35 @@ public:
 
     // Renders current page into dest_buffer as raw RGBA bytes.
     // dest_buffer must be pre-allocated with size width * height * 4.
+    // Returns true when a CPU-readable frame is available.
     bool capture_frame_rgba(uint8_t* dest_buffer, int target_w, int target_h);
 
     int width() const { return width_; }
     int height() const { return height_; }
     bool is_loaded() const { return is_loaded_; }
-    bool is_wpe_fdo_active() const { return fdo_initialized_; }
-
-    void on_shm_buffer_exported(struct wpe_fdo_shm_exported_buffer* buffer);
 
 private:
     int width_;
     int height_;
     std::string current_url_;
     std::atomic<bool> is_loaded_{false};
-    bool fdo_initialized_ = false;
     std::mutex render_mutex_;
 
-    struct wpe_view_backend_exportable_fdo* exportable_fdo_ = nullptr;
-    struct wpe_view_backend* view_backend_ = nullptr;
-
+    // WPEPlatform headless objects
+    WPEDisplay* display_ = nullptr;
     WebKitWebView* web_view_ = nullptr;
-    cairo_surface_t* offscreen_surface_ = nullptr;
-    std::vector<uint8_t> latest_shm_frame_;
-    bool has_shm_frame_ = false;
+    WPEView* wpe_view_ = nullptr;
+
+    // Retained latest buffer state for capture_frame_rgba().
+    // Owned by WPE; we only retain the GBytes reference.
+    GBytes* latest_buffer_ = nullptr;
+    int latest_w_ = 0;
+    int latest_h_ = 0;
+    int latest_stride_ = 0;
+    int latest_format_ = 0;
+
+    static void on_buffers_changed(WPEView* view, WPEBuffer** buffers, guint n_buffers, gpointer user_data);
+    void release_latest_buffer();
 };
 
 } // namespace tarva

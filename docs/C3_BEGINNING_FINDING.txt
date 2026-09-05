@@ -1,0 +1,75 @@
+C3 BEGINNING FINDING
+=====================
+
+Date checked: 2026-09-06
+Host: current TARVA development machine
+Branch: tarva
+Current HEAD: 67152024b767605cdd743eeed55c5ba46aaeb8f0
+
+Conclusion:
+C3 cannot begin on this host in the current state.
+
+Reason:
+The approved C3 pipeline requires the WPE platform integration to be usable from the
+build. On this host, the WPE WebKit 2.52.5 library and its headless symbols are present,
+but the pkg-config dependency graph needed to compile and link against WPE WebKit 2.52.5
+is not correctly available by default.
+
+Observed package versions:
+- gpac: 26.08-DEV
+- wpe-1.0: 1.17.0
+- wpebackend-fdo-1.0: 1.17.0
+- webkit2gtk-4.1: 2.52.6
+
+Observed pkg-config availability:
+- wpe-webkit-2.0: NOT found by default
+- wpe-platform-2.0: NOT found by default
+
+Relevant evidence:
+- libWPEWebKit-2.0.so.1.9.9 exists at /usr/local/lib/
+- libWPEWebKit-2.0.so symlinks exist
+- wpe-display-headless symbols are present in the library, including:
+  - wpe_display_headless_new
+  - wpe_display_headless_new_for_device
+  - wpe_view_headless_get_type
+- WPE platform headers exist under:
+  /usr/local/include/wpe-webkit-2.0/wpe-platform/wpe/headless/
+- The file /usr/local/pkgconfig/wpe-webkit-2.0.pc exists and says:
+  - Version: 2.52.5
+  - Requires: glib-2.0 libsoup-3.0 wpe-platform-2.0
+
+Why this blocks C3:
+1. ADR-020 defines the corrected rendering path as:
+   WPE WebKit -> WPEDisplayHeadless -> WPEBuffer -> CPU-readable RGBA
+     -> GF_FilterSession compositor filter
+     -> FFmpeg H.264/AAC encoder -> RTMP output
+
+2. C3 requires the existing known-good WPE WebKit 2.52.5 artifact and WPEPlatform headless.
+
+3. The current CMakeLists.txt requires webkit2gtk-4.1, not wpe-webkit-2.0.
+
+4. Even though the WPE library and headers exist, the pkg-config discovery path for
+   wpe-webkit-2.0 is not in the default search path, and it depends on wpe-platform-2.0,
+   which is also not discoverable by default here.
+
+5. That means C3 source cannot be compiled/linked through the intended WPE path without
+   first correcting the WPE platform pkg-config discovery/build configuration.
+
+What the next action must be:
+- Make wpe-webkit-2.0 and wpe-platform-2.0 usable for the build, OR
+- Confirm that the intended build host already has them correctly packaged/installed.
+
+Do NOT:
+- Rebuild WPE.
+- Modify WPE.
+- Revert C2.3.
+- Start speculative C3 implementation before this is resolved.
+
+Recommended immediate next step:
+Decide whether to:
+A. Fix pkg-config/CMake discovery for wpe-webkit-2.0 and wpe-platform-2.0 on this host,
+   then proceed with C3 implementation and measurement.
+B. Mark C3 blocked here and defer the C3 gate to the capable build host, consistent with
+   ADR-021 sequencing intent.
+
+End of finding.
