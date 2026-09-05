@@ -17,7 +17,7 @@ This file tracks two INDEPENDENT workstreams:
 ### Current Task
 ID: 0.3 (Phase C1 gate execution)
 Name: Prove WPEPlatform headless -> CPU-readable RGBA buffer
-Status: **IN PROGRESS** — C1.3 COMPLETE, C1.4 PASS, C1.5 PASS, C1.5.1 PASS, C2 PASS, C2.1 PASS, C2.2 PASS
+Status: **IN PROGRESS** — C1.3 COMPLETE, C1.4 PASS, C1.5 PASS, C1.5.1 PASS, C2 PASS, C2.1 PASS, C2.2 PASS, C2.3 PASS
 Started: 2026-08-17
 Last Updated: 2026-08-23
 
@@ -44,10 +44,10 @@ No GitHub Actions workflow should trigger on `push` to any branch.
 **To run benchmark:** Manually dispatch `c1_5_1_bench.yml` via GitHub Actions UI.
 
 ### Overall Progress (checkpoint tasks only)
-Completed: 6 (0.1, 0.2, 0.3-prep, C1.3 build, C1.4+C1.5 measurement, C2 composition gate)
+Completed: 7 (0.1, 0.2, 0.3-prep, C1.3 build, C1.4+C1.5 measurement, C2 composition gate, C2.3 dynamic refresh proof)
 In Progress: 0
 Blocked: 0
-Not Started: 11
+Not Started: 10
 
 > C4-local corrective work (workstream B) is intentionally NOT included in these counts.
 > C1, C2 and C3 remain open gates regardless of B's results.
@@ -102,7 +102,8 @@ Not Started: 11
 - **C1.4 — RESOLVED**: WPE headless rendering proven, CPU-readable RGBA pixels obtained.
 - **C1.5 — RESOLVED**: 30.71 FPS sustained at 1920x1080, 0% drops, 460 frames.
 - **C1 gate — CONDITIONALLY PASS**: All checkpoints complete. P95 of 38.98ms is slightly over 33.33ms target due to 1.2GHz i3 hardware. On production hardware (4+ GHz), P95 would be <20ms.
-- **C2**: **PASS** — GPAC compositor performs real 2-layer composition via BIFS scene.
+- **C2.2**: **PASS** — GPAC C API frame injection path characterized; compositor sticky-session blocker documented.
+- **C2.3**: **PASS** — GPAC dynamic frame refresh proved; `buffer=0:rbuffer=0` zero-rebuffer configuration + non-blocking session drive correct per-frame content refresh, monotonic CTS, and 0 dropped frames.
 - **C3**: gated behind operator decision to proceed.
 
 ### What remains to execute C1 (0.3) — on a capable build host / CI
