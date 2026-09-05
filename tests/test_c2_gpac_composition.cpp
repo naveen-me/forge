@@ -203,7 +203,7 @@ int main() {
     // Phase 3: GPAC filter session via C API
     fprintf(stderr, "\n--- Phase 3: GPAC filter session (C API) ---\n");
     GF_Err err = GF_OK;
-    GF_FilterSession* fs = gf_fs_new_defaults(static_cast<GF_FilterSessionFlags>(0));
+    GF_FilterSession* fs = gf_fs_new_defaults(0);
     if (!fs) { fprintf(stderr, "FAIL: No GPAC session\n"); return 1; }
     
     // Load BIFS scene as source (btplay filter handles .bt files)

@@ -149,12 +149,20 @@ static int test_part_a() {
     src_counter_a = 0;
     auto t0 = now_ns();
     GF_Err err = GF_OK;
-    GF_FilterSession* fs = gf_fs_new_defaults(
-        static_cast<GF_FilterSessionFlags>(0));
+    GF_FilterSession* fs = gf_fs_new_defaults(0);
 
     GF_Filter* src = gf_fs_new_filter(fs, "c22src",
                                        GF_FS_REG_MAIN_THREAD, &err);
     gf_filter_set_process_ckb(src, custom_src_process);
+
+    GF_PropertyValue pv_cap;
+    pv_cap.type = GF_PROP_UINT;
+    pv_cap.value.uint = GF_STREAM_VISUAL;
+    gf_filter_push_caps(src, GF_PROP_PID_STREAM_TYPE, &pv_cap, NULL, GF_CAPS_OUTPUT, 0);
+    pv_cap.value.uint = GF_CODECID_RAW;
+    gf_filter_push_caps(src, GF_PROP_PID_CODECID, &pv_cap, NULL, GF_CAPS_OUTPUT, 0);
+    pv_cap.value.uint = GF_PIXEL_RGBA;
+    gf_filter_push_caps(src, GF_PROP_PID_PIXFMT, &pv_cap, NULL, GF_CAPS_OUTPUT, 0);
 
     GF_FilterPid* pid = gf_filter_pid_new(src);
     GF_PropertyValue pv;
@@ -174,6 +182,7 @@ static int test_part_a() {
     GF_Filter* fout = gf_fs_load_filter(fs, "fout:dst=/tmp/c22_partA.png",
                                          &err);
     gf_filter_set_source(png, src, NULL);
+    gf_filter_set_source(fout, png, NULL);
     gf_filter_post_process_task(src);
 
     for (int i = 0; i < 100; i++) {
@@ -235,8 +244,7 @@ static int test_part_c() {
     int64_t t_inject = now_ns();
 
     GF_Err err = GF_OK;
-    GF_FilterSession* fs = gf_fs_new_defaults(
-        static_cast<GF_FilterSessionFlags>(0));
+    GF_FilterSession* fs = gf_fs_new_defaults(0);
 
     // Chain: file → rfrawvid (raw video parser) → compositor
     char chain_url[1024];
@@ -371,8 +379,7 @@ static int test_part_d() {
     fclose(sf);
 
     GF_Err err = GF_OK;
-    GF_FilterSession* fs = gf_fs_new_defaults(
-        static_cast<GF_FilterSessionFlags>(0));
+    GF_FilterSession* fs = gf_fs_new_defaults(0);
 
     GF_Filter* src = gf_fs_load_source(fs, scene_path, NULL, NULL, &err);
     GF_Filter* comp = gf_fs_load_filter(fs,
