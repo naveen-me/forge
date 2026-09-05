@@ -159,5 +159,15 @@ target_link_libraries(test_c2_1_native_frame_injection PRIVATE tarva_core png)
 add_test(NAME test_c2_1_native_frame_injection COMMAND $<TARGET_FILE:test_c2_1_native_frame_injection>)
 set_tests_properties(test_c2_1_native_frame_injection PROPERTIES ENVIRONMENT "LIBGL_ALWAYS_SOFTWARE=1;XDG_RUNTIME_DIR=/tmp/runtime-root")
 
+add_executable(test_c2_2_native_injection tests/test_c2_2_native_injection.cpp)
+target_link_libraries(test_c2_2_native_injection PRIVATE tarva_core png)
+add_test(NAME test_c2_2_native_injection COMMAND $<TARGET_FILE:test_c2_2_native_injection>)
+set_tests_properties(test_c2_2_native_injection PROPERTIES ENVIRONMENT "LIBGL_ALWAYS_SOFTWARE=1;XDG_RUNTIME_DIR=/tmp/runtime-root" TIMEOUT 60)
+
+add_executable(test_c2_3_continuous_compositor tests/test_c2_3_continuous_compositor.cpp)
+target_link_libraries(test_c2_3_continuous_compositor PRIVATE tarva_core)
+add_test(NAME test_c2_3_continuous_compositor COMMAND $<TARGET_FILE:test_c2_3_continuous_compositor>)
+set_tests_properties(test_c2_3_continuous_compositor PROPERTIES ENVIRONMENT "LIBGL_ALWAYS_SOFTWARE=1;XDG_RUNTIME_DIR=/tmp/runtime-root" TIMEOUT 120)
+
 add_executable(run_poc_benchmark benchmarks/run_poc_benchmark.cpp)
 target_link_libraries(run_poc_benchmark PRIVATE tarva_core)

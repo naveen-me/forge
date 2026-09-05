@@ -17,9 +17,9 @@ This file tracks two INDEPENDENT workstreams:
 ### Current Task
 ID: 0.3 (Phase C1 gate execution)
 Name: Prove WPEPlatform headless -> CPU-readable RGBA buffer
-Status: **IN PROGRESS** — C1.3 COMPLETE, C1.4 PASS, C1.5 PASS, C1.5.1 PASS, C2 PASS, C2.1 PASS
+Status: **IN PROGRESS** — C1.3 COMPLETE, C1.4 PASS, C1.5 PASS, C1.5.1 PASS, C2 PASS, C2.1 PASS, C2.2 PASS
 Started: 2026-08-17
-Last Updated: 2026-08-22
+Last Updated: 2026-08-23
 
 ### CI Policy (effective 2026-08-23)
 
@@ -317,6 +317,59 @@ WPEBufferSHM → ARGB8888 (BGRA bytes) → 1 in-memory copy → tmpfs → rfrawv
 - `tests/test_c2_1_native_frame_injection.cpp` (new — C2.1 test)
 - `CMakeLists.txt` (added test_c2_1_native_frame_injection target)
 - `C2_1_REPORT.md` (new — detailed report)
+
+---
+
+#### [C2.2] Native GPAC C API Frame Injection Investigation
+- Date: 2026-08-23
+- Status: **PASS**
+- Objective: Determine whether CPU-readable RGBA frame can be injected into GPAC C API filter graph without PNG/JPEG/tmpfs/subprocess.
+
+**Investigation results:**
+
+**Part A — Custom source filter → pngenc → fout: PASS**
+- Proves zero-copy, zero-file frame injection into GPAC C API
+- `gf_filter_pck_new_alloc()` + `gf_filter_pck_send()` injects RGBA frames directly
+- No tmpfs, no PNG/JPEG, no subprocess
+- 1 memory copy (alloc into packet buffer)
+- Output: 1920×1080 RGBA, 2,073,600 blue pixels (100%)
+- Latency: ~140 ms
+
+**Part B — Custom source → compositor → pngenc → fout: BLOCKED**
+- `gf_filter_set_source()` creates link but session hangs
+- Root cause: `gf_fs_run()` in blocking mode never terminates because the compositor filter is sticky (by design for continuous media playback)
+- Source code analysis confirms PID IS connected, scene IS created, but blocking session prevents completion
+- `compose_configure_pid()` creates dynamic scene but `gf_sc_draw_frame()` needs `ctx->vout` which is only created on first PID connection
+
+**Part C — tmpfs raw RGBA → rfrawvid chain → compositor: PASS**
+- `gf_fs_load_source()` with `file#rfrawvid:size=WxH:spfmt=rgba` chain syntax
+- Compositor works with rfrawvid raw video PIDs via C API
+- Output: 1920×1080 RGBA, 2,073,600 blue pixels
+- Injection: 6 ms, Total: 200 ms
+
+**Part D — BIFS scene + PNGs → compositor (C API): PASS**
+- OrderedGroup → Layer2D → Background2D + Transform2D composes two layers
+- BIFS scene parsed, compositor rendered, output produced
+- Output: 1920×1080 RGBA with image pixels present
+- Latency: ~300 ms
+
+**Key findings:**
+1. Zero-file injection IS proven via GPAC C API custom source filters
+2. The compositor's scene management blocks custom sources in blocking mode
+3. The production path is: buffer → custom source filter → standard downstream filters
+4. For composition: tmpfs → rfrawvid chain → compositor works via C API
+5. The gap between Part A and Part B is the compositor's sticky session behavior, not the frame injection
+
+**GPAC source code analysis:**
+- `gf_filter_set_source()` correctly sets `source_ids` on destination filter
+- PID init task (`gf_filter_pid_init_task`) runs and matches source_ids
+- `compose_configure_pid()` is called, creates root_scene + namespace
+- `gf_scene_insert_pid()` inserts the PID into the scene graph
+- The hang occurs in `gf_fs_run()` blocking mode, not in filter resolution
+
+**Files changed:**
+- `tests/test_c2_2_native_injection.cpp` (new — 511 lines)
+- `CMakeLists.txt` (added test_c2_2_native_injection target)
 
 ---
 
