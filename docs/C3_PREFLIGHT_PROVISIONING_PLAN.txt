@@ -1,0 +1,156 @@
+C3 PRE-FLIGHT — USE EXISTING WPE ARTIFACT (DO NOT REBUILD WPE)
+=========================================================================
+
+Goal
+-----
+Verify the migrated production WpeHtmlRenderer against the existing WPE
+WebKit 2.52.5 artifact in GitHub Actions.
+
+Constraints
+-----------
+- Do NOT rebuild WPE.
+- Do NOT create another WPE build workflow.
+- Do NOT modify the WPE build workflow.
+- Do NOT troubleshoot the root-owned local build directory here.
+- Do NOT install random ICU packages here.
+- Only one test is in scope:
+    test_wpe_production_renderer
+- C3 30 FPS benchmark is explicitly out of scope.
+- C3 PASS is explicitly not claimed.
+
+What already exists
+-------------------
+1. WPE artifact workflow
+   .github/workflows/c1_wpe_build.yml
+   - Manual only (workflow_dispatch)
+   - Builds WPE WebKit 2.52.5 on ubuntu-24.04
+   - Installs into /usr/local
+   - Uploads artifact:
+       wpewebkit-2.52.5-ubuntu24.04-x86_64.tar.gz
+
+2. Existing artifact download/install scripts
+   scripts/install_wpe_artifact.sh
+   scripts/reinstall_wpe_artifact.sh
+   scripts/download_wpe_artifact.sh
+   - Artifact source repo in those scripts:
+       naveen-me/forge
+   - Artifact id in install_wpe_artifact.sh:
+       9472006562
+   - Artifact name:
+       wpewebkit-2.52.5-ubuntu24.04-x86_64
+   - Install layout:
+       /usr/local/lib/libWPEWebKit-2.0.so*
+       /usr/local/include/wpe-webkit-2.0
+       /usr/local/include/wpe-platform-2.0
+       /usr/local/pkgconfig/wpe-*.pc
+       /usr/local/libexec/wpe-webkit-2.0/
+       /usr/local/share/wpe-webkit-2.0/
+
+3. Existing C1.4/C1.5 runtime helper scripts
+   scripts/build_and_run_c1_4.sh
+   - Sets:
+       PKG_CONFIG_PATH=/usr/local/pkgconfig
+       LD_LIBRARY_PATH with ICU 74 path
+       LIBGL_ALWAYS_SOFTWARE=1
+       WPE_DISPLAY=wpe-display-headless
+       WEBKIT_INJECTED_BUNDLE_PATH=/usr/local/lib/
+       WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1
+   - Builds test_c1_4 with:
+       pkg-config --cflags --libs wpe-webkit-2.0 wpe-platform-2.0
+
+4. Existing benchmark workflow
+   .github/workflows/c1_5_1_bench.yml
+   - Downloads existing WPE artifact from successful C1 build run
+   - Installs it to /usr/local
+   - Builds and runs C1.5 tests
+
+5. New validation workflow created for this task
+   .github/workflows/c3_renderer_migration_validation.yml
+   - Manual only
+   - Downloads existing WPE artifact from successful C1 build run
+   - Installs it exactly as the C1 environment did
+   - Configures TARVA with_pkg_config pointing at /usr/local/pkgconfig
+   - Builds ONLY test_wpe_production_renderer
+   - Runs ONLY test_wpe_production_renderer
+   - Uploads stdout/stderr as c3_renderer_migration_validation artifact
+
+Approved dependency
+-------------------
+- WPE WebKit 2.52.5 artifact
+- NOT rebuilt here
+- reused from successful C1 build workflow artifact
+
+Required environment
+--------------------
+On the GitHub Actions runner after artifact install:
+  PKG_CONFIG_PATH=/usr/local/pkgconfig:$PKG_CONFIG_PATH
+  LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+  LIBGL_ALWAYS_SOFTWARE=1
+  WPE_DISPLAY=wpe-display-headless
+  WEBKIT_INJECTED_BUNDLE_PATH=/usr/local/lib/
+  WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1
+  XDG_RUNTIME_DIR=/tmp/runtime-root
+
+GitHub Actions artifact access
+------------------------------
+The new workflow uses the GitHub CLI workflow command context to look up the
+latest successful C1 WPE build run and then download the matching artifact by
+name. That is the smallest safe path that does NOT rebuild WPE and does NOT
+need a separate manually tracked artifact id.
+
+If the successful C1 run cannot be found automatically, the workflow will fail
+explicitly rather than silently fall back to a wrong artifact.
+
+ICU/runtime compatibility
+-------------------------
+The C1 helper scripts show ICU 74 and libxml2 2.9 were packaged separately for
+this host when needed:
+  scripts/download_icu74.sh
+
+The new validation workflow does not attempt to solve that automatically. It
+leaves the runtime dependency question to be answered by the runner result.
+
+If the runner shows missing libraries at ldd time or a startup failure, the
+next step is to inspect the uploaded artifact log and decide whether the
+artifact itself already carries the needed runtime libraries or whether the
+runner needs additional packages. That decision should be made from evidence,
+not by guessing.
+
+What this task produces
+-----------------------
+1. A GitHub Actions workflow file:
+   .github/workflows/c3_renderer_migration_validation.yml
+
+2. A plain-text plan:
+   docs/C3_PREFLIGHT_PROVISIONING_PLAN.txt
+
+What it does NOT produce yet
+----------------------------
+- A workflow run result
+- A build result
+- A test run result
+- C3 PASS
+
+Suggested next step
+-------------------
+Manually dispatch:
+  .github/workflows/c3_renderer_migration_validation.yml
+on the TARVA branch that contains the migrated renderer.
+
+Then inspect:
+  c3_renderer_migration_validation artifact
+    -> /tmp/renderer_validation.txt
+
+Success looks like:
+  - TARVA cmake configures
+  - test_wpe_production_renderer builds
+  - test_wpe_production_renderer runs
+  - expected pixels are produced
+  - multiple captures work
+  - changing content produces changing pixels
+  - no X11/Xvfb
+  - no GTK rendering path
+  - no Cairo rendering path
+
+That would validate the migration gate without starting the C3 performance
+benchmark.

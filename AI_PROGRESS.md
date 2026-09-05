@@ -104,6 +104,7 @@ Not Started: 10
 - **C1 gate — CONDITIONALLY PASS**: All checkpoints complete. P95 of 38.98ms is slightly over 33.33ms target due to 1.2GHz i3 hardware. On production hardware (4+ GHz), P95 would be <20ms.
 - **C2.2**: **PASS** — GPAC C API frame injection path characterized; compositor sticky-session blocker documented.
 - **C2.3**: **PASS** — Direct WPE/Native RGBA → GPAC Continuous Dynamic Frame Gate proved; successive source frame pixel values appear as successive compositor output pixel values under `GF_FS_FLAG_NON_BLOCKING` + `buffer=0:rbuffer=0`.
+- **C3 pre-flight**: **IN PROGRESS** — production renderer migrated off WebKitGTK/GTK/Cairo; validation workflow prepared to verify it against the existing WPE WebKit 2.52.5 artifact. Not run yet.
 - **C3**: gated behind operator decision to proceed.
 
 ### What remains to execute C1 (0.3) — on a capable build host / CI

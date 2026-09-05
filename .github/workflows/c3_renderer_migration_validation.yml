@@ -1,0 +1,140 @@
+name: C3 Production Renderer Migration Validation
+
+# Temporary/manual validation workflow for the migrated production
+# WpeHtmlRenderer. It reuses the existing WPE WebKit 2.52.5 artifact
+# from the successful C1 build; it does NOT rebuild WPE.
+#
+# Trigger manually.
+on:
+  workflow_dispatch:
+
+jobs:
+  validate:
+    name: Build + run test_wpe_production_renderer
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout TARVA
+        uses: actions/checkout@v4
+
+      - name: Report runner environment
+        run: |
+          echo "=== CPU ==="
+          nproc
+          lscpu | grep "Model name\|CPU(s):" || true
+          echo "=== RAM ==="
+          free -h
+          echo "=== Disk ==="
+          df -h /
+          echo "=== OS ==="
+          cat /etc/os-release | head -5
+          echo "=== pkg-config ==="
+          pkg-config --version
+
+      - name: Install minimal runtime deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential pkg-config \
+            libglib2.0-dev libegl1-mesa-dev libgles2-mesa-dev \
+            libgbm-dev libepoxy-dev zlib1g-dev
+
+      - name: Download existing WPE WebKit 2.52.5 artifact
+        run: |
+          set +e
+          RUN_ID=$(gh api repos/${{ github.repository }}/actions/runs \
+            --jq '[.workflow_runs[] | select(.name == "C1 WPE WebKit Build" and .conclusion == "success")] | .[0].id' 2>/dev/null || echo "")
+          echo "Successful C1 build run id: ${RUN_ID:-<none>}"
+
+          ARTIFACT_URL=$(gh api repos/${{ github.repository }}/actions/runs/${RUN_ID}/artifacts \
+            --jq '.artifacts[] | select(.name == "wpewebkit-2.52.5-ubuntu24.04-x86_64") | .archive_download_url' 2>/dev/null || echo "")
+
+          if [ -z "$ARTIFACT_URL" ]; then
+            echo "Could not fetch artifact URL from successful C1 run; failing."
+            echo "Expected artifact name: wpewebkit-2.52.5-ubuntu24.04-x86_64"
+            exit 1
+          fi
+
+          echo "Fetching artifact from: $ARTIFACT_URL"
+          gh api --method GET -H "Accept: application/zip" \
+            "$ARTIFACT_URL" > /tmp/wpe-artifact.zip
+
+          if ! file /tmp/wpe-artifact.zip | grep -q "Zip"; then
+            echo "Downloaded file does not look like a zip:"
+            file /tmp/wpe-artifact.zip
+            exit 1
+          fi
+
+          mkdir -p /tmp/wpe-extract
+          cd /tmp/wpe-extract
+          unzip -q /tmp/wpe-artifact.zip
+          echo "=== Extracted artifact tree (top) ==="
+          find . -maxdepth 2 -type d | sort
+          echo "=== Artifact contents (first 40 entries) ==="
+          find . -type f | sort | head -40
+
+      - name: Install WPE WebKit artifact
+        run: |
+          cd /tmp/wpe-extract
+          sudo tar xzf wpewebkit-2.52.5-ubuntu24.04-x86_64.tar.gz -C /usr/local/
+          sudo ldconfig
+          echo "=== Verify installed libraries ==="
+          ls -lh /usr/local/lib/libWPEWebKit-2.0.so* || true
+          echo "=== Verify installed pkg-config ==="
+          PKG_CONFIG_PATH=/usr/local/pkgconfig:$PKG_CONFIG_PATH \
+            pkg-config --modversion wpe-webkit-2.0 wpe-platform-2.0 || true
+          echo "=== Verify installed headers ==="
+          ls /usr/local/include/wpe-webkit-2.0/wpe-platform/wpe/headless/ || true
+
+      - name: Configure TARVA build
+        run: |
+          export PKG_CONFIG_PATH=/usr/local/pkgconfig:$PKG_CONFIG_PATH
+          export CMAKE_PREFIX_PATH=/usr/local:$CMAKE_PREFIX_PATH
+          export CMAKE_MODULE_PATH=/usr/local/lib/cmake:$CMAKE_MODULE_PATH
+
+          echo "=== pkg-config discovery ==="
+          pkg-config --modversion wpe-webkit-2.0 || true
+          pkg-config --modversion wpe-platform-2.0 || true
+          pkg-config --cflags wpe-webkit-2.0 || true
+          pkg-config --libs wpe-webkit-2.0 || true
+
+          echo "=== cmake configure ==="
+          cmake -S . -B build \
+            -DCMAKE_PREFIX_PATH=/usr/local \
+            -DCMAKE_MODULE_PATH=/usr/local/lib/cmake \
+            -DCMAKE_POLICY_VERSION=3.5
+
+      - name: Build test_wpe_production_renderer only
+        run: |
+          cd build
+          make -j$(nproc) test_wpe_production_renderer
+          echo "=== Built artifacts ==="
+          file test_wpe_production_renderer
+          ldd test_wpe_production_renderer || true
+
+      - name: Run test_wpe_production_renderer
+        run: |
+          export PKG_CONFIG_PATH=/usr/local/pkgconfig:$PKG_CONFIG_PATH
+          export LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+          export LIBGL_ALWAYS_SOFTWARE=1
+          export WPE_DISPLAY=wpe-display-headless
+          export WEBKIT_INJECTED_BUNDLE_PATH=/usr/local/lib/
+          export WEBKIT_DISABLE_SANDBOX_THIS_IS_DANGEROUS=1
+          export XDG_RUNTIME_DIR=/tmp/runtime-root
+          mkdir -p "$XDG_RUNTIME_DIR"
+
+          echo "=== Running production renderer validation ==="
+          timeout 200 ./build/test_wpe_production_renderer 2>&1 | tee /tmp/renderer_validation.txt
+          EXIT_CODE=${PIPESTATUS[0]}
+          echo "=== Exit code: $EXIT_CODE ==="
+          exit $EXIT_CODE
+
+      - name: Upload validation output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c3_renderer_migration_validation
+          path: |
+            /tmp/renderer_validation.txt
+          retention-days: 30
