@@ -44,7 +44,7 @@ No GitHub Actions workflow should trigger on `push` to any branch.
 **To run benchmark:** Manually dispatch `c1_5_1_bench.yml` via GitHub Actions UI.
 
 ### Overall Progress (checkpoint tasks only)
-Completed: 7 (0.1, 0.2, 0.3-prep, C1.3 build, C1.4+C1.5 measurement, C2 composition gate, C2.3 dynamic refresh proof)
+Completed: 7 (0.1, 0.2, 0.3-prep, C1.3 build, C1.4+C1.5 measurement, C2 composition gate, C2.3 direct native RGBA → GPAC continuous dynamic frame gate)
 In Progress: 0
 Blocked: 0
 Not Started: 10
@@ -103,7 +103,7 @@ Not Started: 10
 - **C1.5 — RESOLVED**: 30.71 FPS sustained at 1920x1080, 0% drops, 460 frames.
 - **C1 gate — CONDITIONALLY PASS**: All checkpoints complete. P95 of 38.98ms is slightly over 33.33ms target due to 1.2GHz i3 hardware. On production hardware (4+ GHz), P95 would be <20ms.
 - **C2.2**: **PASS** — GPAC C API frame injection path characterized; compositor sticky-session blocker documented.
-- **C2.3**: **PASS** — GPAC dynamic frame refresh proved; `buffer=0:rbuffer=0` zero-rebuffer configuration + non-blocking session drive correct per-frame content refresh, monotonic CTS, and 0 dropped frames.
+- **C2.3**: **PASS** — Direct WPE/Native RGBA → GPAC Continuous Dynamic Frame Gate proved; successive source frame pixel values appear as successive compositor output pixel values under `GF_FS_FLAG_NON_BLOCKING` + `buffer=0:rbuffer=0`.
 - **C3**: gated behind operator decision to proceed.
 
 ### What remains to execute C1 (0.3) — on a capable build host / CI
