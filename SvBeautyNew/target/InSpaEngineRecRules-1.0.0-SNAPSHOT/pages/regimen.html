@@ -1,0 +1,508 @@
+
+
+			
+<html>
+<head>
+<title>SV Personal Beauty System | Product Regimen</title>
+<script language="JavaScript">
+<!--
+
+function submitInfo() {
+
+/*     if (document.regdet.cleanseSkip.checked != null)
+       if (document.regdet.cleanseSkip.checked)
+	     document.regdet.cleanseprod.value="" ;
+	     
+     if (document.regdet.moisturizeSkip.checked != null)
+       if (document.regdet.moisturizeSkip.checked)
+	     document.regdet.moisturizeprod.value="" ;
+	     
+     if (document.regdet.treatSkip.checked != null)
+       if (document.regdet.treatSkip.checked)
+	     document.regdet.treatprod.value="" ;
+	     
+     if (document.regdet.etreatSkip.checked != null)
+       if (document.regdet.etreatSkip.checked)
+	     document.regdet.etreatprod.value="" ;
+	  
+	alert("cleanse "+document.regdet.cleanseprod.value) ;
+	alert("moisturize "+document.regdet.moisturizeprod.value) ;
+	alert("treat "+document.regdet.treatprod.value) ;
+	alert("etreat "+document.regdet.etreatprod.value) ;
+	alert("spf "+document.regdet.spfprod.value) ;
+*/	  
+  document.regdet.action = "regimenshop.do" ;
+  document.regdet.submit() ;
+}
+function submitDetails() {
+
+  document.regdet.prodTypeFlag.value = "no" ;
+  document.regdet.prodLineFlag.value = "no" ;
+  document.regdet.action = "regimendetail.do" ;
+  document.regdet.submit() ;
+}
+
+function call_popup(id,cid,pdid,pcn)
+{
+//  document.regdet.customerId.value = cid ;
+//  document.regdet.prodId.value = pdid ;
+//  document.regdet.target = "_new" ;
+//  document.regdet.action = "productanalysis.do" ;
+//  document.regdet.submit() ;
+    url = "productanalysis.do?customerId="+cid+"&productId="+pdid ;
+    window.open(url,'productAnalysis','width=640,height=480', 'toolbars=0');
+}
+function call_detail(id1)
+{
+//  document.pdet.prodid.value = id1 ;
+//  document.pdet.action = "proddetailvgo.do" ;
+//  document.pdet.submit() ;
+    window.open("productDetails.do?productId="+id1+"&popup=y&desc=y&direc=n&ingred=n&glos=n", "", "height=600, width=800, scrollbars=yes,resizable=yes,left=0,top=0");
+}
+function call_pdf(id1)
+{
+//  document.pdet.prodid.value = id1 ;
+//  document.pdet.action = "proddetailvgo.do" ;
+//  document.pdet.submit() ;
+    window.open("productDescPdfGenerator.do");
+}
+function skipThis(id)
+{
+} 
+
+function selectProd(id,val)
+{
+    if (id == "cleanse")
+       if (!document.regdet.cleanseSkip.checked)
+       {
+			document.regdet.cleanseprod.value=val ;
+	   }
+    if (id == "moisturize")
+       if (!document.regdet.moisturizeSkip.checked)
+       {
+			document.regdet.moisturizeprod.value=val ;
+	   }
+    if (id == "treat")
+       if (!document.regdet.treatSkip.checked)
+       {
+			document.regdet.treatprod.value=val ;
+	   }
+    if (id == "etreat")
+       if (!document.regdet.etreatSkip.checked)
+       {
+			document.regdet.etreatprod.value=val ;
+	   }
+} 
+
+// Function for New Price and adding the content to the HTML
+////////////////////////////////////////////////////////////
+
+function changePrice()
+{
+  var price = 0.0;
+
+  var cleansePrice = parseFloat(document.regdet.cleansePrice.value);
+  var moisturizePrice = parseFloat(document.regdet.moisturizePrice.value);
+  var treatPrice = parseFloat(document.regdet.treatPrice.value);
+  var etreatPrice = parseFloat(document.regdet.etreatPrice.value);
+
+  var cleanseqty = parseFloat(document.regdet.cleanseqty.value);
+  var moisturizeqty = parseFloat(document.regdet.moisturizeqty.value);
+  var treatqty = parseFloat(document.regdet.treatqty.value);
+  var etreatqty = parseFloat(document.regdet.etreatqty.value);
+
+  if(isNaN(cleanseqty))
+  {
+    cleanseqty = 0;
+  }
+  if(isNaN(moisturizeqty))
+  {
+    moisturizeqty = 0;
+  }
+  if(isNaN(treatqty))
+  {
+    treatqty = 0;
+  }
+  if(isNaN(etreatqty))
+  {
+    etreatqty = 0;
+  }
+
+  if(document.regdet.cleanseCheck.checked)
+  {
+    price += cleanseqty * cleansePrice;
+  }
+  if(document.regdet.moisturizeCheck.checked)
+  {
+    price += moisturizeqty * moisturizePrice;
+  }
+  if(document.regdet.treatCheck.checked)
+  {
+    price += treatqty * treatPrice
+  }
+  if(document.regdet.etreatCheck.checked)
+  {
+    price += etreatqty * etreatPrice
+  }
+
+  newPrice.innerHTML = "$"+price;
+}
+////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////
+
+function submit_this()
+{
+  document.regdet.action = "regimenmail.do" ;
+  document.regdet.submit() ;
+}
+function selectType(id)
+{
+  if (id == "cleanse")
+    document.regdet.prodType.value = "0001" ;
+  if (id == "moisturize")
+    document.regdet.prodType.value = "0003" ;
+  if (id == "treat")
+    document.regdet.prodType.value = "0005" ;
+  if (id == "etreat")
+    document.regdet.prodType.value = "0004" ;
+  document.regdet.prodTypeFlag.value = "yes" ;
+  document.regdet.prodLineFlag.value = "no" ;
+  document.regdet.action = "regimendetail.do" ;
+  document.regdet.submit() ;
+}
+function showBrandInfo(brandid)
+{
+    window.open("brandDisc.do?brandId="+brandid+"&popup=y&desc=y&direc=n&ingred=n&glos=n", "", "height=600, width=800, scrollbars=yes,resizable=yes,left=0,top=0");
+}
+//-->
+</script>
+<STYLE> <!-- body { margin-top: 0; margin-left: 0 } --> </STYLE>
+<script language="JavaScript">
+<!--
+  name = 'mainwindow';
+  //--></script>
+		<link rel="stylesheet" href="sv.css">
+	</head>
+<body bgcolor="#FFFFFF" text="#000000" link="#006699" vlink="#006699" alink="#006699" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0" >
+ <form name="regdet" method="post" action="">
+
+			<table width="778" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+					<td colspan="2"><img src="images/shared/trans.gif" alt="" width="476" height="26" border="0"></td>
+                </tr>
+				<tr valign="top">
+				    <td width="17"></td>
+					<td><img src="images/beauty_logo_txt.gif" border="0" width="230" height="30" alt="SV Beauty Advisor"></a></td>
+				</tr>
+                <tr valign="top"> 
+				  <td width="17"></td>
+                  <td><img src="images/colorbar.gif" width="756" height="5" border="0" alt=""></td>
+               </tr>
+			</table>
+
+			<table width="778" border="0" cellspacing="0" cellpadding="0">
+                <tr>
+					<td colspan="2"><img src="images/shared/trans.gif" alt="" width="476" height="26" border="0"></td>
+                </tr>
+			</table>
+         
+         
+			<table width="778" border="0" cellspacing="0" cellpadding="0" border="1">
+				<tr valign="top">
+                    <td width="17"></td>
+				    <td width="600"><b>Your solution for beautiful skin</b></td>
+                    <td width="170" align="center"></td>
+				</tr>
+			</table>
+			<table width="778" border="0" cellspacing="0" cellpadding="0" border="1">
+				<tr valign="top">
+                    <td width="17"></td>
+				    <td width="600"><b>Based on your skin type, skin concerns, and preferences - here&rsquo;s your personalized skin care regimen.</td>
+                    <td width="170" align="center"><div id=price style="font-weight:bold;font-size:12">$220.5</div><br>
+                        <input type=button name="shop" value="Buy this regimen" onClick="javascript:submitInfo()">
+                    </td>
+				</tr>
+			</table>
+
+			<table width="778" border="0" cellspacing="0" cellpadding="0" border="1">
+				<tr valign="top">
+                    <td width="17"></td>
+				    <td width="600"><b>The products below have been selected because they are formulated to be gentle and non-irritating for your rosacea while still helping you to achieve you skin care needs, but remember to do a patch test on each product and introduce one product at a time into your regimen. Use gentle motions when cleansing. </td>
+                    <td width="170" align="center">Or you can <br>
+                        <a href="javascript:call_pdf('id')">View regimen details</a><br>
+                        <a href="javascript:submit_this()">Email to a friend</a><br><br>
+                        <b>Purchase products individually</b>
+                    </td>
+				</tr>
+			</table>
+
+          
+			<table width="778" border="0" cellspacing="0" cellpadding="0">
+				<tr height="10">
+					<td colspan="2" width="778" height="10"></td>
+				</tr>
+				<tr valign="top">
+					<td width="17"></td>
+					<td width="767">
+					 <table width="767" border="0" cellspacing="0" cellpadding="0">
+		              
+							<tr valign="top" height="20">
+								<td colspan="3" align="left"><b>Step 1. Cleanse</b></td>
+                            </tr>
+				            <tr height="10">
+					          <td colspan="3" width="767" height="10"><img src="images/shared/trans.gif" width="100" height="10"></td>
+				            </tr>
+                            
+							<tr valign="top">
+	                           
+								<td  align="center" width="192"><a href="javascript:call_detail('158361')"><img src="http://a1468.g.akamai.net/f/1468/580/1d/pics.drugstore.com/prodimg/158361/100.jpg" width="57" height="57" border="0" alt="Product Display"></a></td>
+                                <td width="580">
+                                  <table>
+							        <tr valign="top">
+								      <td class="regbodtext" colspan="2" width="192" align="left">Korres Natural Products Facial Fluid Gel Cleanser, White Tea, 6.76 fl oz</td>
+    						        </tr>
+                                   
+							        <tr valign="top">
+								     <td colspan="2" class="regprice" width="192" align="left">
+										$19.50</td>
+										
+							         </tr>
+							         <tr valign="top">
+                                      <td colspan="2" width="192" align="right"><a href="javascript:call_popup('proddetail','300000197','158361','')"><img src="images/btn-see-analysis.gif" alt="" width="81" height="31" border="0"></a></td>
+							         </tr>
+                                  </table>
+                                </td>
+                                <td width="140" align="right"><input type=text name="cleanseqty" value="1" size="3" onchange="javascript:changePrice()">&nbsp;&nbsp;&nbsp;
+                                     <input type="checkbox" name="cleanseCheck" checked onchange="javascript:changePrice()">
+                                </td>
+								
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<tr height="20">
+					<td colspan="2" width="778" height="20"></td>
+				</tr>
+			</table>
+       
+       
+        
+
+<!-- cleanse end -->
+<!-- moisturize begins -->
+
+          
+			<table width="778" border="0" cellspacing="0" cellpadding="0">
+				<tr height="10">
+					<td colspan="2" width="778" height="10"></td>
+				</tr>
+				<tr valign="top">
+					<td width="17"></td>
+					<td width="767">
+					 <table width="767" border="0" cellspacing="0" cellpadding="0">
+		              
+							<tr valign="top" height="20">
+								<td colspan="3" align="left"><b>Step 2. Moisturize</b></td>
+                            </tr>
+				            <tr height="10">
+					          <td colspan="3" width="767" height="10"><img src="images/shared/trans.gif" width="100" height="10"></td>
+				            </tr>
+                            
+							<tr valign="top">
+	                           
+								<td  align="center" width="192"><a href="javascript:call_detail('151187')"><img src="http://a1468.g.akamai.net/f/1468/580/1d/pics.drugstore.com/prodimg/151187/100.jpg" width="57" height="57" border="0" alt="Product Display"></a></td>
+                                <td width="580">
+                                  <table>
+							        <tr valign="top">
+								      <td class="regbodtext" colspan="2" width="192" align="left">Juice Beauty Oil-Free Moisturizer, 2 fl oz</td>
+    						        </tr>
+                                   
+							        <tr valign="top">
+								     <td colspan="2" class="regprice" width="192" align="left">
+										$28.00</td>
+							         </tr>
+							         <tr valign="top">
+                                      <td colspan="2" width="192" align="right"><a href="javascript:call_popup('proddetail','300000197','151187','')"><img src="images/btn-see-analysis.gif" alt="" width="81" height="31" border="0"></a></td>
+							         </tr>
+                                  </table>
+                                </td>
+                                <td width="140" align="right"><input type=text name="moisturizeqty" value="1" onchange="javascript:changePrice()" size="3">&nbsp;&nbsp;&nbsp;
+                                     <input type="checkbox" name="moisturizeCheck" checked onchange="javascript:changePrice()">
+                                </td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<tr height="20">
+					<td colspan="2" width="778" height="20"></td>
+				</tr>
+			</table>
+       
+
+       
+        
+
+
+<!-- moisturize ends -->
+<!-- treat begins -->
+          
+			<table width="778" border="0" cellspacing="0" cellpadding="0">
+				<tr height="10">
+					<td colspan="2" width="778" height="10"></td>
+				</tr>
+				<tr valign="top">
+					<td width="17"></td>
+					<td width="767">
+					 <table width="767" border="0" cellspacing="0" cellpadding="0">
+		              
+							<tr valign="top" height="20">
+								<td colspan="3" align="left"><b>Step 3. Treat</b></td>
+                            </tr>
+				            <tr height="10">
+					          <td colspan="3" width="767" height="10"><img src="images/shared/trans.gif" width="100" height="10"></td>
+				            </tr>
+                            
+							<tr valign="top">
+	                           
+								<td align="center" width="192"><a href="javascript:call_detail('147472')"><img src="http://a1468.g.akamai.net/f/1468/580/1d/pics.drugstore.com/prodimg/147472/100.jpg" width="57" height="57" border="0" alt="Product Display"></a></td>
+                                <td width="580">
+                                  <table>
+							        <tr valign="top">
+								      <td class="regbodtext" colspan="2" width="192" align="left">Dr. Brandt R3P Cream</td>
+    						        </tr>
+                                   
+							        <tr valign="top">
+								     <td colspan="2" class="regprice" width="192" align="left">
+										$125.00</td>
+							         </tr>
+							         <tr valign="top">
+                                      <td colspan="2" width="192" align="right"><a href="javascript:call_popup('proddetail','300000197','147472','')"><img src="images/btn-see-analysis.gif" alt="" width="81" height="31" border="0"></a></td>
+							         </tr>
+                                  </table>
+                                </td>
+                                <td width="140" align="right"><input type=text name="treatqty" value="1" onchange="javascript:changePrice()" size="3">&nbsp;&nbsp;&nbsp;
+                                     <input type="checkbox" name="treatCheck" checked onchange="javascript:changePrice()">
+                                 </td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<tr height="20">
+					<td colspan="2" width="778" height="20"></td>
+				</tr>
+			</table>
+       
+
+       
+        
+
+<!-- treat ends -->
+<!-- etreat begins -->
+
+       
+			<table width="778" border="0" cellspacing="0" cellpadding="0">
+				<tr height="10">
+					<td colspan="2" width="778" height="10"></td>
+				</tr>
+				<tr valign="top">
+					<td width="17"></td>
+					<td width="767">
+					 <table width="767" border="0" cellspacing="0" cellpadding="0">
+		              
+							<tr valign="top" height="20">
+								<td colspan="3" align="left"><b>Step 4. Eye</b></td>
+                            </tr>
+				            <tr height="10">
+					          <td colspan="3" width="767" height="10"><img src="images/shared/trans.gif" width="100" height="10"></td>
+				            </tr>
+                            
+							<tr valign="top">
+	                           
+								<td  align="center" width="192"><a href="javascript:call_detail('91603')"><img src="http://a1468.g.akamai.net/f/1468/580/1d/pics.drugstore.com/prodimg/91603/100.jpg" width="57" height="57" border="0" alt="Product Display"></a></td>
+                                <td width="580">
+                                  <table>
+							        <tr valign="top">
+								      <td class="regbodtext" colspan="2" width="192" align="left">Fresh Lotus Eye Gel, .5 fl oz</td>
+    						        </tr>
+                                   
+							        <tr valign="top">
+								     <td colspan="2" class="regprice" width="192" align="left">
+										$48.00</td>
+							         </tr>
+							         <tr valign="top">
+                                      <td colspan="2" width="192" align="right"><a href="javascript:call_popup('proddetail','300000197','91603','')"><img src="images/btn-see-analysis.gif" alt="" width="81" height="31" border="0"></a></td>
+							         </tr>
+                                  </table>
+                                </td>
+                                <td width="140" align="right"><input type=text name="etreatqty" value="1" onchange="javascript:changePrice()" size="3">&nbsp;&nbsp;&nbsp;
+                                     <input type="checkbox" name="etreatCheck" checked onchange="javascript:changePrice()">
+                                 </td>
+							</tr>
+						</table>
+					</td>
+				</tr>
+				<tr height="20">
+					<td colspan="2" width="778" height="20"></td>
+				</tr>
+				<!-- Calculations for price begins Here -->
+				<tr>
+				  <td></td>
+				  <td> </td>
+				  <td align="left"><div id="newPrice" style="font-weight:bold;font-size:12">$220.5</div></td>
+				</tr>
+
+			</table>
+       
+
+       
+        
+
+<!-- etreat ends -->
+<!-- spf begins -->
+
+          
+          
+
+       
+            <table>
+              <tr>
+                <td><img src="images/shared/trans.gif" width="600" height="10"><a href="javascript:history.go(-1)">Change your selections</a><img src="images/shared/trans.gif" width="20" height="10"><a href="javascript:submitInfo()">Buy selected items</a></td>
+              </tr>
+            </table>
+       
+
+<input type=hidden name="customerId" value="300000197">
+<input type=hidden name="cusid" value="300000197">
+<input type=hidden name=prodLine value="">
+<input type=hidden name=prodType value="">
+<input type=hidden name=prodLineFlag value="">
+<input type=hidden name=prodTypeFlag value="">
+<input type=hidden name=prodId value="">
+<input type=hidden name=prodid value="">
+<input type="hidden" name="cleanseprod" value="158361">
+<input type="hidden" name="moisturizeprod" value="151187">
+<input type="hidden" name="treatprod" value="147472">
+<input type="hidden" name="etreatprod" value="91603">
+<input type="hidden" name="spfprod" value="null">
+<input type="hidden" name="spf" value="">
+<input type="hidden" name="spf" value="">
+<input type="hidden" name="spf" value="">
+<input type="hidden" name="spf" value="">
+<input type="hidden" name="spfexists" value="no">
+
+<!-- New Hidden Fields -->
+
+<input type="hidden" name="cleansePrice" value="19.50">
+<input type="hidden" name="moisturizePrice" value="28.00">
+<input type="hidden" name="treatPrice" value="125.00">
+<input type="hidden" name="etreatPrice" value="48.00">
+
+<!-- End of new Html Hidden Fields -->
+
+</form>
+</body>
+</html>
+
+
+
+<!-- web30215.mail.mud.yahoo.com compressed/chunked Thu Sep  6 03:10:45 PDT 2007 -->

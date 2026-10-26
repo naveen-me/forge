@@ -1,0 +1,289 @@
+@charset "utf-8";
+/* CSS Document */
+@import url("footer_ie6.css");
+#footer-outer{
+	width:100%;
+	height:443px;
+	margin:auto;
+	#margin-top:25px;
+	padding:0;
+	float:left;
+	background:url(../images/footer-bg.png) repeat-x;
+	}
+#footer-content-outer{
+	width:980px;
+	height:auto;
+	margin:auto;
+	padding:0px;
+	}
+#footer-nav-outer{
+	width:980px;
+	height:auto;
+	float:left;
+	margin:40px 0 0 0;
+	padding:0;
+	font-family:Arial, Helvetica, sans-serif;
+	}
+#help-nav{
+	width:140px;
+	height:auto;
+	float:left;
+	margin:0 7px 0 0;
+	padding:0;
+	}
+#help-nav h1, #beauty-nav h1, #shopping-services h1, #beauty-perks h1, #email-exclusive h1{
+	margin:0;
+	padding:0;
+	font-size:15px;
+	color:#9a9899;
+	}
+#help-nav ul, #beauty-nav ul, #shopping-services ul, #beauty-perks ul, #email-exclusive ul{
+	margin:0;
+	padding:0;
+	list-style:none;
+	}
+#help-nav ul li{
+	width:140px;
+	height:auto;
+	float:left;
+	margin:3px 0px;
+	padding:0;
+	}
+#help-nav ul li a, #beauty-nav ul li a, #shopping-services ul li a, #beauty-perks ul li a{
+	font-family:Arial, Helvetica, sans-serif;
+	color:#DCDCDC;
+	text-decoration:none;
+	font-size:12px;
+	}
+#help-nav ul li a:hover, #beauty-nav ul li a:hover, #shopping-services ul li a:hover, #beauty-perks ul li a:hover {
+	color:#DCDCDC;
+	text-decoration:underline;
+	}
+#beauty-nav{
+	width:170px;
+	height:auto;
+	float:left;
+	margin:0 13px 0 0;
+	padding:0;
+	}
+#beauty-nav ul li{	
+	width:170px;
+	height:auto;
+	float:left;
+	margin:3px 0px;
+	padding:0;
+	}
+#shopping-services{
+	width:210px;
+	height:auto;
+	float:left;
+	margin:0 6px 0 0;
+	padding:0;
+	}
+#shopping-services ul li{	
+	width:210px;
+	height:auto;
+	float:left;
+	margin:3px 0px;
+	padding:0;
+	}
+#beauty-perks{
+	width:185px;
+	height:auto;
+	float:left;
+	margin:0 7px 0 0;
+	padding:0;
+	}
+#beauty-perks ul li{
+	width:185px;
+	height:auto;
+	float:left;
+	margin:3px 0px;
+	padding:0;
+	}
+#email-exclusive{
+	width:236px;
+	height:auto;
+	float:left;
+	margin:0;
+	padding:0;
+	}
+#email-exclusive ul li{	
+	width:236px;
+	height:auto;
+	float:left;
+	margin:5px 0;
+	padding:0;
+	font-size:12px;
+	color:#DCDCDC;
+	}
+#email-exclusive ul li .email-exclusive-input input{
+	width:160px;
+	height:30px;
+	float:left;
+	margin:0;
+	padding:0;
+	background:url(../images/enter-your-email-bg.png) no-repeat 0 0;
+	border:0;
+	}
+#email-exclusive ul li .email-exclusive-button a{
+	width:76px;
+	height:30px;
+	float:left;
+	margin:0;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -107px -103px;
+	}
+#connect-share-outer{
+	width:980px;
+	height:auto;
+	float:left;
+	margin:17px 0px 0px 0px;
+	#margin:16px 0px 0px 0px;
+	margin:16px 0px 0px 0px\0/;
+	padding:0;
+	}
+#connect-share-outer .connect-share{
+	width:76px;
+	height:30px;
+	float:left;
+	margin:40px 41px 0 0;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -6px -165px;
+	}
+#connect-share-outer .facebook	a{
+	width:145px;
+	height:38px;
+	float:left;
+	margin:32px 45px 0 0;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -97px -163px;
+	}
+#connect-share-outer .twitter	a{
+	width:138px;
+	height:39px;
+	float:left;
+	margin:32px 49px 0 0;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -253px -163px;
+	}
+#connect-share-outer .pinterest a{
+	width:110px;
+	height:39px;
+	float:left;
+	margin:32px 35px 0 0;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -405px -165px;
+	}
+#connect-share-outer .youtube a{
+	width:100px;
+	height:39px;
+	float:left;
+	margin:32px 12px 0 0;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -6px -208px;
+	}
+#connect-share-outer .ipad a{
+	width:229px;
+	height:103px;
+	float:left;
+	margin:-22px 0 0 0;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -207px -210px;
+	}
+#beauty-com-information{
+	width:885px;
+	height:auto;
+	float:left;
+	margin:34px 0;
+	#margin:32px 0px 32px 0px;
+	margin:40px 0px 25px 0px\0/;
+	padding:0;
+	font-size:11px;
+	color:#DCDCDC;
+	font-family:Arial, Helvetica, sans-serif;
+	}
+#beauty-com-information p{
+	margin:0;
+	padding:0;
+	width:885px;
+	line-height:18px;
+	}
+#google-paupal-outer{
+	width:95px;
+	height:64px;
+	float:left;
+	margin:50px 0 0 0;
+	padding:0;
+	}	
+#google-paupal-outer #google{
+	width:81px;
+	height:29px;
+	float:left;
+	margin:0 0 8px 7px;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -115px -212px;
+	}
+#google-paupal-outer #paypal{
+	width:36px;
+	height:23px;
+	float:left;
+	margin:0 8px 0 7px;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -116px -249px;
+	}
+#google-paupal-outer #billme{
+	width:36px;
+	height:23px;
+	float:left;
+	margin:0 0 0 0;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -160px -249px;
+	}
+#terms-of-use-copyright-outer{
+	width:980px;
+	height:auto;
+	float:left;
+	margin:0;
+	#margin:0 0 0 0;
+	margin:2px 0 0 0\0/;
+	padding:0;
+	}
+#terms-of-use{
+	width:300px;
+	height:auto;
+	float:left;
+	margin:3px 0 0 0;
+	padding:0;
+	}
+#terms-of-use ul{
+	margin:0;
+	padding:0;
+	list-style:none;
+	}
+#terms-of-use ul li{
+	width:auto;
+	height:auto;
+	float:left;
+	margin:0px 5px;
+	padding:0;
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:11px;
+	}
+#terms-of-use ul li a{
+	color:#DCDCDC;
+	text-decoration:none;
+	}
+#terms-of-use ul li a:hover{
+	text-decoration:underline;
+	}
+#copyright{
+	width:auto;
+	height:auto;
+	margin:3px 0 0;
+	padding:0;
+	float:right;
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:11px;
+	color:#DCDCDC;
+	}	

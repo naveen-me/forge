@@ -1,0 +1,24 @@
+package com.svb.struts.bean;
+
+public class ProfileDetailBean {
+	
+	
+    String SV_PROFILE_ATTRIBUTE_VALUE;
+    String SV_PROFILE_ATTRIBUTE_DESC;
+    
+    public String getSV_PROFILE_ATTRIBUTE_VALUE(){
+		return SV_PROFILE_ATTRIBUTE_VALUE;
+	}
+
+	public void setSV_PROFILE_ATTRIBUTE_VALUE(String SV_PROFILE_ATTRIBUTE_VALUE) {
+		this.SV_PROFILE_ATTRIBUTE_VALUE = SV_PROFILE_ATTRIBUTE_VALUE;
+	}
+
+	public String getSV_PROFILE_ATTRIBUTE_DESC(){
+		return SV_PROFILE_ATTRIBUTE_DESC;
+	}
+
+	public void setSV_PROFILE_ATTRIBUTE_DESC(String SV_PROFILE_ATTRIBUTE_DESC) {
+		this.SV_PROFILE_ATTRIBUTE_DESC = SV_PROFILE_ATTRIBUTE_DESC;
+	}
+}

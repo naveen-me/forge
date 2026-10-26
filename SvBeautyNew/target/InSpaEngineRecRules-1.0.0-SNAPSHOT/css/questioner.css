@@ -1,0 +1,244 @@
+@charset "utf-8";
+/* CSS Document */
+@import url("questioner_1e6.css");
+#body-running-content{
+	width:980px;
+	height:auto;
+	float:left;
+	margin:0px;
+	padding:0px;
+	background:#fff;
+	}
+#questioner-outer{
+	width:800px;
+	height:auto;
+	float:left;
+	margin:50px 90px 0 90px;
+	padding:0px;
+	}
+#questioner-outer h1{
+	margin:0 0 10px 0;
+	padding:0;
+	font-size:32px;
+	color:#444;
+	font-weight:normal;
+	width:500px;
+	float:left;
+	}
+#error-you-missed-something-outer{
+	width:650px;
+	height:auto;
+	float:left;
+	margin:0 0px 15px 0px;
+	padding:0;
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:11px;
+	font-weight:bold;
+	}	
+#error-you-missed-something-outer .error-icon-large{
+	width:28px;
+	height:28px;
+	float:left;
+	margin:0px 10px 0px 0px;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -514px -334px;
+	}
+#error-you-missed-something-outer .error-text-message{
+	width:auto;
+	height:auto;
+	float:left;
+	margin:0;
+	padding:0;
+	}
+#error-you-missed-something-outer	span.error-your-missed-something-text{
+	display:block;
+	margin:0px 0 2px 0;
+	padding:0;
+	color:#ed2801;
+	font-size:12px;
+	}
+#error-you-missed-something-outer	span.error-please-answer-text{
+	width:auto;
+	height:auto;
+	display:block;
+	float:left;
+	margin:0;
+	padding:0;
+	font-size:13px;
+	font-weight:normal;
+	}	
+#answer-required{
+	width:auto;
+	height:auto;
+	float:right;
+	margin:26px 0 0 0;
+	padding:0;
+	}
+#answer-required span{
+	width:auto;
+	height:auto;
+	float:left;
+	margin:0;
+	padding:0;
+	text-transform:uppercase;
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:11px;
+	font-weight:bold;
+	color:#444444;
+	}	
+#answer-required span.star{
+	width:8px;
+	height:8px;
+	float:left;
+	margin:3px 5px 0px 0px;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -535px 0;
+	}	
+#questions-content{
+	width:800px;
+	height:auto;
+	float:left;
+	margin:0;
+	padding:0;
+	}
+#questions-content > ul{
+	margin:0;
+	padding:0;
+	list-style:none;
+	}
+#questions-content > ul > li{
+	width:800px;
+	height:auto;
+	float:left;
+	margin:0px 0px 1px 0px;	
+	padding:25px 0px 7px;
+	}
+.question{
+	width:775px;
+	height:auto;
+	float:left;
+	margin:0 0 0 25px;
+	padding:0;
+	}
+.question span.star{
+	width:8px;
+	height:8px;
+	float:left;
+	margin:5px 0px 0px 0px;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -535px 0;
+	}
+.question span.number{
+	width:19px;
+	height:auto;
+	float:left;
+	margin:0px 2px 0 1px;
+	padding:0px;
+	text-align:center;
+	}	
+.question span.no-star{
+	width:8px;
+	height:8px;
+	float:left;
+	margin:5px 5px 0px 0px;
+	padding:0;
+	}	
+.question span{
+	font-size:16px;
+	font-weight:bold;
+	color:#444444;
+	}
+.question div.error{
+	color:#ed2801;
+	font-size:11px;
+	font-family:Arial, Helvetica, sans-serif;
+	font-weight:bold;
+	margin:0px 0px 10px 0px;
+	}
+#questions-content label.error{
+	color:#ed2801;
+	font-size:11px;
+	font-family:Arial, Helvetica, sans-serif;
+	font-weight:bold;
+	margin:0px 0px 15px 25px;
+	float: left;
+	}		
+.answers{
+	width:750px;
+	height:auto;
+	float:left;
+	margin:15px 0 0 50px;
+	padding:0;
+	}
+.answers ul{
+	margin:0;
+	padding:0;
+	list-style:none;
+	}
+.answers ul li{
+	width:182px;
+	height:auto;
+	float:left;
+	margin:0 0 15px 0;
+	padding:0;
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:12px;
+	line-height:15px;
+	color:#444444;
+	}
+.answers ul li label{
+	#margin:3px 0px 0px 3px !important;	
+	margin:-17px 0 0 23px;
+	display:block;
+	float:left;
+	position:absolute;
+	}
+.answers ul li.one-two-three{
+  width:121px;
+  }	
+ .answers ul.radio-top input[type="radio"]{	
+ 	margin-top:0px;
+ } 
+.questioner-submit-button{
+	width:94px;
+	height:auto;
+	float:right;
+	margin:0;
+	padding:0;
+	}	
+.questioner-submit-button a{
+	width:94px;
+	height:34px;
+	float:right;
+	margin:10px 0px 50px 0;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -3px -99px;
+	}
+#please-note{
+	width:980px;
+	height:auto;
+	float:left;
+	margin:25px 0;
+	padding:0;
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:10px;
+	color:#666;
+	}
+#the-world-of-beauty{
+	width:980px;
+	height:25px;
+	float:left;
+	margin:0 0 25px 0;
+	padding:0;
+	text-align:center;
+	}
+	
+.answer-all-mandatory-questions{
+	color: #ED2801;
+    font-family: Arial,Helvetica,sans-serif;
+    font-size: 11px;
+    font-weight: bold;
+    margin: 20px 0 0 430px;
+	float:left;
+	text-transform: uppercase;
+	}		

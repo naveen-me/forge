@@ -1,0 +1,803 @@
+
+Connected to: Oracle Database 19c Standard Edition 2 Release 19.0.0.0.0 - Production
+Version 19.11.0.0.0
+Export done in AL32UTF8 character set and AL16UTF16 NCHAR character set
+
+About to export specified users ...
+. exporting pre-schema procedural objects and actions
+. exporting foreign function library names for user SVBTESTLOCAL 
+. exporting PUBLIC type synonyms
+. exporting private type synonyms
+. exporting object type definitions for user SVBTESTLOCAL 
+About to export SVBTESTLOCAL's objects ...
+. exporting database links
+. exporting sequence numbers
+. exporting cluster definitions
+. about to export SVBTESTLOCAL's tables via Conventional Path ...
+. . exporting table                            AGE
+                                                            4 rows exported
+. . exporting table                AVON_ATTRIBUTES
+                                                           48 rows exported
+. . exporting table             AVON_ENTRY_RATINGS
+                                                            0 rows exported
+. . exporting table               AVON_PRODUCT_AGE
+                                                            3 rows exported
+. . exporting table              AVON_PRODUCT_BASE
+                                                           23 rows exported
+. . exporting table          AVON_PRODUCT_CATEGORY
+                                                           12 rows exported
+. . exporting table         AVON_PRODUCT_DAY_ORDER
+                                                            8 rows exported
+. . exporting table            AVON_PRODUCT_GENDER
+                                                            3 rows exported
+. . exporting table       AVON_PRODUCT_INGREDIENTS
+                                                        62444 rows exported
+. . exporting table AVON_PRODUCT_INGREDIENTS_ANISH_DUP_14_08_2023
+                                                        62407 rows exported
+. . exporting table AVON_PRODUCT_INGREDIENTS_PARTH_28_07_2023
+                                                        59939 rows exported
+. . exporting table AVON_PRODUCT_INGREDIENTS_PARTH_31_07_2023
+                                                        62163 rows exported
+. . exporting table AVON_PRODUCT_INGREDIENTS_SHIVAM_03_03_2025
+                                                        62344 rows exported
+. . exporting table AVON_PRODUCT_INGREDIENTS_SHIVAM_05_12_2023
+                                                        62725 rows exported
+. . exporting table AVON_PRODUCT_INGREDIENTS_SHIVAM_07_03_2024
+                                                        64075 rows exported
+. . exporting table AVON_PRODUCT_INGREDIENTS_SHIVAM_08_02_2024
+                                                        63530 rows exported
+. . exporting table AVON_PRODUCT_INGREDIENTS_SHIVAM_10_10_2024
+                                                        64816 rows exported
+. . exporting table AVON_PRODUCT_INGREDIENTS_SHIVAM_13_10_2023
+                                                        62407 rows exported
+. . exporting table AVON_PRODUCT_INGREDIENTS_SHIVAM_14_02_2025
+                                                        62505 rows exported
+. . exporting table AVON_PRODUCT_INGREDIENTS_SHIVAM_19_10_2023
+                                                        62407 rows exported
+. . exporting table AVON_PRODUCT_INGREDIENTS_SHIVAM_20_02_2025
+                                                        62389 rows exported
+. . exporting table AVON_PRODUCT_INGREDIENTS_SHIVAM_23_01_2024
+                                                        63182 rows exported
+. . exporting table AVON_PRODUCT_INGREDIENTS_SHIVAM_24_09_2024
+                                                        64382 rows exported
+. . exporting table AVON_PRODUCT_INGREDIENTS_SHIVAM_25_01_2024
+                                                        63269 rows exported
+. . exporting table AVON_PRODUCT_INGREDIENTS_SHIVAM_25_03_2025
+                                                        62374 rows exported
+. . exporting table AVON_PRODUCT_INGREDIENTS_SHIVAM_27_02_2025
+                                                        62316 rows exported
+. . exporting table AVON_PRODUCT_INGREDIENTS_SHIVAM_30_11_2023
+                                                        62421 rows exported
+. . exporting table              AVON_PRODUCT_LINE
+                                                           45 rows exported
+. . exporting table AVON_PRODUCT_LINE_SHIVAM_05_12_2023
+                                                           44 rows exported
+. . exporting table       AVON_PRODUCT_MASTER_TYPE
+                                                           11 rows exported
+. . exporting table       AVON_PRODUCT_NIGHT_ORDER
+                                                            8 rows exported
+. . exporting table           AVON_PRODUCT_REGIMEN
+                                                            3 rows exported
+. . exporting table              AVON_PRODUCT_TYPE
+                                                           34 rows exported
+. . exporting table             AVON_PRODUCT_USAGE
+                                                            5 rows exported
+. . exporting table                AVON_PRODUCT_UV
+                                                          111 rows exported
+. . exporting table                   AVON_RATINGS
+                                                        16810 rows exported
+. . exporting table          AVON_UV_SPECIFICATION
+                                                           10 rows exported
+. . exporting table                      A_PRODUCT
+                                                          699 rows exported
+. . exporting table             A_PRODUCT_ELEMENTS
+                                                          712 rows exported
+. . exporting table          A_PRODUCT_INGREDIENTS
+                                                        16009 rows exported
+. . exporting table                       BTY_INGR
+                                                          454 rows exported
+. . exporting table                      BTY_INGR2
+                                                         2940 rows exported
+. . exporting table                     BUMP_RULES
+                                                          150 rows exported
+. . exporting table         CUSTOMER_BASIC_PROFILE
+.
+                                                       174453 rows exported
+. . exporting table          CUSTOMER_HAIR_PROFILE
+....
+                                                       420093 rows exported
+. . exporting table                CUSTOMER_MASTER
+                                                         1925 rows exported
+. . exporting table                 CUSTOMER_TRACK
+..........................
+                                                      2604007 rows exported
+. . exporting table               ELIMINATION_RULE
+                                                           21 rows exported
+. . exporting table          EXCEPTION_RULE_MASTER
+                                                            4 rows exported
+EXP-00008: ORACLE error 1455 encountered
+ORA-01455: converting column overflows integer datatype
+EXP-00056: ORACLE error 1403 encountered
+ORA-01403: no data found
+. . exporting table        EXCEPTION_RULE_PRODUCTS
+                                                            0 rows exported
+. . exporting table EXCEPTION_RULE_PRODUCTS_SHIVAM_11_04_2025
+                                                           28 rows exported
+. . exporting table                FUNCTION_MASTER
+                                                           75 rows exported
+. . exporting table      HAIR_INGREDIENTS_GLOSSORY
+                                                         1172 rows exported
+. . exporting table       HAIR_PRODUCT_INGREDIENTS
+                                                        25017 rows exported
+. . exporting table    HAIR_PRODUCT_INGREDIENTS_NA
+                                                           95 rows exported
+. . exporting table     HAIR_PROF_ATTRIB_FUNCTIONS
+                                                          880 rows exported
+. . exporting table                    INGREDIENTS
+                                                          904 rows exported
+. . exporting table            INGREDIENTS_ALLERGY
+                                                          905 rows exported
+. . exporting table INGREDIENTS_ALLERGY_PARTH_07_07_2023
+                                                          338 rows exported
+. . exporting table INGREDIENTS_ALLERGY_SHIVAM_08_02_2024
+                                                          902 rows exported
+. . exporting table INGREDIENTS_ALLERGY_SHIVAM_11_02_2025
+                                                          902 rows exported
+. . exporting table INGREDIENTS_ALLERGY_SHIVAM_13_02_2025
+                                                          903 rows exported
+. . exporting table INGREDIENTS_ALLERGY_SHIVAM_31_01_2024
+                                                          868 rows exported
+. . exporting table           INGREDIENTS_FUNCTION
+                                                          791 rows exported
+. . exporting table           INGREDIENTS_GLOSSORY
+                                                         5095 rows exported
+. . exporting table INGREDIENTS_GLOSSORY_05_09_2023
+                                                         4511 rows exported
+. . exporting table INGREDIENTS_GLOSSORY_05_09_2023_2ND
+                                                         4901 rows exported
+. . exporting table INGREDIENTS_GLOSSORY_PARTH_01_08_2023
+                                                         4511 rows exported
+. . exporting table INGREDIENTS_GLOSSORY_PARTH_01_08_2023_COPY
+                                                         4923 rows exported
+. . exporting table INGREDIENTS_GLOSSORY_SHIVAM_05_03_2025
+                                                         5028 rows exported
+. . exporting table INGREDIENTS_GLOSSORY_SHIVAM_18_03_2024
+                                                         4916 rows exported
+. . exporting table INGREDIENTS_GLOSSORY_SHIVAM_25_03_2025
+                                                         5094 rows exported
+. . exporting table      PRODUCT_ELIMINATION_RULES
+                                                          156 rows exported
+. . exporting table PRODUCT_ELIMINATION_RULES_PARTH_04_08_2023
+                                                          156 rows exported
+. . exporting table            PRODUCT_INGREDIENTS
+                                                          433 rows exported
+. . exporting table         PRODUCT_USAGE_BENEFITS
+                                                           15 rows exported
+. . exporting table    PROFILE_ATTRIBUTE_FUNCTIONS
+                                                          244 rows exported
+. . exporting table       PROFILE_ATTRIB_FUNC_TEXT
+                                                          217 rows exported
+. . exporting table           RATINGS_SKIN_CONCERN
+                                                         1463 rows exported
+. . exporting table         RATINGS_SKIN_CONDITION
+                                                         1463 rows exported
+. . exporting table              RATINGS_SKIN_TYPE
+                                                         1437 rows exported
+. . exporting table   RX_WARNING_SHIVAM_20_03_2024
+                                                          230 rows exported
+. . exporting table                           SKIN
+                                                         2488 rows exported
+. . exporting table                   SKIN_CONCERN
+                                                           19 rows exported
+. . exporting table                 SKIN_CONDITION
+                                                            7 rows exported
+. . exporting table                      SKIN_TYPE
+                                                            4 rows exported
+. . exporting table           SV_BRAND_DESCRIPTION
+                                                          160 rows exported
+. . exporting table                SV_BRAND_MASTER
+                                                          207 rows exported
+. . exporting table SV_BRAND_MASTER_SHIVAM_05_12_2023
+                                                          206 rows exported
+. . exporting table         SV_FUNCTION_DEFINITION
+                                                         1060 rows exported
+. . exporting table SV_FUNCTION_GROUP_AND_BODY_ATTRIBUTE_MASTER
+                                                          132 rows exported
+. . exporting table SV_FUNCTION_GROUP_CAUTION_GENERIC_TEXT
+                                                           16 rows exported
+. . exporting table   SV_FUNCTION_GROUP_DEFINITION
+                                                         1003 rows exported
+. . exporting table SV_FUNCTION_GROUP_DEFINITION_SHIVAM_23_08_2023
+                                                         1113 rows exported
+. . exporting table       SV_FUNCTION_GROUP_MASTER
+                                                           22 rows exported
+. . exporting table SV_FUNCTION_GROUP_MASTER_SHIVAM_07_09_2023
+                                                           14 rows exported
+. . exporting table SV_FUNCTION_GROUP_MASTER_SHIVAM_13_02_2025
+                                                           21 rows exported
+. . exporting table SV_FUNCTION_GROUP_MASTER_SHIVAM_23_08_2023
+                                                           13 rows exported
+. . exporting table             SV_FUNCTION_MASTER
+                                                           95 rows exported
+. . exporting table SV_FUNCTION_MASTER_ANISH_11_08_2023
+                                                           87 rows exported
+. . exporting table SV_FUNCTION_MASTER_PARTH_06_07_2023
+                                                           84 rows exported
+. . exporting table SV_FUNCTION_MASTER_SHIVAM_01_12_2023
+                                                           93 rows exported
+. . exporting table SV_FUNCTION_MASTER_SHIVAM_23_08_2023
+                                                           89 rows exported
+. . exporting table                SV_HAIR_RATINGS
+                                                        33932 rows exported
+. . exporting table        SV_INGREDIENTS_FUNCTION
+                                                         7750 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_ANISH_08_08_2023
+                                                         7360 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_ANISH_18_08_2023
+                                                         7348 rows exported
+. . exporting table  SV_INGREDIENTS_FUNCTION_GROUP
+                                                         1237 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_GROUP_SHIVAM_06_03_2024
+                                                         1273 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_GROUP_SHIVAM_07_09_2023
+                                                         1165 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_GROUP_SHIVAM_08_02_2024
+                                                         1274 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_GROUP_SHIVAM_13_02_2025
+                                                         1279 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_GROUP_SHIVAM_14_03_2024
+                                                         1275 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_GROUP_SHIVAM_17_09_2024
+                                                         1277 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_GROUP_SHIVAM_18_08_2023
+                                                          701 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_GROUP_SHIVAM_23_08_2023
+                                                          674 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_GROUP_SHIVAM_25_01_2024
+                                                         1273 rows exported
+. . exporting table   SV_INGREDIENTS_FUNCTION_HAIR
+                                                          833 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_LATEST
+                                                         7348 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_LATEST_55_CASES
+                                                         7295 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_ORIGINAL_BACKUP_11_08_2023
+                                                         7368 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_PARTH_01_08_2023
+                                                         7360 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_PARTH_06_07_2023
+                                                         6741 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_PARTH_07_07_2023
+                                                         7281 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_PARTH_28_07_2023
+                                                         7288 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_PARTH_31_07_2023
+                                                         7353 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SECOND_SHIVAM_19_10_2023
+                                                         7349 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_01_12_2023
+                                                         7517 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_06_02_2024
+                                                         7589 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_06_03_2024
+                                                         7651 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_07_03_2024
+                                                         7652 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_07_09_2023
+                                                         7348 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_08_02_2024
+                                                         7605 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_11_02_2025
+                                                         7718 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_12_02_2025
+                                                         7730 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_13_02_2025
+                                                         7733 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_14_03_2024
+                                                         7654 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_14_04_2025
+                                                         7750 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_17_09_2024
+                                                         7654 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_18_08_2023
+                                                         7351 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_19_01_2024
+                                                         7528 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_19_10_2023
+                                                         7349 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_21_08_2023
+                                                         7351 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_23_08_2023
+                                                         7351 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_25_01_2024
+                                                         7559 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_25_03_2025
+                                                         7748 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_26_02_2024
+                                                         7651 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_28_08_2023
+                                                         7348 rows exported
+. . exporting table SV_INGREDIENTS_FUNCTION_SHIVAM_30_11_2023
+                                                         7441 rows exported
+. . exporting table        SV_INGREDIENTS_GLOSSORY
+                                                         1622 rows exported
+. . exporting table          SV_INGREDIENTS_MASTER
+                                                         7765 rows exported
+. . exporting table SV_INGREDIENTS_MASTER_ANISH_08_08_2023
+                                                         7361 rows exported
+. . exporting table SV_INGREDIENTS_MASTER_ANISH_10_08_2023
+                                                         7386 rows exported
+. . exporting table SV_INGREDIENTS_MASTER_ANISH_11_08_2023
+                                                         7387 rows exported
+. . exporting table SV_INGREDIENTS_MASTER_ANISH_DUP_14_08_2023
+                                                         7391 rows exported
+. . exporting table SV_INGREDIENTS_MASTER_PARTH_06_07_2023
+                                                         6741 rows exported
+. . exporting table SV_INGREDIENTS_MASTER_PARTH_28_07_2023
+                                                         7289 rows exported
+. . exporting table SV_INGREDIENTS_MASTER_PARTH_31_07_2023
+                                                         7354 rows exported
+. . exporting table SV_INGREDIENTS_MASTER_SHIVAM_06_02_2024
+                                                         7605 rows exported
+. . exporting table SV_INGREDIENTS_MASTER_SHIVAM_06_03_2024
+                                                         7666 rows exported
+. . exporting table SV_INGREDIENTS_MASTER_SHIVAM_07_03_2024
+                                                         7667 rows exported
+. . exporting table SV_INGREDIENTS_MASTER_SHIVAM_08_02_2024
+                                                         7621 rows exported
+. . exporting table SV_INGREDIENTS_MASTER_SHIVAM_11_02_2025
+                                                         7733 rows exported
+. . exporting table SV_INGREDIENTS_MASTER_SHIVAM_12_02_2025
+                                                         7745 rows exported
+. . exporting table SV_INGREDIENTS_MASTER_SHIVAM_13_02_2025
+                                                         7748 rows exported
+. . exporting table SV_INGREDIENTS_MASTER_SHIVAM_13_10_2023
+                                                         7385 rows exported
+. . exporting table SV_INGREDIENTS_MASTER_SHIVAM_17_09_2024
+                                                         7669 rows exported
+. . exporting table SV_INGREDIENTS_MASTER_SHIVAM_19_01_2024
+                                                         7543 rows exported
+. . exporting table SV_INGREDIENTS_MASTER_SHIVAM_19_10_2023
+                                                         7364 rows exported
+. . exporting table SV_INGREDIENTS_MASTER_SHIVAM_25_01_2024
+                                                         7574 rows exported
+. . exporting table SV_INGREDIENTS_MASTER_SHIVAM_25_03_2025
+                                                         7763 rows exported
+. . exporting table SV_INGREDIENTS_MASTER_SHIVAM_30_11_2023
+                                                         7456 rows exported
+. . exporting table  SV_INGREDIENTS_NONCLEAN_GROUP
+                                                          345 rows exported
+. . exporting table SV_INGREDIENTS_NONCLEAN_GROUP_SHIVAM_08_02_2024
+                                                          243 rows exported
+. . exporting table SV_INGREDIENTS_NONCLEAN_GROUP_SHIVAM_13_02_2025
+                                                          243 rows exported
+. . exporting table SV_INGREDIENTS_NONCLEAN_GROUP_SHIVAM_18_08_2023
+                                                          223 rows exported
+. . exporting table      SV_INGREDIENTS_NOT_MAPPED
+                                                         2255 rows exported
+. . exporting table        SV_INGREDIENTS_WARNINGS
+                                                           18 rows exported
+. . exporting table SV_INGREDIENT_CAUTION_TEXT_MASTER
+                                                         9530 rows exported
+. . exporting table SV_INGREDIENT_CAUTION_TEXT_MASTER_14_08_2023
+                                                          343 rows exported
+. . exporting table SV_INGREDIENT_CAUTION_TEXT_MASTER_16_08_2023
+                                                         7290 rows exported
+. . exporting table SV_INGREDIENT_CAUTION_TEXT_MASTER_SHIVAM_10_03_2025
+                                                         7658 rows exported
+. . exporting table SV_INGREDIENT_CAUTION_TEXT_MASTER_SHIVAM_21_08_2023
+                                                         7315 rows exported
+. . exporting table SV_INGREDIENT_ELIMINATION_TEXT_MASTER
+                                                           54 rows exported
+. . exporting table       SV_NONCLEAN_GROUP_MASTER
+                                                            9 rows exported
+. . exporting table SV_NONCLEAN_GROUP_MASTER_SHIVAM_13_02_2025
+                                                            8 rows exported
+. . exporting table        SV_PRODUCTS_INGREDIENTS
+                                                         1192 rows exported
+. . exporting table        SV_PRODUCT_BUMP_RATINGS
+                                                           80 rows exported
+. . exporting table SV_PRODUCT_BUMP_RATINGS_PARTH_04_08_2023
+                                                           84 rows exported
+. . exporting table         SV_PRODUCT_DESCRIPTION
+                                                          453 rows exported
+. . exporting table SV_PRODUCT_DESCRIPTION_PARTH_28_07_2023
+                                                          407 rows exported
+. . exporting table SV_PRODUCT_DESCRIPTION_PARTH_31_07_2023
+                                                          467 rows exported
+. . exporting table SV_PRODUCT_DESCRIPTION_SHIVAM_03_03_2025
+                                                          451 rows exported
+. . exporting table SV_PRODUCT_DESCRIPTION_SHIVAM_05_12_2023
+                                                          482 rows exported
+. . exporting table SV_PRODUCT_DESCRIPTION_SHIVAM_07_03_2024
+                                                          520 rows exported
+. . exporting table SV_PRODUCT_DESCRIPTION_SHIVAM_08_02_2024
+                                                          507 rows exported
+. . exporting table SV_PRODUCT_DESCRIPTION_SHIVAM_10_10_2024
+                                                          539 rows exported
+. . exporting table SV_PRODUCT_DESCRIPTION_SHIVAM_14_02_2025
+                                                          457 rows exported
+. . exporting table SV_PRODUCT_DESCRIPTION_SHIVAM_19_10_2023
+                                                          473 rows exported
+. . exporting table SV_PRODUCT_DESCRIPTION_SHIVAM_20_02_2025
+                                                          454 rows exported
+. . exporting table SV_PRODUCT_DESCRIPTION_SHIVAM_23_01_2024
+                                                          497 rows exported
+. . exporting table SV_PRODUCT_DESCRIPTION_SHIVAM_24_09_2024
+                                                          529 rows exported
+. . exporting table SV_PRODUCT_DESCRIPTION_SHIVAM_25_01_2024
+                                                          500 rows exported
+. . exporting table SV_PRODUCT_DESCRIPTION_SHIVAM_25_03_2025
+                                                          452 rows exported
+. . exporting table SV_PRODUCT_DESCRIPTION_SHIVAM_27_02_2025
+                                                          450 rows exported
+. . exporting table SV_PRODUCT_DESCRIPTION_SHIVAM_30_11_2023
+                                                          474 rows exported
+. . exporting table SV_PRODUCT_DESCRIPTION_bkp_before_new_product_insert__update_barb_1004
+                                                            0 rows exported
+. . exporting table SV_PRODUCT_LIFESTYLE_BASED_RECS_1
+                                                            2 rows exported
+. . exporting table SV_PRODUCT_LIFESTYLE_BASED_RECS_2
+                                                            2 rows exported
+. . exporting table              SV_PRODUCT_MASTER
+                                                          663 rows exported
+. . exporting table      SV_PRODUCT_MULTI_BENEFITS
+                                                            6 rows exported
+. . exporting table SV_PRODUCT_MULTI_BENEFITS_BKP_BEFORE_BHAVIN_LEFT_07012020
+                                                            6 rows exported
+. . exporting table SV_PRODUCT_MULTI_BENEFITS_BKP_BEFORE_REC_ENGINE_RULE
+                                                            5 rows exported
+. . exporting table          SV_PRODUCT_RX_WARNING
+                                                          250 rows exported
+. . exporting table SV_PRODUCT_RX_WARNING_SHIVAM_08_02_2024
+                                                          228 rows exported
+. . exporting table SV_PRODUCT_RX_WARNING_SHIVAM_17_09_2024
+                                                          249 rows exported
+. . exporting table SV_PRODUCT_RX_WARNING_SHIVAM_20_03_2024_BACKUP
+                                                          230 rows exported
+. . exporting table SV_PRODUCT_RX_WARNING_SHIVAM_31_01_2024
+                                                          162 rows exported
+. . exporting table        SV_PRODUCT_SUB_CATEGORY
+                                                           41 rows exported
+. . exporting table         SV_PRODUCT_WHEN_TO_USE
+                                                           25 rows exported
+. . exporting table   SV_PROFILE_ATTRIBUTE_DETAILS
+                                                          140 rows exported
+. . exporting table SV_PROFILE_ATTRIBUTE_DETAILS_PARTH_07_07_2023
+                                                          134 rows exported
+. . exporting table                     SV_RATINGS
+..
+                                                       244044 rows exported
+. . exporting table      SV_RATINGS_ANISH_05082023
+..
+                                                       238318 rows exported
+. . exporting table    SV_RATINGS_ANISH_08_08_2023
+..
+                                                       238450 rows exported
+. . exporting table    SV_RATINGS_ANISH_18_08_2023
+..
+                                                       230682 rows exported
+. . exporting table SV_RATINGS_ANISH_DUP_14_08_2023
+..
+                                                       230837 rows exported
+. . exporting table              SV_RATINGS_LATEST
+..
+                                                       230837 rows exported
+. . exporting table     SV_RATINGS_LATEST_55_CASES
+..
+                                                       226145 rows exported
+. . exporting table      SV_RATINGS_LATEST_BATCH_1
+                                                         7750 rows exported
+. . exporting table     SV_RATINGS_LATEST_BATCH_10
+                                                        77500 rows exported
+. . exporting table   SV_RATINGS_LATEST_BATCH_11_1
+.
+                                                       187550 rows exported
+. . exporting table   SV_RATINGS_LATEST_BATCH_11_2
+.
+                                                       189100 rows exported
+. . exporting table   SV_RATINGS_LATEST_BATCH_11_3
+.
+                                                       190650 rows exported
+. . exporting table   SV_RATINGS_LATEST_BATCH_11_4
+.
+                                                       193750 rows exported
+. . exporting table   SV_RATINGS_LATEST_BATCH_11_5
+.
+                                                       192200 rows exported
+. . exporting table     SV_RATINGS_LATEST_BATCH_12
+                                                        85250 rows exported
+. . exporting table     SV_RATINGS_LATEST_BATCH_13
+                                                        93000 rows exported
+. . exporting table     SV_RATINGS_LATEST_BATCH_14
+.
+                                                       100750 rows exported
+. . exporting table     SV_RATINGS_LATEST_BATCH_15
+.
+                                                       108500 rows exported
+. . exporting table   SV_RATINGS_LATEST_BATCH_16_1
+.
+                                                       197625 rows exported
+. . exporting table   SV_RATINGS_LATEST_BATCH_16_2
+..
+                                                       201500 rows exported
+. . exporting table     SV_RATINGS_LATEST_BATCH_17
+.
+                                                       116250 rows exported
+. . exporting table     SV_RATINGS_LATEST_BATCH_18
+.
+                                                       124000 rows exported
+. . exporting table     SV_RATINGS_LATEST_BATCH_19
+.
+                                                       131750 rows exported
+. . exporting table      SV_RATINGS_LATEST_BATCH_2
+                                                        15500 rows exported
+. . exporting table     SV_RATINGS_LATEST_BATCH_20
+.
+                                                       139500 rows exported
+. . exporting table   SV_RATINGS_LATEST_BATCH_21_1
+..
+                                                       203050 rows exported
+. . exporting table   SV_RATINGS_LATEST_BATCH_21_3
+..
+                                                       204600 rows exported
+. . exporting table   SV_RATINGS_LATEST_BATCH_21_4
+..
+                                                       206150 rows exported
+. . exporting table   SV_RATINGS_LATEST_BATCH_21_5
+..
+                                                       207700 rows exported
+. . exporting table     SV_RATINGS_LATEST_BATCH_22
+.
+                                                       147250 rows exported
+. . exporting table     SV_RATINGS_LATEST_BATCH_23
+.
+                                                       162750 rows exported
+. . exporting table     SV_RATINGS_LATEST_BATCH_24
+.
+                                                       155000 rows exported
+. . exporting table   SV_RATINGS_LATEST_BATCH_25_1
+..
+                                                       211575 rows exported
+. . exporting table   SV_RATINGS_LATEST_BATCH_25_2
+..
+                                                       213528 rows exported
+. . exporting table   SV_RATINGS_LATEST_BATCH_25_3
+..
+                                                       215450 rows exported
+. . exporting table     SV_RATINGS_LATEST_BATCH_26
+.
+                                                       170500 rows exported
+. . exporting table     SV_RATINGS_LATEST_BATCH_27
+.
+                                                       178250 rows exported
+. . exporting table     SV_RATINGS_LATEST_BATCH_28
+.
+                                                       186000 rows exported
+. . exporting table   SV_RATINGS_LATEST_BATCH_29_1
+..
+                                                       220038 rows exported
+. . exporting table   SV_RATINGS_LATEST_BATCH_29_2
+..
+                                                       221588 rows exported
+. . exporting table   SV_RATINGS_LATEST_BATCH_29_3
+..
+                                                       224595 rows exported
+. . exporting table   SV_RATINGS_LATEST_BATCH_29_4
+..
+                                                       223045 rows exported
+. . exporting table      SV_RATINGS_LATEST_BATCH_3
+                                                        23250 rows exported
+. . exporting table      SV_RATINGS_LATEST_BATCH_4
+                                                        31000 rows exported
+. . exporting table      SV_RATINGS_LATEST_BATCH_5
+                                                        38750 rows exported
+. . exporting table      SV_RATINGS_LATEST_BATCH_6
+                                                        46500 rows exported
+. . exporting table      SV_RATINGS_LATEST_BATCH_7
+                                                        54250 rows exported
+. . exporting table      SV_RATINGS_LATEST_BATCH_8
+                                                        62000 rows exported
+. . exporting table      SV_RATINGS_LATEST_BATCH_9
+                                                        69750 rows exported
+. . exporting table        SV_RATINGS_LATEST_FINAL
+..
+                                                       228346 rows exported
+. . exporting table SV_RATINGS_ORIGINAL_BACKUP_11_08_2023
+..
+                                                       239225 rows exported
+. . exporting table    SV_RATINGS_PARTH_01_08_2023
+..
+                                                       238242 rows exported
+. . exporting table    SV_RATINGS_PARTH_06_07_2023
+..
+                                                       218927 rows exported
+. . exporting table    SV_RATINGS_PARTH_07_07_2023
+..
+                                                       235698 rows exported
+. . exporting table    SV_RATINGS_PARTH_07_08_2023
+..
+                                                       238318 rows exported
+. . exporting table    SV_RATINGS_PARTH_10_08_2023
+                                                            0 rows exported
+. . exporting table    SV_RATINGS_PARTH_28_07_2023
+..
+                                                       236010 rows exported
+. . exporting table    SV_RATINGS_PARTH_31_07_2023
+..
+                                                       238025 rows exported
+. . exporting table SV_RATINGS_SECOND_SHIVAM_19_10_2023
+..
+                                                       230837 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_06_02_2024
+..
+                                                       238308 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_06_03_2024
+..
+                                                       240199 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_07_03_2024
+..
+                                                       240230 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_08_02_2024
+..
+                                                       238804 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_09_10_2024
+..
+                                                       243021 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_11_02_2025
+..
+                                                       243021 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_11_03_2024
+..
+                                                       240292 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_12_02_2025
+..
+                                                       243424 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_13_02_2025
+..
+                                                       243517 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_14_03_2024
+..
+                                                       240913 rows exported
+. . exporting table SV_RATINGS_SHIVAM_14_03_2024_SECOND
+..
+                                                       241006 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_14_04_2025
+..
+                                                       244044 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_15_03_2024
+..
+                                                       241006 rows exported
+. . exporting table SV_RATINGS_SHIVAM_15_03_2024_SECOND
+..
+                                                       241006 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_17_09_2024
+..
+                                                       241037 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_18_03_2024
+..
+                                                       241006 rows exported
+. . exporting table SV_RATINGS_SHIVAM_18_03_2024_SECOND
+..
+                                                       241037 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_18_08_2023
+..
+                                                       230837 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_19_01_2024
+..
+                                                       236386 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_19_10_2023
+..
+                                                       230837 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_21_08_2023
+..
+                                                       230837 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_25_01_2024
+..
+                                                       237347 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_25_03_2025
+..
+                                                       243982 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_26_02_2024
+..
+                                                       240199 rows exported
+. . exporting table   SV_RATINGS_SHIVAM_30_11_2023
+..
+                                                       233689 rows exported
+. . exporting table                   TEMP_PRODUCT
+                                                          421 rows exported
+. . exporting table          TEMP_PRODUCT_ELEMENTS
+                                                          421 rows exported
+. . exporting table TEMP_PRODUCT_ELEMENTS_PARTH_28_07_2023
+                                                          375 rows exported
+. . exporting table TEMP_PRODUCT_ELEMENTS_PARTH_31_07_2023
+                                                          435 rows exported
+. . exporting table TEMP_PRODUCT_ELEMENTS_SHIVAM_03_03_2025
+                                                          419 rows exported
+. . exporting table TEMP_PRODUCT_ELEMENTS_SHIVAM_05_12_2023
+                                                          450 rows exported
+. . exporting table TEMP_PRODUCT_ELEMENTS_SHIVAM_07_03_2024
+                                                          488 rows exported
+. . exporting table TEMP_PRODUCT_ELEMENTS_SHIVAM_08_02_2024
+                                                          475 rows exported
+. . exporting table TEMP_PRODUCT_ELEMENTS_SHIVAM_10_10_2024
+                                                          507 rows exported
+. . exporting table TEMP_PRODUCT_ELEMENTS_SHIVAM_14_02_2025
+                                                          425 rows exported
+. . exporting table TEMP_PRODUCT_ELEMENTS_SHIVAM_19_10_2023
+                                                          441 rows exported
+. . exporting table TEMP_PRODUCT_ELEMENTS_SHIVAM_20_02_2025
+                                                          422 rows exported
+. . exporting table TEMP_PRODUCT_ELEMENTS_SHIVAM_23_01_2024
+                                                          465 rows exported
+. . exporting table TEMP_PRODUCT_ELEMENTS_SHIVAM_24_09_2024
+                                                          497 rows exported
+. . exporting table TEMP_PRODUCT_ELEMENTS_SHIVAM_25_01_2024
+                                                          468 rows exported
+. . exporting table TEMP_PRODUCT_ELEMENTS_SHIVAM_25_03_2025
+                                                          420 rows exported
+. . exporting table TEMP_PRODUCT_ELEMENTS_SHIVAM_27_02_2025
+                                                          418 rows exported
+. . exporting table TEMP_PRODUCT_ELEMENTS_SHIVAM_30_11_2023
+                                                          442 rows exported
+. . exporting table              TEMP_PRODUCT_HAIR
+                                                         1295 rows exported
+. . exporting table     TEMP_PRODUCT_HAIR_ELEMENTS
+                                                         1327 rows exported
+. . exporting table  TEMP_PRODUCT_PARTH_28_07_2023
+                                                          375 rows exported
+. . exporting table  TEMP_PRODUCT_PARTH_31_07_2023
+                                                          435 rows exported
+. . exporting table TEMP_PRODUCT_SHIVAM_03_03_2025
+                                                          419 rows exported
+. . exporting table TEMP_PRODUCT_SHIVAM_05_02_2024
+                                                          475 rows exported
+. . exporting table TEMP_PRODUCT_SHIVAM_05_12_2023
+                                                          450 rows exported
+. . exporting table TEMP_PRODUCT_SHIVAM_07_03_2024
+                                                          488 rows exported
+. . exporting table TEMP_PRODUCT_SHIVAM_08_02_2024
+                                                          475 rows exported
+. . exporting table TEMP_PRODUCT_SHIVAM_10_10_2024
+                                                          507 rows exported
+. . exporting table TEMP_PRODUCT_SHIVAM_14_02_2025
+                                                          425 rows exported
+. . exporting table TEMP_PRODUCT_SHIVAM_15_02_2024
+                                                          488 rows exported
+. . exporting table TEMP_PRODUCT_SHIVAM_19_10_2023
+                                                          441 rows exported
+. . exporting table TEMP_PRODUCT_SHIVAM_19_10_2023_2
+                                                          441 rows exported
+. . exporting table TEMP_PRODUCT_SHIVAM_20_02_2025
+                                                          422 rows exported
+. . exporting table TEMP_PRODUCT_SHIVAM_21_09_2023
+                                                          441 rows exported
+. . exporting table TEMP_PRODUCT_SHIVAM_23_01_2024
+                                                          465 rows exported
+. . exporting table TEMP_PRODUCT_SHIVAM_24_09_2024
+                                                          497 rows exported
+. . exporting table TEMP_PRODUCT_SHIVAM_25_01_2024
+                                                          468 rows exported
+. . exporting table TEMP_PRODUCT_SHIVAM_25_03_2025
+                                                          420 rows exported
+. . exporting table TEMP_PRODUCT_SHIVAM_27_02_2025
+                                                          418 rows exported
+. . exporting table TEMP_PRODUCT_SHIVAM_30_11_2023
+                                                          442 rows exported
+. exporting synonyms
+. exporting views
+. exporting stored procedures
+. exporting operators
+. exporting referential integrity constraints
+. exporting triggers
+. exporting indextypes
+. exporting bitmap, functional and extensible indexes
+. exporting posttables actions
+. exporting materialized views
+. exporting snapshot logs
+. exporting job queues
+. exporting refresh groups and children
+. exporting dimensions
+. exporting post-schema procedural objects and actions
+. exporting statistics
+Export terminated successfully with warnings.

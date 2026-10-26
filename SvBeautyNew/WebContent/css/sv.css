@@ -1,0 +1,214 @@
+
+.helplink     { color: #666; font-size: 12px; font-family: Helvetica, Arial; font-weight: bold; text-decoration: none }
+.welcometext { color: #666; font-size: 16px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif }
+.regtreatment    { color: #323232; font-size: 12px; font-family: "Times New Roman", Times, serif; font-style: italic; font-weight: bold }
+.regprice { color: #4c6166; font-size: 12px; font-family: "Times New Roman", Times, serif; font-style: normal }
+.regbodtext  { color: black; font-size: 12px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; padding-top: 5px; padding-bottom: 5px }
+.emailtop   { color: black; font-size: 12px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; background-color: #f6fbfd; padding: 10px; border-style: solid; border-width: 0 1px 1px; border-color: gray }
+.emailbotm  { color: black; font-size: 12px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; padding: 10px; border-style: solid; border-width: 0 1px 1px; border-color: gray }
+.previewemail { color: #666; font-size: 11px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif }
+.regbodtext1 { color: black; font-size: 13px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif }
+.bodytextgrey { color: #333; font-size: 12px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; padding-top: 10px; padding-bottom: 10px }
+.bodytextgrey1 { color: #666; font-size: 12px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; padding-top: 10px; padding-bottom: 10px }
+.bodytextgreyprint  { color: #666; font-size: 9px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; padding-top: 10px; padding-bottom: 10px }
+.tablelistheader { color: black; font-size: 12px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; font-weight: bold; padding: 10px 5px }
+.tablelistheader a:link    { color: black; font-size: 12px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; font-weight: bold; padding: 10px 5px }
+.tablelistheader a:visited { color: black; font-size: 12px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; font-weight: bold; padding: 10px 5px }
+.tablelistheader a:hover   { color: black; font-size: 12px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; font-weight: bold; padding: 10px 5px }
+.tablelistheader a:active  { color: black; font-size: 12px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; font-weight: bold; padding: 10px 5px }
+
+.tablelistheader1 { color: black; font-size: 12px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; font-weight: bold }
+.tablelistheader1 a:link    { color: black; font-size: 12px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; font-weight: bold }
+.tablelistheader1 a:visited { color: black; font-size: 12px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; font-weight: bold }
+.tablelistheader1 a:hover   { color: black; font-size: 12px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; font-weight: bold }
+.tablelistheader1 a:active  { color: black; font-size: 12px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; font-weight: bold }
+
+.tablelistheader2 { color: black; font-size: 11px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; font-weight: bold; background-color: #e1ebf4; padding: 3px 5px; border-bottom: 1px solid #818181 }
+.tablelistheader3 { color: black; font-size: 11px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; font-weight: bold; background-color: #e1ebf4; padding: 3px 5px }
+.tablelistrow1  { color: black; font-size: 11px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; background-color: #dde9ea; padding: 3px 5px }
+.tablelistrow2   { color: black; font-size: 11px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; background-color: white; padding: 3px 5px }
+.tablelistrowruled { color: black; font-size: 11px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; background-color: white; padding: 4px 5px; border-bottom: 1px solid gray }
+.tablelistrow2grey { color: #666; font-size: 11px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; padding: 3px 5px }
+.tablelistrow2greyprint { color: #666; font-size: 9px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; padding: 3px 5px }
+.tablelistrow3 { color: black; font-size: 11px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif }
+.tablelistrowline { color: black; font-size: 11px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; font-weight: bold; background-color: #e8e8e8; padding: 3px 5px; border-bottom: 1px solid #818181 }
+.titlename { color: black; font-size: 16px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; padding-top: 10px }
+.titlenameprint { color: black; font-size: 16px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif }
+.footerlinks { font-size: 9pt; font-family: Arial, Helvetica, Geneva, Swiss, SunSans-Regular }
+.footercopyright { color: #696969; font-size: 7pt; font-family: Arial, Helvetica, Geneva, Swiss, SunSans-Regular }
+.footercopyright1 { color: #696969; font-size: 10px; font-family: Arial, Helvetica, Geneva, Swiss, SunSans-Regular }
+.sellsubhead { color: #3d3d3d; font-size: 14px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; font-weight: bold; background-color: #dde9ea; padding: 3px 5px }
+.trialtext  { color: #bc456c; font-size: 12px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; padding: 3px 10px }
+.trialtextpink  { color: #bc456c; font-size: 12px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; }
+.trialtextpurple  { color: purple; font-size: 12px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; }
+.trialtextyellow  { color: black; background-color: yellow; font-size: 12px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; }
+.trialtext1 { color: #bc456c; font-size: 10px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; padding: 3px 10px }
+.error {font-family:sans-serif;font-style: normal;font-weight: bold;font-size:11px;;color:red}
+.guideday { font-size: 10px; font-family: Arial; line-height: 10px }
+.guidenight { color: white; font-size: 10px; font-family: Arial; line-height: 10px }
+.guidename { color: white; font-size: 16px; font-family: Arial; font-weight: 700 }
+.message {font-family:sans-serif;font-style: normal;font-weight: bold;font-size:11px;color: #bc456c}
+.header { color: #666; font-size: 22px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif }
+.header1  { color: #bc456c; font-size: 16px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif }
+.header2 { color: #bc456c; font-size: 12px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif }
+.batext{ color: #cfcfcf; font-size: 16px; font-weight: bold; font-family: Arial }
+.batext1{ color: #669933; font-size: 16px; font-weight: bold; font-family: Arial }
+.mentext{ color: #669933; font-size: 16px; font-weight: bold; font-family: Arial }
+.mentext1{ color: #770000; font-size: 16px; font-weight: bold; font-family: Arial }
+.mentext2{ color: #331562; font-size: 16px; font-weight: bold; font-family: Arial }
+.modifytext   { color: black; font-size: 14px; font-family: Helvetica, Geneva, Arial, SunSans-Regular, sans-serif; background-color: white; padding: 3px 5px }
+
+.border_top {
+    border-top : 2px solid;    
+    border-color: #9BBDBE;
+}
+
+.border_left {
+    border-left : 2px solid;    
+    border-color: #9BBDBE;
+}
+
+.border_right {
+    border-right : 2px solid;    
+    border-color: #9BBDBE;
+}
+
+.border_bottom {
+    border-bottom : 2px solid;    
+    border-color: #9BBDBE;
+}
+
+.foot_border_top {
+    border-top : 1px solid;    
+    border-color: #6A9CCE;
+}
+
+.foot_border_bottom {
+    border-bottom : 1px solid;    
+    border-color: #6A9CCE;
+}
+
+.foot_border_left {
+    border-left : 1px solid;    
+    border-color: #6A9CCE;
+}
+
+.foot_border_right {
+    border-right : 1px solid;    
+    border-color: #6A9CCE;
+}
+
+.border_white {
+    border-bottom : 2px solid;    
+    border-color: #ffffff;
+}
+
+.name_action {
+	font-size: 11px;
+	font-family: tahoma;
+	color: #6B8081;
+	font-weight: normal;
+}
+
+.font_14 {
+	font-size: 14px;
+	font-weight: bold;
+}
+
+.state_action {
+	font-size: 11px;
+	font-family: tahoma;
+	color: #14988A;
+}
+
+.action_center_bg {
+	background-image: url(../images/action_center_bg.gif);
+	background-repeat: repeat-y;
+	width:153;
+}
+
+td {
+	 font-size:11px;
+	 font-family: tahoma;
+}
+
+.table_text {
+	font-size: 11px;
+	font-family: tahoma;
+	color: #355C5E;
+}
+
+/****************************************/
+
+
+
+.line_top {
+	background-image: url(../images/line_top.gif);
+	background-repeat: repeat-x;
+	background-position: top;
+}
+
+.line_bottom {
+	background-image: url(../images/line_bottom.gif);
+	background-repeat: repeat-x;
+	background-position: bottom;
+}
+
+.border_left_graphic {
+    border-left : 1px solid;    
+    border-color: #8FB5BC;
+}
+
+.border_right_graphic {
+    border-right : 1px solid;    
+    border-color: #8FB5BC;
+}
+
+.border_top_product {
+    border-top : 1px solid;    
+    border-color: #CCCCCC;
+}
+
+.border_bottom_product {
+    border-bottom : 1px solid;    
+    border-color: #CCCCCC;
+}
+
+.border_left_product {
+    border-left : 1px solid;    
+    border-color: #CCCCCC;
+}
+
+.border_right_product {
+    border-right : 1px solid;    
+    border-color: #CCCCCC;
+}
+
+.text {
+	font-size: 11px;
+	font-family: tahoma;
+	color: #666666;
+}
+
+.productTitle {font-family: helvetica, arial, verdana, sans-serif; color:#339999; font-size: 18px; font-weight: bold;}
+.productTitleUlt {font-family: helvetica, arial, verdana, sans-serif; color:#cc6633; font-size: 18px; font-weight: bold;}
+.productTitleFor {font-family: helvetica, arial, verdana, sans-serif; color:#222222; font-size: 18px; font-weight: bold;}
+.container {width: 778px; border: none; text-align: left; margin-top:5px; margin-left:15px; margin-bottom: 15px;}
+
+.leftimage {position: relative; float: left; margin-right: 25px; width: 185px;}
+.rightimage {position: relative; float: right; margin-left: 0px; width: 185px;}
+.clearer {clear: both; height:1px; overflow:hidden;margin-top:-1px }
+div,p  {margin-top:0}/*clear top margin for mozilla*/
+
+.thankYou {font-family: New Times Roman, Times, Georgia, serif; font-size: 30px; color: #66cccc; font-weight: bold;}
+.thanks { font-family: New Times Roman, Times, Georgia, serif; font-size: 15px; color: #339999;}
+
+
+hr.retro { border: none; color: #339999; width: 800px; background-color: #339999; height: 1px;}
+hr.ult { border: none; color: #cc6600; width: 800px; background-color: #cc6600; height: 1px;}
+hr.for { border: none; color: #444444; width: 800px; background-color: #444444; height: 1px;}
+
+
+ul.bulletsRetro {font-family: helvetica, arial, verdana, sans-serif; color:#0099cc; font-size: 14px;}
+ul.bulletsUlt {font-family: helvetica, arial, verdana, sans-serif; color:#993300; font-size: 14px;}
+ul.bulletsFor {font-family: helvetica, arial, verdana, sans-serif; color:#333333; font-size: 14px;}

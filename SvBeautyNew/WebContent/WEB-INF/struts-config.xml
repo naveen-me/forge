@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE struts-config PUBLIC
+          "-//Apache Software Foundation//DTD Struts Configuration 1.2//EN"
+          "http://struts.apache.org/dtds/struts-config_1_2.dtd">
+<struts-config>
+  <form-beans>
+	
+    <form-bean name="profilesummaryForm" type="com.svb.customerprofile.formbeans.ProfileSummaryFormBean" />
+    <form-bean name="productRegimenForm" type="com.svb.ratings.formbeans.ProductRegimenForm" />
+    <form-bean name="productDetailsForm" type="com.svb.struts.form.Details.ProductDetailsForm"/>
+     <form-bean name="applicationGuidelinesForm" type="com.svb.aplgd.formbeans.ApplicationGuidelinesForm" />  
+	   </form-beans>
+    <global-exceptions>
+        <exception key="error" type="java.lang.Exception" scope="request" handler="com.svb.generic.BaseExceptionHandler" path="/error.jsp"/>
+    </global-exceptions>
+    <global-forwards type="org.apache.struts.action.ActionForward">
+        <!--<forward name="error" path="/error.jsp" redirect="false"/>-->
+        <forward name="error" path="/errorpage.do" redirect="false"/>
+    </global-forwards>
+  
+  
+   <action-mappings>
+   <action path="/CustomerRegistrationAction" type="com.svb.customerregistration.actions.CustomerRegistrationAction"  name="profilesummaryForm" scope="request"  input="/customerregistration.jsp">
+          <forward name="general" path="/customerselfprofileskinconcerns.do?skinMethodToCall=get" />
+          <forward name="skinNewUI" path="/customerselfprofileNewskinconcerns.do?skinMethodToCall=get" />
+		  <forward name="haircare" path="/customerselfprofilehairconcerns.do?skinMethodToCall=get" />
+    </action>
+   
+     <action path="/CustomerRegistrationAction" type="com.svb.customerregistration.actions.CustomerRegistrationAction"  name="profilesummaryForm" scope="request"  input="/customerregistration.jsp">
+          <forward name="general" path="/customerselfprofileskinconcerns.do?skinMethodToCall=get" />
+          <forward name="skinNewUI" path="/customerselfprofileNewskinconcerns.do?skinMethodToCall=get" />
+		  <forward name="haircare" path="/customerselfprofilehairconcerns.do?skinMethodToCall=get" />
+    </action>
+	
+    <action path="/customerselfprofileskinconcerns" type="com.svb.customerregistration.actions.SvCustomerProfileSkinConcernsAction"  name="profilesummaryForm" parameter="skinMethodToCall" scope="request"  input="/SvCustomerProfileSkin.jsp">
+          <forward name="skinconcernsprofile" path="/SvCustomerProfileSkin.jsp" />
+      	  <forward name="currentregimenprofile" path="/productregimen.do" />
+    </action>
+    
+    <action path="/customerselfprofileNewskinconcerns" type="com.svb.customerregistration.actions.SvCustomerProfileSkinConcernsAction"  name="profilesummaryForm" parameter="skinMethodToCall" scope="request"  input="/SvCustomerProfileSkinNew.jsp">
+          <forward name="skinconcernsprofileNew" path="/SvCustomerProfileSkinNew.jsp" />
+      	  <forward name="currentregimenprofile" path="/productregimen.do" />
+    </action>
+    
+    <action  path="/brandDisc" scope="request" type="com.svb.struts.action.Brand.BrandDiscriptionAction" validate="false">
+      <forward name="Success" path="/pages/BrandDetails.jsp" redirect="false"/>
+    </action>
+    
+    <action path="/customerselfprofilehairconcerns" type="com.svb.customerregistration.actions.SvCustomerProfileHairConcernsAction"  name="profilesummaryForm" parameter="skinMethodToCall" scope="request"  input="/SvCustomerProfileHair.jsp">
+          <forward name="hairconcernsprofile" path="/SvCustomerProfileHair.jsp" />
+      	  <forward name="hairregimenprofile" path="/hairproductregimen.do" />
+    </action>
+    
+    <action path="/productanalysis" type="com.svb.analysis.actions.AnalysisDetailAction" name="productAnalysisForm" scope="request" input="/productRegimen.jsp">
+          <forward name="success" path="/SvProductAnalysis.jsp" />
+    </action>
+ 	<!--  Added by Synoptek(29-11-2019) -->   
+	 <!-- 		Start  		-->   
+      <action path="/ingredientScore" type="com.svb.analysis.actions.AnalysisDetailAction" name="productAnalysisForm" scope="request" input="/productRegimen.jsp">
+          <forward name="success" path="/SvIngredientScore.jsp" />
+    </action>
+	<!-- Added by Synoptek(30-12-2019)[Export Excel Action] --> 
+    <action path="/exportProductWithIngrScore" type="com.svb.ratings.actions.ExportProductWithIngrScoreAction"  name="productRegimenForm" scope="request"  input="/SvBeautyNoBrand.jsp">
+    	<forward name="failure" path="/ExcelError.jsp" />
+    </action>
+    
+    <action path="/exportJsonRequestResponse" type="com.svb.ratings.actions.ExportJsonRequestResponse"  name="productRegimenForm" scope="request"  input="/SvBeautyNoBrand.jsp">
+    	<forward name="failure" path="/ExcelError.jsp" />
+    </action>
+ 	<!-- 		End 		-->   
+     
+    <action path="/prodanalysisdetail" type="com.svb.analysis.actions.AnalysisAction" name="productAnalysisForm" scope="request" input="/productRegimen.jsp">
+          <forward name="success" path="/SvProductAnalysisDetail.jsp" />
+    </action>
+    
+    <action path="/regimenmail" type="com.svb.regimenmail.actions.RegimenMailAction" name="applicationGuidelinesForm" parameter="methodToCall" scope="request" input="/SvBeautyRegimenDetail.jsp">
+          <forward name="success" path="/SvBeautyEmail.jsp" />
+    </action>
+    <action path="/regimenshop" type="com.svb.regimenmail.actions.RegimenShopAction" name="applicationGuidelinesForm" parameter="methodToCall" scope="request" input="/SvBeautyRegimenDetail.jsp">
+          <forward name="success" path="/SvBeautyShopCart.jsp" />
+    </action>
+    <action path="/regimenmailsent" type="com.svb.regimenmail.actions.RegimenMailSentAction" name="applicationGuidelinesForm" parameter="methodToCall" scope="request" input="/SvBeautyEmail.jsp">
+          <forward name="productregimen" path="/regimendetail.do" />
+    </action>
+
+
+    <action path="/productregimen" type="com.svb.ratings.actions.RegimenAction" name="productRegimenForm" scope="request" input="/customer_database_products.jsp">
+          <forward name="failure" path="/customerDatabase.jsp" />
+          <forward name="svbeautynobrand" path="/SvBeautyNoBrand.jsp" />
+    </action>
+    
+    <action path="/hairproductregimen" type="com.svb.ratings.actions.HairRegimenAction" name="productRegimenForm" scope="request" input="/customer_database_products.jsp">
+          <forward name="failure" path="/customerDatabase.jsp" />
+          <forward name="svbeautynobrand" path="/SvHairNoBrand.jsp" />
+    </action>
+    <!-- over for VK -->
+    
+    <action path="/regimendetail" type="com.svb.ratings.actions.RegimenDetailAction" name="productRegimenForm" scope="request" input="/customer_database_products.jsp">
+          <forward name="success" path="/SvBeautyRegimenDetail.jsp" />
+          <forward name="svbeautybrand" path="/SvBeautyBrand.jsp" />
+    </action>
+    <action path="/hairregimendetail" type="com.svb.ratings.actions.HairRegimenDetailAction" name="productRegimenForm" scope="request" input="/customer_database_products.jsp">
+          <forward name="success" path="/SvHairRegimenDetail.jsp" />
+          <forward name="svbeautybrand" path="/SvHairBrand.jsp" />
+    </action>
+
+    <action path="/hairregimenmail" type="com.svb.regimenmail.actions.HairRegimenMailAction" name="applicationGuidelinesForm" parameter="methodToCall" scope="request" input="/SvHairRegimenDetail.jsp">
+          <forward name="success" path="/SvHairEmail.jsp" />
+    </action>
+    <action path="/hairregimenshop" type="com.svb.regimenmail.actions.HairRegimenShopAction" name="applicationGuidelinesForm" parameter="methodToCall" scope="request" input="/SvHairRegimenDetail.jsp">
+          <forward name="success" path="/SvHairShopCart.jsp" />
+    </action>
+    <action path="/hairregimenmailsent" type="com.svb.regimenmail.actions.HairRegimenMailSentAction" name="applicationGuidelinesForm" parameter="methodToCall" scope="request" input="/SvHairEmail.jsp">
+          <forward name="productregimen" path="/hairregimendetail.do" />
+    </action>
+
+    <action path="/hairproductanalysis" type="com.svb.analysis.actions.HairAnalysisDetailAction" name="productAnalysisForm" scope="request" input="/productRegimen.jsp">
+          <forward name="success" path="/SvProductAnalysisHair.jsp" />
+    </action>
+    <action path="/hairprodanalysisdetail" type="com.svb.analysis.actions.HairAnalysisAction" name="productAnalysisForm" scope="request" input="/productRegimen.jsp">
+          <forward name="success" path="/SvProductAnalysisDetailHair.jsp" />
+    </action>
+    <action name="productDetailsForm" path="/productDetails" scope="request" type="com.svb.struts.action.Details.ProductDetails" validate="false">
+      <forward name="Success" path="/pages/ProductDetails.jsp" redirect="false"/>
+      <forward name="Popup" path="/pages/CompleteProductDetails.jsp" redirect="false"/>
+    </action>
+    <action name="productDetailsForm" path="/hairProductDetails" scope="request" type="com.svb.struts.action.Details.HairProductDetails" validate="false">
+      <forward name="Success" path="/pages/ProductDetails.jsp" redirect="false"/>
+      <forward name="Popup" path="/pages/CompleteHairProductDetails.jsp" redirect="false"/>
+    </action>
+    <action path="/hairregimenshop" type="com.svb.regimenmail.actions.HairRegimenShopAction" name="applicationGuidelinesForm" parameter="methodToCall" scope="request" input="/SvHairRegimenDetail.jsp">
+          <forward name="success" path="/SvHairShopCart.jsp" />
+    </action>
+  </action-mappings>
+  
+  <controller>
+  	<set-property  property="processorClass" value="com.svb.common.SVBeautyRequestProcessor"/>
+  </controller>
+   <message-resources parameter="resources.ApplicationResources"/> 
+</struts-config>

@@ -1,0 +1,191 @@
+/*---------------------------------------------------------------------
+PDF Print View Style Sheet
+
+StyleValet / Beauty.com
+
+version:	1.0
+author:		Brian McNitt, TrendMedia Technologies, Inc.
+email:		brian@trendmedia.com
+website:	http://www.trendmedia.com
+
+
+
+/* CONFIGURABLE LAYOUT SETTINGS
+--------------------------------------------------------------------*/
+
+/* Global Magnification
+Change this number to scale entire layout. 62.5% is the base size. */
+	body {
+		font-size: 83.125%;
+	}
+/* Page Margins
+Change the following numbers to adjust page margins */
+	body {
+		margin-top: 0px;
+		margin-right: 0px;
+		margin-bottom: 0px;
+		margin-left: 0px;
+	}
+/* Logo Size
+Expressed in EMS. Convert pixel-size to EM by dividing by 10. 
+For example 100px is equal to 10.0em  */
+	img.logo {
+		width: 16.4em;
+		height: 6.4em;
+	}
+/* Product Image Size
+Expressed in EMS. Convert pixel-size to EM by dividing by 10. 
+For example 100px is equal to 10.0em  */
+	table.regimenDetail img {
+		width: 10em;
+		height: 10em;
+	}
+/* 
+-------------------------------------------------------------------- */
+
+
+
+
+
+body {
+	font-family:Arial, Helvetica, sans-serif;
+	color: #333333;
+	width: 53.0em;
+}
+h1 {
+	font-size: 1.5em;
+	color: #ec1862;
+	font-weight: normal;
+	margin: 0 0 .25em 0;
+}
+body#page1 h1 {
+	margin-top: 3em;
+}
+h2 {
+	font-size: 1.2em;
+	margin: 0 0 .25em 0;
+	color: #333333;
+}
+div#am, div#pm {
+	padding: 0 1em 0 1em;
+	background-color: #e9e8ea;
+}
+div#am {
+	border-top-width: 2px;
+	border-right-width: 2px;
+	border-bottom-width: 2px;
+	border-left-width: 2px;
+	border-top-style: solid;
+	border-right-style: solid;
+	border-bottom-style: dotted;
+	border-left-style: solid;
+	border-top-color: #757575;
+	border-right-color: #757575;
+	border-bottom-color: #757575;
+	border-left-color: #757575;
+}
+div#pm {
+	border-right-width: 2px;
+	border-bottom-width: 2px;
+	border-left-width: 2px;
+	border-right-style: solid;
+	border-bottom-style: solid;
+	border-left-style: solid;
+	border-right-color: #757575;
+	border-bottom-color: #757575;
+	border-left-color: #757575;
+	margin-bottom: 1em;
+}
+div#am div.header, div#pm div.header {
+	margin: 0 -1em .75em -1em;
+	padding: 0 1em 0 1em;
+	background-color: #c7c9ca;
+}
+div#am h2, div#pm h2 {
+	font-size: 1.4em;
+	color: #333333;
+	font-weight: normal;
+	padding: .25em 0 .25em 0;
+}
+h3 {
+	font-size: 0.9em;
+	margin: 0;
+}
+a:link {
+	text-decoration: none;
+	color: #cc66cc;
+}
+a:visited {
+	text-decoration: none;
+	color: #990099;
+}
+a:hover {
+	text-decoration: underline;
+}
+a:active {
+	color: #cc66cc;
+}
+p {
+	margin-top: 0;
+	line-height: 1.25em;
+}
+ul {
+	margin-left: 5em;
+	padding-left: 0;
+}
+.clear {
+	clear: both;
+}
+.center {
+	text-align: center;
+}
+div.border {
+	clear: both;
+	border-top: dotted 1px #666666;
+	margin: 0 -1.4em 0 -1.4em;
+}
+.floatLeft {
+	float: left;
+}
+img.logo {
+	width: 16.4em;
+	height: 6.4em;
+}
+table.regimenDetail {
+	width: 53.0em;
+	height: 12.0em;
+	min-height: 12.0em;
+	border: solid 2px #999;
+	margin: 0 0 0.8em 0;
+	vertical-align: top;
+}
+table.regimenDetail td, table.regimenDetail th {
+	vertical-align: top;
+}
+table.regimenDetail td.detail {
+	width: 16.5em;
+	min-width: 16.5em;
+}
+table.regimenDetail img {
+	float: left;
+	margin-right: 1em;
+	width: 10em;
+	height: 10em;
+}
+table.regimenDetail p.detail {
+	font-size: 1.0em;
+	color: #888;
+}
+table.regimenDetail p.productBrand {
+	font-weight: bold;
+	text-transform: uppercase;
+	margin: .125em 0 0 0;
+	color: #333333;
+}
+table.regimenDetail p.productDetail {
+	margin: 0;
+}
+table.regimenDetail p.price {
+	margin: 0;
+	color: #333333;
+}

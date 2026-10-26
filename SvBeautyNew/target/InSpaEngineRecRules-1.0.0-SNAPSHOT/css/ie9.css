@@ -1,0 +1,30 @@
+@charset "utf-8";
+/* CSS Document */
+#nav{
+	margin-top:-4px;
+	}
+/*.product-tab-outer .tab-nav ul li a.active, .product-tab-outer .tab-nav ul li a:hover{
+	background:#fff;
+	color:#333 !important;
+	border-bottom:1px solid #fff;
+	margin-bottom:-1px;
+	cursor:pointer;
+	text-decoration:none;
+	}*/
+.product-tab-outer .tab-nav ul li a{
+  	padding-left:10px !important;
+	padding-right:16px !important;
+	}		
+.answers ul li label {
+    display: block;
+    float: left;
+    margin: -16px 0 0 23px;
+    position: absolute;
+}
+.answers ul li input[type="checkbox"]{
+	margin-top:1px;
+	padding-bottom:-1px;
+	}
+.select span.select-label{
+	margin-top:5px;
+	}	

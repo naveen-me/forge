@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!DOCTYPE taglib
+        PUBLIC "-//Sun Microsystems, Inc.//DTD JSP Tag Library 1.2//EN"
+        "http://java.sun.com/dtd/web-jsptaglibrary_1_2.dtd">
+<taglib>
+    <tlib-version>1.0</tlib-version>
+    <jsp-version>1.2</jsp-version>
+    <short-name>pcpgo tag lib</short-name>
+    <uri>http://www.pcpgo.com/pcpgo</uri>
+    <display-name>pcp template tag library</display-name>
+    <description>Tag Library for MedRule</description>
+    <tag>
+        <name>providerPayers</name>
+        <tag-class>com.PCPgo.prm.web.taglib.ProviderPayersTag</tag-class>
+        <body-content>JSP</body-content>
+        <description>stores a list of PayerIdNames into the pageContext under the given id name.</description>
+        <attribute>
+            <name>id</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>orderBy</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+        <attribute>
+            <name>defaultAll</name>
+            <required>false</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+    <tag>
+        <name>locationProviders</name>
+        <tag-class>com.PCPgo.prm.web.taglib.LocationProvidersTag</tag-class>
+        <body-content>JSP</body-content>
+        <small-icon></small-icon>
+        <large-icon></large-icon>
+        <description>stores a list of Providers into the pageContext under the given id name.</description>
+        <attribute>
+            <name>id</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+    <tag>
+        <name>broadcastMessageTypes</name>
+        <tag-class>com.PCPgo.prm.web.taglib.BroadcastMessageTypesTag</tag-class>
+        <body-content>JSP</body-content>
+        <description>Retrieves a list of BroadcastMessageTypesJdo</description>
+        <attribute>
+            <name>id</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+    <tag>
+        <name>broadcastMessages</name>
+        <tag-class>com.PCPgo.prm.web.taglib.BroadcastMessagesTag</tag-class>
+        <body-content>JSP</body-content>
+        <description>Retrieves a list of BroadcastMessageJdos and places it into pageContext under id</description>
+        <attribute>
+            <name>id</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+    <tag>
+        <name>activeBroadcastMessage</name>
+        <tag-class>com.PCPgo.prm.web.taglib.ActiveBroadcastMessageTag</tag-class>
+        <body-content>JSP</body-content>
+        <description>Retrieves the single active broadcast message if available and stores it in the pageContext under id</description>
+        <attribute>
+            <name>id</name>
+            <required>true</required>
+            <rtexprvalue>true</rtexprvalue>
+        </attribute>
+    </tag>
+    <tag>
+        <name>validateErrors</name>
+        <tag-class>com.PCPgo.prm.web.taglib.ValidateErrorsTag</tag-class>
+        <body-content>JSP</body-content>
+        <description>Displays the validation errors from HIPAA document validation. Very similar to html:errors in struts</description>
+    </tag>
+</taglib>

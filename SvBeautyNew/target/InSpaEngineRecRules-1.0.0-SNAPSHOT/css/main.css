@@ -1,0 +1,30 @@
+@charset "utf-8";
+/* CSS Document */
+body{
+  margin:0;
+  padding:0;
+  font-family:"Times New Roman", Times, serif;
+  font-size:100%;
+  background: #eeeeee;
+  }
+ a{
+ 	outline:none;
+ }
+.odd{
+	background:#eae2eb;
+	}
+.even{
+	background:#f1edf2;
+	}	
+#wrapper{
+ 	width:100%;
+	height:auto;
+	margin:auto;
+	padding:0;
+ }
+#container{
+	width:980px;
+	height:auto;
+	margin:auto;
+	padding:0;
+	}

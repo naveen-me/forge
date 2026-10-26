@@ -1,0 +1,715 @@
+<STYLE TYPE="text/css">
+BEGIN STANDARD JCP STYLES .Unused
+{
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 0.9em
+}
+.CheckoutPageHeading
+{
+    COLOR: #003399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 20px;
+}
+.Border
+{
+	BACKGROUND: #003399;
+}
+.CheckoutLink
+{
+	TEXT-DECORATION: underline
+}
+BODY A
+{
+    TEXT-DECORATION: none
+}
+.StandardText
+{
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px
+}
+.BoldStandardText
+{
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 12px;
+    FONT-WEIGHT: bold
+}
+.LabelText
+{
+    COLOR: #666666;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px
+}
+.LabelAccent
+{
+    BACKGROUND-COLOR: #cccc99;
+    BACKGROUND-IMAGE: none;
+    BACKGROUND-REPEAT: repeat;
+    COLOR: #000000;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px;
+    TEXT-DECORATION: none
+}
+.PageHeading
+{
+    COLOR: #003399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 14px;
+    FONT-WEIGHT: bold
+}
+.SubHeading
+{
+    COLOR: #003399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 12px;
+    FONT-WEIGHT: bold
+}
+.SubText
+{
+    COLOR: #003399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px
+}
+.NavText
+{
+    COLOR: #cccccc;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px;
+    TEXT-DECORATION: none
+}
+.ErrorMessage
+{
+    COLOR: #ff0000;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 15px;
+    FONT-WEIGHT: bold
+}
+.ErrorMessageSmall
+{
+    COLOR: #ff0000;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 12px;
+    text-decoration: none;
+    FONT-WEIGHT: bold
+}
+.SaleItemSmall
+{
+    COLOR: red;
+    FONT-FAMILY: Verdana;
+    FONT-SIZE: 11px
+}
+.StandardCellHeading
+{
+    BACKGROUND-COLOR: #cccc99;
+    BACKGROUND-IMAGE: none;
+    BACKGROUND-REPEAT: repeat;
+    COLOR: #333333;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px
+}
+.StandardCell
+{
+    BACKGROUND: #ffffff;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px
+}
+.NavCellAccent
+{
+    BACKGROUND-COLOR: #ffffcc;
+    BACKGROUND-IMAGE: none;
+    BACKGROUND-REPEAT: repeat;
+    COLOR: #000000;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px
+}
+.CellAccent1
+{
+    BACKGROUND-COLOR: #ffffcc;
+    BACKGROUND-IMAGE: none;
+    BACKGROUND-REPEAT: repeat;
+    COLOR: #000000;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px
+}
+.CellAccent2
+{
+    BACKGROUND: #ffffff;
+    COLOR: #000000;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px
+}
+A.NavLink:active
+{
+    COLOR: #333333;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px;
+    TEXT-DECORATION: none
+}
+A.NavLink:link
+{
+    COLOR: #333333;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px;
+    TEXT-DECORATION: none
+}
+A.NavLink:visited
+{
+    COLOR: #333333;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px;
+    TEXT-DECORATION: none
+}
+A.Link:active
+{
+    COLOR: #003399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px;
+    TEXT-DECORATION: none
+}
+A.Link:link
+{
+    COLOR: #003399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px;
+    TEXT-DECORATION: none
+}
+A.Link:visited
+{
+    COLOR: #003399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px;
+    TEXT-DECORATION: none
+}
+A.StandardTextLink:active
+{
+    COLOR: #003399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px;
+    TEXT-DECORATION: none
+}
+A.StandardTextLink:link
+{
+    COLOR: #003399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px;
+    TEXT-DECORATION: none
+}
+A.StandardTextLink:visited
+{
+    COLOR: #003399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px;
+    TEXT-DECORATION: none
+}
+A.NavLinkSelected:active
+{
+    COLOR: #003399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 10px;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none
+}
+A.NavLinkSelected:link
+{
+    COLOR: #003399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 10px;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none
+}
+A.NavLinkSelected:visited
+{
+    COLOR: #003399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 10px;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none
+}
+A.NavLinkDeselected:active
+{
+    COLOR: #9999ff;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 10px;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none
+}
+A.NavLinkDeselected:link
+{
+    COLOR: #9999ff;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 10px;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none
+}
+A.NavLinkDeselected:visited
+{
+    COLOR: #9999ff;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 10px;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none
+}
+END STANDARD JCP STYLES BEGIN OLD STYLES THAT SHOULD BE GRADUALLY RETIRED A.boldlink:active
+{
+    COLOR: #663399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 8pt;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none
+}
+A.boldlink:link
+{
+    COLOR: #003399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none
+}
+A.boldlink:visited
+{
+    COLOR: #003399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none
+}
+A.boldlinkarrow:active
+{
+    BACKGROUND: #ffffcc;
+    COLOR: #333333;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 10px;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none
+}
+A.boldlinkarrow:link
+{
+    BACKGROUND: #ffffcc;
+    COLOR: #333333;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 10px;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none
+}
+A.boldlinkarrow:visited
+{
+    BACKGROUND: #ffffcc;
+    COLOR: #333333;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 10px;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none
+}
+A.graylink:active
+{
+    BACKGROUND: #ffffcc;
+    COLOR: #003399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none
+}
+A.graylink:link
+{
+    BACKGROUND: #ffffcc;
+    COLOR: #003399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none
+}
+A.graylink:visited
+{
+    BACKGROUND: #ffffcc;
+    COLOR: #003399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none
+}
+A.graylinkarrow:active
+{
+    BACKGROUND: #ffffcc;
+    COLOR: #003399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 10px;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none
+}
+A.graylinkarrow:link
+{
+    BACKGROUND: #ffffcc;
+    COLOR: #003399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 10px;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none
+}
+A.graylinkarrow:visited
+{
+    BACKGROUND: #ffffcc;
+    COLOR: #003399;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 10px;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: none
+}
+A.sidelink:active
+{
+    BACKGROUND: #ffffcc;
+    COLOR: #333333;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px;
+    TEXT-DECORATION: none
+}
+A.sidelink:link
+{
+    BACKGROUND: #ffffcc;
+    COLOR: #333333;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px;
+    TEXT-DECORATION: none
+}
+A.sidelink:visited
+{
+    BACKGROUND: #ffffcc;
+    COLOR: #333333;
+    FONT-FAMILY: verdana, arial;
+    FONT-SIZE: 11px;
+    TEXT-DECORATION: none
+}
+.CopyrightInfo
+{
+    BACKGROUND: #ffffff;
+    COLOR: #999933;
+    FONT: 10px verdana, arial
+}
+END OLD STYLES BEGIN PRODUCTSHOM STYLES .SalePrice
+{
+    COLOR: #ff0000;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 10pt;
+    FONT-WEIGHT: normal
+}
+.RegPriceStrike
+{
+    COLOR: #666666;
+    FONT-FAMILY: Arial, Verdana;
+    FONT-SIZE: 14px;
+    FONT-WEIGHT: normal;
+    TEXT-DECORATION: line-through
+}
+.RegPrice
+{
+    COLOR: #666666;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 13px;
+    FONT-WEIGHT: normal
+}
+.ProdColumn
+{
+    COLOR: #666666;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 13px;
+    FONT-WEIGHT: 900;
+    TEXT-TRANSFORM: capitalize
+}
+.ProdColumnRed
+{
+    COLOR: #ff0000;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 13px;
+    FONT-WEIGHT: 900;
+    TEXT-TRANSFORM: capitalize
+}
+.ProdNotShaded
+{
+    BACKGROUND-COLOR: #ffffff
+}
+.ProdShaded
+{
+    BACKGROUND-COLOR: #cccc99
+}
+.ProdMain
+{
+    COLOR: #666666;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 13px;
+    FONT-WEIGHT: normal
+}
+.NavBreadCrumbs
+{
+    COLOR: #003399;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 11px;
+    FONT-WEIGHT: normal
+}
+.NavItems
+{
+    COLOR: #666666;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 11px;
+    FONT-WEIGHT: normal
+}
+.ProdCopy
+{
+    COLOR: #000000;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 11px;
+    FONT-WEIGHT: normal
+}
+.bProdCopy
+{
+    COLOR: #000000;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 11px;
+    FONT-WEIGHT: bold
+}
+.ProdCopyHeader
+{
+    COLOR: #000000;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 15px;
+    FONT-WEIGHT: bold
+}
+TD.productdetailswatch
+{
+    BACKGROUND: #99cccc;
+    COLOR: #ffffff;
+    FONT: bold 11px/10pt arial
+}
+.BedSize1
+{
+    COLOR: #000000;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 11px;
+    FONT-WEIGHT: normal;
+    TEXT-TRANSFORM: capitalize
+}
+.BedSize2
+{
+    COLOR: #666699;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 11px;
+    FONT-WEIGHT: normal;
+    TEXT-TRANSFORM: capitalize
+}
+.BedSizeSelected
+{
+    COLOR: #666666;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 11px;
+    FONT-WEIGHT: bold;
+    TEXT-TRANSFORM: capitalize
+}
+.NavPrevNext
+{
+    COLOR: #666699;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 11px;
+    FONT-WEIGHT: normal;
+    TEXT-TRANSFORM: none
+}
+.ProdImage
+{
+    COLOR: #003399;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 11px;
+    FONT-WEIGHT: normal
+}
+.ProdName
+{
+    COLOR: #333333;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 13px;
+    FONT-WEIGHT: normal;
+    TEXT-DECORATION: underline
+}
+.NavOtherLinks
+{
+    COLOR: #333333;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 11px;
+    FONT-WEIGHT: normal;
+    TEXT-TRANSFORM: none
+}
+.ItemsAdded
+{
+    COLOR: #ff0000;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 13px;
+    FONT-STYLE: italic;
+    FONT-WEIGHT: bold
+}
+.ItemNotFound1
+{
+    COLOR: #000000;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 18px;
+    FONT-STYLE: normal;
+    FONT-WEIGHT: normal
+}
+.ItemNotFound2
+{
+    COLOR: #000000;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 18px;
+    FONT-STYLE: italic;
+    FONT-WEIGHT: bold
+}
+.ItemsNotAdded
+{
+    COLOR: #ff0000;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 13px;
+    FONT-STYLE: italic;
+    FONT-WEIGHT: bold
+}
+.ItemsNotAddedMessages
+{
+    BORDER-BOTTOM: #666699 thin solid;
+    BORDER-LEFT: #666699 thin solid;
+    BORDER-RIGHT: #666699 thin solid;
+    BORDER-TOP: #666699 thin solid;
+    COLOR: #666699;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 11px;
+    FONT-WEIGHT: normal
+}
+.ProdError
+{
+    COLOR: #ff0000;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 13px;
+    FONT-WEIGHT: bold
+}
+Business Casual Basics TD.four
+{
+    BACKGROUND: #999999
+}
+TD.tanline
+{
+    BACKGROUND: #cccc99
+}
+.SalePrice
+{
+    COLOR: #666666;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 13px;
+    FONT-WEIGHT: normal
+}
+.ThankYouSubscribeEmail
+{
+    COLOR: #6699cc;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 18px
+}
+.ThankYouSubscribeEmail2
+{
+    COLOR: #666699;
+    FONT-FAMILY: Verdana, Arial;
+    FONT-SIZE: 18px
+}
+BODY
+{
+    BACKGROUND-COLOR: white
+}
+.PageHeading2
+{
+    FONT-FAMILY: Tahoma;
+    FONT-SIZE: 18pt;
+    FONT-WEIGHT: bold
+}
+.BoldStandardText2
+{
+    FONT-FAMILY: Tahoma;
+    FONT-SIZE: 11pt;
+    FONT-WEIGHT: bold;
+    TEXT-ALIGN: justify
+}
+.StandardText2
+{
+    FONT-FAMILY: Tahoma;
+    FONT-SIZE: 11pt
+}
+A.Link2:link
+{
+    COLOR: #000099;
+    FONT-FAMILY: Tahoma;
+    FONT-SIZE: 11pt;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: underline
+}
+A.Link2:active
+{
+    COLOR: #000099;
+    FONT-FAMILY: Tahoma;
+    FONT-SIZE: 11pt;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: underline
+}
+A.Link2:visited
+{
+    COLOR: #000099;
+    FONT-FAMILY: Tahoma;
+    FONT-SIZE: 11pt;
+    FONT-WEIGHT: bold;
+    TEXT-DECORATION: underline
+}
+.BoldStandardText3
+{
+    COLOR: #000099;
+    FONT-FAMILY: Tahoma;
+    FONT-SIZE: 11pt;
+    FONT-WEIGHT: bold
+}
+.SubHeading2
+{
+    FONT-FAMILY: Tahoma;
+    FONT-SIZE: 14pt;
+    FONT-WEIGHT: bold
+}
+.StandardText3
+{
+    FONT-FAMILY: Tahoma;
+    FONT-SIZE: 9pt
+}
+A.Link3:active
+{
+    COLOR: #000099;
+    FONT-FAMILY: Tahoma;
+    FONT-SIZE: 9pt;
+    TEXT-DECORATION: underline
+}
+A.Link3:link
+{
+    COLOR: #000099;
+    FONT-FAMILY: Tahoma;
+    FONT-SIZE: 9pt;
+    TEXT-DECORATION: underline
+}
+A.Link3:visited
+{
+    COLOR: #000099;
+    FONT-FAMILY: Tahoma;
+    FONT-SIZE: 9pt;
+    TEXT-DECORATION: underline
+}
+.BoldStandardText4
+{
+    FONT-FAMILY: Tahoma;
+    FONT-SIZE: 9pt;
+    FONT-WEIGHT: bold
+}
+.LineAccent
+{
+    BACKGROUND-COLOR: #cccccc
+}
+.LineAccentLanding
+{
+    BACKGROUND-COLOR: #003399
+}
+.TextBoxStandardText
+{
+    FONT-FAMILY: Arial
+}
+</STYLE>

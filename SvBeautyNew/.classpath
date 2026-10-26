@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry exported="true" kind="con" path="org.eclipse.m2e.MAVEN2_CLASSPATH_CONTAINER">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+			<attribute name="org.eclipse.jst.component.dependency" value="/WEB-INF/lib"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/activation.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/antlr.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/commons-beanutils.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/commons-collections.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/commons-digester.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/commons-fileupload.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/commons-logging-api.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/commons-logging.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/commons-validator.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/core-renderer-minimal.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/core-renderer.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/cos.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/itext-1.5.3.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/itext-paulo-155.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/jakarta-oro.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/java-json.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/jstl.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/mail.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/minium.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/msbase.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/mssqlserver.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/msutil.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/mysql-connector-java-3.1.10-bin.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/ojdbc8.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/pager-taglib.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/servlet-api.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/sslext.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/standard.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/struts-el.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/struts.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/uploadbean.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/Verisign.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/xmlparserv2.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/log4j-1.2.9.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/oraclepki.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/osdt_cert.jar"/>
+	<classpathentry exported="true" kind="lib" path="WebContent/WEB-INF/lib/osdt_core.jar"/>
+	<classpathentry exported="true" kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8">
+		<attributes>
+			<attribute name="maven.pomderived" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry exported="true" kind="con" path="org.eclipse.jst.server.core.container/org.eclipse.jst.server.tomcat.runtimeTarget/Apache Tomcat v8.5">
+		<attributes>
+			<attribute name="owner.project.facets" value="jst.web"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" path="target/generated-sources/annotations">
+		<attributes>
+			<attribute name="ignore_optional_problems" value="true"/>
+			<attribute name="optional" value="true"/>
+			<attribute name="maven.pomderived" value="true"/>
+			<attribute name="m2e-apt" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="src" output="target/test-classes" path="target/generated-test-sources/test-annotations">
+		<attributes>
+			<attribute name="ignore_optional_problems" value="true"/>
+			<attribute name="optional" value="true"/>
+			<attribute name="maven.pomderived" value="true"/>
+			<attribute name="m2e-apt" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="output" path="target/classes"/>
+</classpath>

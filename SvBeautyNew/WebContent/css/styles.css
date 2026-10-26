@@ -1,0 +1,40 @@
+span.h3 {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	font-weight: bold;
+	color: #53828D;
+}
+span.h2 {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 12px;
+	padding: 0px;
+	height: auto;
+	width: auto;
+	float: none;
+	vertical-align: baseline;
+	background-position: center center;
+	text-indent: 4pt;
+	clear: none;
+	font-weight: bold;
+}
+td {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	font-size: 11px;
+}
+.RemoveBoxBorder {
+	border-top: 1px none;
+	border-right: 1px none;
+	border-bottom: 1px solid;
+	border-left: 1px none;
+	margin: 0px;
+	padding: 0px;
+}
+.RemoveMargin {
+	margin: 0px;
+	padding: 0px;
+	clear: none;
+	float: none;
+	border: thin none;
+	height: 14px;
+	width: 14px;
+	}

@@ -1,0 +1,684 @@
+@charset "utf-8";
+/* CSS Document */
+#running-content{
+	width:872px;
+	height:auto;
+	float:left;
+	margin:0;
+	padding:17px 54px;
+	background:#fff;
+	font-family:"Times New Roman", Times, serif, Tahoma;
+	font-size:14px;
+	line-height:18px;
+	color:#444444;
+	}
+#running-content p{
+	margin: 0;
+	padding: 0;
+	}	
+#product-outer{
+	width:980px;
+	height:auto;
+	float:left;
+	margin:0;
+	padding:0;
+	}
+#go-back-to-all-and-see-recommendation-outer{
+	width:500px;
+	height:auto;
+	float:right;
+	margin:0;
+	padding:0;
+	}
+#go-back-to-all a{
+	margin:20px 0 0px;
+	width:auto;
+	height:auto;
+	float:right;
+	font-family:Arial, Helvetica, sans-serif;
+	color:#FE816D;
+	text-transform:uppercase;
+	font-weight:bold;
+	}	
+#brand-name-tell-me-about-outer{
+	width:250px;
+	height:auto;
+	float:left;
+	margin:0px;
+	padding:0px;
+	}
+#brand-name-tell-me-about-outer .brand-name{	
+	font-size:28px;
+	font-family:Arial, Helvetica, sans-serif;
+	color:#444444;
+	text-transform:uppercase;
+	width:auto;
+	height:auto;
+	float:left;
+	margin:20px 0px 0px 0px;
+	padding:0px;
+	}	
+#brand-name-tell-me-about-outer .tell-me-about-this-brand a{
+	margin:5px 0 10px 0;
+	width:auto;
+	height:auto;
+	float:left;
+	font-family:Arial, Helvetica, sans-serif;
+	color:#FE816D;
+	text-transform:uppercase;
+	font-weight:bold;
+	}
+#see-recommendation{
+	width:auto;
+	height:auto;
+	float:right;
+	margin:20px 0 -10px 0;
+	padding:0;
+	}
+#see-recommendation span.see-recommendtaion-label{
+	margin:7px 7px 0 0;
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:14px;
+	color:#444;
+	font-weight:bold;
+	float:left;
+	}
+#see-recommendation div.see-recommendation-dropdown{
+	width:154px;
+	height:26px;
+	float:right;
+	margin:0;
+	padding:0 0 0 10px;
+	border:1px solid #999999;
+	background:#fff;
+	line-height:26px;
+	cursor:pointer;
+	}
+#see-recommendation div.down-arrow a{
+	width:6px;
+	height:6px;
+	float:right;
+	margin:-15px 9px 0px 0px;
+	padding:0px;
+	background:url(../images/beauty-sprite.png) no-repeat -536px -20px;
+}
+#see-recommendation div.dropdown-content{
+	width:164px;
+	height:auto;
+	float:left;
+	margin:0 0 0 -11px;
+	padding:0;
+	border-bottom:1px solid #999999;
+	border-left:1px solid #999999;
+	border-right:1px solid #999999;
+	background:#fff;
+	z-index:100;
+	position:absolute;
+	}
+#see-recommendation div.dropdown-content ul{
+	margin:0;
+	padding:0;
+	list-style:none;
+	}	
+#see-recommendation div.dropdown-content ul li a{
+	width:154px;
+	height:26px;
+	line-height:26px;
+	float:left;
+	margin:0;
+	padding:0 0 0 10px;
+	border-bottom:1px solid #999999;
+	color:#444;
+	}
+#see-recommendation div.dropdown-content ul li:hover a{
+	background:#F7F7F7;
+	}	
+.product-images-outer{
+	width:980px;
+	height:auto;
+	float:left;
+	margin:30px 0 0 0;
+	padding:0;
+	background:#fff;
+	}
+.product-number-label{
+	width:198px;
+	height:290px;
+	float:left;
+	margin:0;
+	padding:0;
+	border-left:1px solid #f0f0f0;
+	font-family:Arial, Helvetica, sans-serif;		
+	}
+.product-image .styleing-product-please-note{
+	width:150px;
+	height:auto;
+	float:left;
+	margin:0px 0 0 5px;
+	padding:0px;
+	min-height:212px;
+	}
+.product-image .styleing-product-please-note h1{	
+	margin:20px 0 0 0;
+	padding:0;
+	color:#ed2801;
+	font-family:Arial, Helvetica, sans-serif;
+	font-weight:bold;
+	font-size:14px;
+	text-transform:uppercase;
+	}
+.product-image .styleing-product-please-note p{
+	width:150px;
+	height:auto;
+	float:left;
+	margin:5px 0 0 0;
+	padding:0;
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:13px;
+	color:#444;
+	}	
+.product-number-label .product-number-label-outer, .add-finishing-touch{
+	width:174px;
+	height:auto;
+	float:left;
+	margin:0px 0 0 10px;
+	padding:0px 0 0 10px;
+	}
+.add-finishing-touch P{
+	width:174px;
+	height:auto;
+	float:left;
+	margin:20px 0 0 0;
+	padding:0;
+	font-family:"Times New Roman", Times, serif, Tahoma;
+	font-size:15px;
+	line-height:20px;
+	}
+.you-might-also-like-label{
+	width:980px;
+	height:20px;
+	float:left;
+	margin:20px 0 -15px 0;
+	padding:0;
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:15px;
+	color:#444;
+	font-weight:bold;
+	}
+.you-might-also-like-label span{
+	width:174px;
+	height:11px;
+	float:left;
+	margin:3px 0px 0px 0px;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -1px -538px;
+	}	
+.sub-total{
+	width:980px;
+	height:20px;
+	float:left;
+	margin:20px 0 0px 0;
+	padding:0;
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:20px;
+	color:#444;
+	font-weight:bold;
+	text-align:right;
+	}			
+.product-number-label .product-number-label-outer .product-label{
+	width:130px;
+	height:auto;
+	float:left;
+	margin:15px 5px 0 0;
+	padding:0;
+	}
+.product-number-label .product-number-label-outer .product-label span.lable1{
+	display:block;
+	font-size:14px;
+	text-transform:uppercase;
+	}
+.product-number-label .product-number-label-outer .product-label span.lable2{
+	display:block;
+	font-size:15px;
+	font-weight:bold;
+	text-transform:uppercase;
+	}	
+.product-number-label .product-number-image{
+	width:136px;
+	height:41px;
+	float:left;
+	margin:20px 0 0 20px;
+	padding:0px;
+	}
+.product-number-label .styleing-product-please-note {
+    float: left;
+    height: auto;
+    margin: 0 0 0 48px;
+    min-height: 212px;
+    padding: 0;
+    width: 120px;
+}
+.product-number-label .styleing-product-please-note h1 {
+    color: #ED2801;
+    font-family: Arial,Helvetica,sans-serif;
+    font-size: 13px;
+    font-weight: bold;
+    margin: 20px 0 0;
+    padding: 0;
+    text-transform: uppercase;
+}
+.product-number-label .styleing-product-please-note p {
+    color: #444444;
+    float: left;
+    font-family: Arial,Helvetica,sans-serif;
+    font-size: 14px/13px;
+    height: auto;
+    margin: 5px 0 0;
+    padding: 0;
+    width: 120px;
+}
+.one{
+	background:url(../images/beauty-sprite.png) no-repeat -161px -447px;
+	}	
+.two{
+	background:url(../images/beauty-sprite.png) no-repeat -299px -447px;
+	}	
+.three{
+	background:url(../images/beauty-sprite.png) no-repeat -161px -491px;
+	}
+.fore{
+	background:url(../images/beauty-sprite.png) no-repeat -299px -491px;
+	}
+.your-regimen{
+	background:url(../images/beauty-sprite.png) no-repeat -6px -441px;
+	}
+.finishing-touch{
+	background:url(../images/beauty-sprite.png) no-repeat -6px -484px;
+	margin:20px 0 0 0!important;
+	}	
+		
+.product-number-label .product-number{
+	width:20px;
+	height:20px;
+	float:left;
+	margin:20px 10px 0 20px;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -522px -300px;
+	}
+.product-number-label .product-number span{
+	color:#fff;
+	font-weight:bold;
+	font-size:11px;
+	text-align:center;
+	display:block;
+	line-height:20px;
+	}
+.product-number-label .product-label{		
+	width:130px;
+	height:auto;
+	float:left;
+	margin:15px 5px 0 0;
+	padding:0;
+	}
+.product-number-label .product-label span.lable1{
+	display:block;
+	font-size:12px;
+	}
+.product-number-label .product-label span.lable2{
+	display:block;
+	font-size:13px;
+	font-weight:bold;
+	}
+.product-image{
+	width:150px;
+	height:290px;
+	float:left;
+	margin:0;
+	padding:0 22px;
+	border-left:1px solid #f0f0f0;
+	font-family:Arial, Helvetica, sans-serif;
+	color:#444444;
+	}
+.fill-color{
+	background:#e1dee4;
+	border:1px solid #999999;
+	}	
+.product-image .final-product-label-number{
+	width:163px;
+	height:20px;
+	float:left;
+	margin:20px 0px 0px 0px;
+	padding:0px;
+	}
+.shampoo{
+	background:url(../images/beauty-sprite.png) no-repeat -3px -403px;
+	width:105px !important;
+	}
+.conditioner{
+	background:url(../images/beauty-sprite.png) no-repeat -112px -403px;
+	width:130px !important;
+	}
+.treatment{
+	background:url(../images/beauty-sprite.png) no-repeat -246px -403px;
+	width:113px !important;
+	}
+.treatment{
+	background:url(../images/beauty-sprite.png) no-repeat -246px -403px;
+	width:113px !important;
+	}
+.styling-product{
+	background:url(../images/beauty-sprite.png) no-repeat -360px -403px;
+	width:165px !important;
+	}
+/* ============= */
+.product-image .product-label-and-number{
+	width:163px;
+	height:20px;
+	float:left;
+	margin:0;
+	padding:0;
+	}
+.product-image .product-number-label-outer{
+	width:174px;
+	height:auto;
+	float:left;
+	margin:0px;
+	padding:0px;
+	}
+.product-image .product-number{
+	width:20px;
+	height:20px;
+	float:left;
+	margin:20px 10px 0 0;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -522px -300px;
+	}
+.product-image .product-number span{
+	color:#fff;
+	font-weight:bold;
+	font-size:11px;
+	text-align:center;
+	display:block;
+	line-height:20px;
+	}
+.product-image .product-label{		
+	width:130px;
+	height:auto;
+	float:left;
+	margin:22px 5px 0 0;
+	padding:0;
+	}
+.product-image .product-label span.lable2{
+	display:block;
+	font-size:13px;
+	font-weight:bold;
+	}
+/* ============= */	
+.product-image .product-thumb-image{
+	width:150px;
+	height:200px;		
+	float:left;
+	margin:0;
+	padding:0;
+	text-align:center;
+	}
+.product-image .product-thumb-image img{
+	cursor:pointer;
+	}	
+.product-image .selected-product-thumb-image{
+	width:174px;
+	height:160px;		
+	float:left;
+	margin:0;
+	padding:0;
+	text-align:center;
+	}
+.product-image .selected-product-thumb-image img{
+	cursor:pointer;
+	}	
+.product-rating{
+	width:62px;
+	height:11px;
+	float:left;
+	margin:0;
+	padding:0;
+	}
+.product-rating ul{
+	margin:0;
+	padding:0;
+	list-style:none;
+	}
+.product-rating ul li{
+	width:12px;
+	height:11px;
+	float:left;
+	margin:0px;
+	padding:0px;
+	}
+.product-rating ul li a{
+	width:12px;
+	height:11px;
+	display:block;
+	}	
+.product-rating ul li a.no-points{
+	background:url(../images/beauty-sprite.png) no-repeat -12px -308px;
+	}
+.product-rating ul li a.give-points{
+	background:url(../images/beauty-sprite.png) no-repeat -1px -308px;
+	}	
+.product-name{
+	width:174px;
+	height:35px;
+	float:left;
+	margin:5px 0;
+	padding:0;
+	font-size:13px;
+	overflow: hidden;
+	}
+.product-price{
+	width:80px;
+	height:auto;
+	float:left;
+	margin:5px 0 0 0;
+	padding:0;
+	font-size:12px;
+	font-weight:bold;
+	}
+.remove-button a{
+	width:auto;
+	height:auto;
+	float:right;
+	margin:10px 7px 0px 0px;
+	padding:0;
+	text-transform:uppercase;
+	font-weight:bold;
+	font-size:11px;
+	color:#fc7b6e;
+	text-decoration:none;
+	}
+.edit-button a{
+	width:auto;
+	height:auto;
+	float:right;
+	margin:10px 7px 0px 0px;
+	padding:0;
+	text-transform:uppercase;
+	font-weight:bold;
+	font-size:11px;
+	color:#fc7b6e;
+	text-decoration:none;
+	}		
+.select{
+	width:68px;
+	height:auto;
+	float:right;
+	margin:0;
+	padding:0;
+	background:#f3eef4;
+	border:1px solid #dddddd;
+	font-size:12px;
+	}
+.select	span.select-radio{
+	width:auto;
+	height:auto;
+	float:left;
+	margin:0px 2px 3px 0;
+	padding:0;
+	}
+.select span.select-label{
+	font-size:11px;
+	font-weight:bold;
+	float:left;
+	margin-top:3px;
+	#margin-top:3px;
+	margin-top:3px\0/;	
+	}
+.recommendation-outer{
+	width:980px;
+	height:auto;
+	float:left;
+	margin:0;
+	padding:0;
+	}	
+.recommendation-header{
+	width:980px;
+	height:30px;
+	float:left;
+	margin:0;
+	padding:0;
+	background:#999999;
+	cursor:pointer;
+	}
+.recommendation-header .collapse{
+	width:17px;
+	height:17px;
+	float:left;
+	margin:6px 0 0 20px;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -32px -303px;
+	}
+.recommendation-header .expand{
+	width:17px;
+	height:17px;
+	float:left;
+	margin:6px 0 0 20px;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -51px -303px;	
+	}
+.recommendation-header .heading-label{
+	width:auto;
+	height:30px;
+	margin:0 0 0 10px;
+	padding:0;
+	line-height:30px;
+	float:left;
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:11.599px;
+	font-weight:bold;
+	color:#ffffff;
+	}
+.recommendation-running-content{
+	width:980px;
+	height:auto;
+	float:left;
+	margin:0;
+	padding:0;
+	}
+.recommendation-running-content ul{
+	margin:0;
+	padding:0;
+	list-style:none;
+	}
+.recommendation-running-content ul li{
+	width:980px;
+	height:30px;
+	float:left;
+	margin:0;
+	padding:0;
+	line-height:30px;
+	color:#444;
+	font-size:12px;
+	font-family:Arial, Helvetica, sans-serif;
+	}
+.recommendation-running-content ul li .recommendation-result-titel{
+	width:178px;
+	height:30px;
+	float:left;
+	margin:0 0 0 20px;
+	padding:0;
+	font-weight:bold;
+	}
+.recommendation-running-content ul li .recommendation-result a.Benefits{
+	color:#fc7b6e;
+	text-decoration:none;
+	font-weight:bold;
+	cursor: pointer;
+	}
+.recommendation-running-content ul li .recommendation-result a.Benefits:hover{
+	text-decoration:underline;
+	}	
+.recommendation-running-content ul li .recommendation-result{
+	width:170px;
+	height:30px;
+	float:left;
+	margin:0;
+	padding:0 10px 0 14px;
+	}
+#edit-review-button-outer{
+	width:405px;
+	height:auto;
+	float:right;
+	margin:15px 0 0 0;
+	padding:0;
+	}
+#edit-review-button-outer .edit-button a{
+	width:158px;
+	height:34px;
+	float:left;
+	margin:0 10px 0 0;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -3px -328px;
+	}
+#edit-review-button-outer .review-button a{
+	width:235px;
+	height:34px;
+	float:left;
+	margin:0 0px 0 0;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -171px -328px;
+	}	
+#edit-review-button-outer .edit-selection-button a{
+	width:163px;
+	height:34px;
+	float:left;
+	margin:0 10px 0 7px;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -3px -365px;
+	}
+#edit-review-button-outer .add-selection-to-bag-button a{
+	width:224px;
+	height:34px;
+	float:left;
+	margin:0 0px 0 0;
+	padding:0;
+	background:url(../images/beauty-sprite.png) no-repeat -174px -365px;
+	}		
+/* ================== Please Note Start ================== */
+#please-note{
+	width:980px;
+	height:auto;
+	float:left;
+	margin:25px 0;
+	padding:0;
+	font-family:Arial, Helvetica, sans-serif;
+	font-size:10px;
+	color:#666;
+	}
+#the-world-of-beauty{
+	width:980px;
+	height:25px;
+	float:left;
+	margin:0 0 25px 0;
+	padding:0;
+	text-align:center;
+	}	

@@ -1,0 +1,102 @@
+/*
+a:link {
+	font-family: Georgia,  Times, serif;
+	background-color: #7575FF;
+	color: #FFFFFF;
+	text-decoration: none;
+	padding-left: 3px;
+	padding-right: 3px;
+}
+a:visited {  
+	font-family: Georgia,  Times, serif;
+ 	background-color: #aaaacc; color: #FFFFFF;
+	text-decoration: none; }
+a:hover {
+	font-family: Georgia,  Times, serif;
+	background-color: #aaaacc;
+	color: white;
+	text-decoration: underline;
+	
+}
+a:active { 
+	font-family: Georgia,  Times, serif;
+	background-color: #aaaacc; color: #FFFFFF;
+	text-decoration: none; }
+*/	
+body, p, table, td, tr
+{	
+	font-family: Georgia, Times, serif;
+	font-size: 12pt;
+	color: #333366;
+}
+h1 {   	font-family: Georgia,  Times, serif;
+	font-size: 24pt;
+	font-weight: bold; }
+h2 {   	font-family:  Times, Bookman, serif;
+	font-size: 24pt;
+	border: thin solid black;
+	font-weight: bold; }
+h3{   	font-family: Georgia,  Times, serif;
+	font-size: 24pt;
+	color: #FF0000;
+	font-weight: bold; }
+h6 {   	font-family: Georgia,  Times, serif;
+	font-size: 12pt; margin:: 0;}
+h7 { margin-left: 20px;  	font-family: Georgia,  Times, serif;
+             font-weight: bold;
+			 color: #000000;
+			 font-size: 13px;
+			 margin-top: -5px;
+			 margin-bottom: -9px;
+			 }
+pre {
+	font-style: italic;
+	font-weight: bold;
+	margin-left: 15px;
+}
+/* The .class tags go here in alphabetical order */
+.bluetag { 	color: #FFFF00; background-color: #3300FF;}
+.boarder {
+	color: #FFFFFF;
+	background-color: #3333CC;
+	margin-bottom: 2px;
+	margin-left: 8px;
+	margin-right: 2px;
+	margin-top: 2px;
+	border: 2px solid black;
+	text-align: justify;
+	padding-right: 4px;
+	padding-bottom: 4px;
+	padding-left: 4px;
+	}			 
+.citer {
+    display:block;
+	background-color: #cccc33;
+	margin-left: 15px;
+	color: #000000;
+	margin-top: -6px;
+	margin-bottom: -9px;
+}
+.gogreen { background-color: #00FF66; color: #000000; }
+.hilite { background-color: yellow;}
+.indent {
+	font-weight: bold;
+	color: #FFFFFF;
+	background-color: #6600CC;
+	margin-left: 20px;
+	margin-top: -9px;
+}
+.redlite { background-color: #FFFF00; color:#FF0000}
+.redfont { 	color: #FF0000; }
+.serifbigbold {
+	font-family: "Times New Roman", Times, serif;
+	font-size: 18px;
+	font-weight: bold;
+	color: #FFFFFF;
+}
+.striker {font-weight: bolder; text-decoration: line-through; }
+.underbold { font-weight: bolder; text-decoration: underline; }
+hr {
+	margin: 0px 0px 0px 0px;
+	padding: 0px;
+}

@@ -1,0 +1,22 @@
+body {}
+#frame1 {width: 400px;height: 200px;border: none;}
+.header{font-family: Arial; font-size: 14pt; color: #333333; font-weight:bold;}
+.header2{font-family: Arial;font-size: 11pt;color: #333333;font-weight:bold;}
+.header3{font-family: Arial;font-size: 8pt;	color: gray;}
+.Price{font-family: Arial;font-size: 8pt;color: black;}
+.textStyle{font-family: Arial;font-size: 11pt;color: #333333;}
+.questionTextStyle{font-family: Arial;font-size: 11pt;color: #333333;font-weight:bold;}
+.textLink{font-family: Arial;font-size: 11pt;color: #cc66cc;}
+.recommendedLink{font-family: Arial;font-size: 8pt;color: #cc66cc;}
+a:hover{font-family: Arial;font-size:11pt;color: #CC66CC;text-decoration: underline;}
+a:visited {font-family: Arial;font-size:11pt;color: #990099;text-decoration: none; }
+.close{font-size: 10px; font-family: Courier;}
+.link{font-family: Arial;font-size: 11pt;color: #CC66CC}
+
+.imgTab {width:5px; padding-left:10px; vertical-align:middle;}
+.selectedTab {height:20px;border:1px;border-style:solid;border-top-color:#6e6565;border-left-color:#6e6565;border-right-color:#6e6565;border-bottom-color:#6B6163;background-color:#6B6163;color:#FFFFFF;}
+.hiddenTab {height:20px;border:1px;border-style:solid;border-top-color:#6e6565;border-left-color:#6e6565;border-right-color:#6e6565;border-bottom-color:#ececec;background-color:#EFEBEF;}
+.tab {height:20px;border:1px;border-style:solid;border-top-color:#6e6565;border-left-color:#6e6565;border-right-color:#6e6565;border-bottom-color:#ececec;background-color:#ececec;text-align:center;}
+
+.TblPDetailsBtn {height:20px;background-color:Transparent;border-style:none;text-align:center;vertical-align:middle;text-transform:uppercase;font-size:55%;font-weight:normal;font-family:Arial;}
+.TblPDetailsSelectedBtn {height:20px;background-color:Transparent;border-style:none;text-align:center;vertical-align:middle;text-transform:uppercase;color:#FFFFFF;font-size:55%;font-weight:normal;font-family:Arial;}
